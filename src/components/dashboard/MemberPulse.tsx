@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import PendingTransactions from "./PendingTransactions";
 import { getMemberData, subscribeMemberStore } from "@/stores/memberStore";
+import { getLoans, subscribeLoanStore } from "@/stores/loanStore";
+import MyLoansPanel from "@/components/lending/MyLoansPanel";
 
 interface MemberPulseProps {
   onTransferClick?: () => void;
@@ -11,12 +13,30 @@ interface MemberPulseProps {
 
 const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   const [memberData, setMemberData] = useState(getMemberData());
+  const [showLoansPanel, setShowLoansPanel] = useState(false);
+  const [activeLoansCount, setActiveLoansCount] = useState(0);
 
   // Subscribe to member data changes
   useEffect(() => {
     const unsubscribe = subscribeMemberStore(() => {
       setMemberData(getMemberData());
     });
+    return () => unsubscribe();
+  }, []);
+
+  // Subscribe to loan data changes and count active loans
+  useEffect(() => {
+    const updateLoansCount = () => {
+      const loans = getLoans();
+      const member = getMemberData();
+      const myActiveLoans = loans.filter(
+        l => l.borrowerId === member.id && l.status === 'funded'
+      );
+      setActiveLoansCount(myActiveLoans.length);
+    };
+
+    updateLoansCount();
+    const unsubscribe = subscribeLoanStore(updateLoansCount);
     return () => unsubscribe();
   }, []);
 
@@ -134,14 +154,25 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           <p className="text-sm font-medium">Transfer Funds</p>
           <p className="text-xs text-muted-foreground">Banks • E-Wallets</p>
         </Card>
-        <Card className="glass-card p-4 hover:border-success/50 cursor-pointer transition-all group">
+        <Card 
+          className="glass-card p-4 hover:border-success/50 cursor-pointer transition-all group"
+          onClick={() => setShowLoansPanel(true)}
+        >
           <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center mb-2 group-hover:bg-success/20 transition-colors">
             <FileText className="w-5 h-5 text-success" />
           </div>
           <p className="text-sm font-medium">My Loans</p>
-          <p className="text-xs text-muted-foreground">Active: {memberData.activeLoans.length}</p>
+          <p className="text-xs text-muted-foreground">
+            Active: {activeLoansCount}
+          </p>
         </Card>
       </div>
+
+      {/* My Loans Panel */}
+      <MyLoansPanel 
+        isOpen={showLoansPanel} 
+        onClose={() => setShowLoansPanel(false)} 
+      />
     </div>
   );
 };
