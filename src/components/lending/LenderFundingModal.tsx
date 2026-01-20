@@ -7,15 +7,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, Shield, Copy, CheckCircle, Clock, Loader2, AlertTriangle,
-  Wallet, TrendingUp, User, Calendar, Info, ArrowRight
+  Shield, Copy, CheckCircle, Clock, Loader2, AlertTriangle,
+  Wallet, TrendingUp, User, ArrowRight
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getGatewaySettings } from "@/stores/gatewayStore";
-import { getSystemStats, generateReferenceNumber } from "@/stores/memberStore";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemberData } from "@/hooks/useMemberData";
+import { toast } from "@/hooks/use-toast";
 
 export interface LoanListing {
   id: string;
@@ -37,18 +37,47 @@ interface LenderFundingModalProps {
 }
 
 const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: LenderFundingModalProps) => {
+  const { systemStats, refresh } = useMemberData();
+  
   const [step, setStep] = useState<'details' | 'qr' | 'pending' | 'success'>('details');
   const [referenceNumber, setReferenceNumber] = useState("");
   const [copied, setCopied] = useState(false);
-  const [clearingTime, setClearingTime] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  
-  const gateway = getGatewaySettings();
-  const systemStats = getSystemStats();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [gateway, setGateway] = useState<{ qrCodeUrl: string | null; receiverName: string | null; receiverNumber: string | null }>({
+    qrCodeUrl: null,
+    receiverName: null,
+    receiverNumber: null,
+  });
+
+  // Fetch gateway settings from database
+  useEffect(() => {
+    const fetchGateway = async () => {
+      const { data } = await supabase
+        .from('global_settings')
+        .select('qr_gateway_url, receiver_name, receiver_phone')
+        .maybeSingle();
+      
+      if (data) {
+        setGateway({
+          qrCodeUrl: data.qr_gateway_url,
+          receiverName: data.receiver_name,
+          receiverNumber: data.receiver_phone,
+        });
+      }
+    };
+    fetchGateway();
+  }, []);
 
   // Calculate earnings
   const interestEarnings = loan ? loan.principalAmount * (loan.interestRate / 100) : 0;
   const totalReturn = loan ? loan.principalAmount + interestEarnings : 0;
+
+  // Generate reference number
+  const generateReferenceNumber = () => {
+    return 'FUND-' + Date.now().toString(36).toUpperCase() + '-' + 
+           Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
 
   // Reset state when modal opens
   useEffect(() => {
@@ -56,6 +85,7 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
       setStep('details');
       setReferenceNumber(generateReferenceNumber());
       setCopied(false);
+      setIsProcessing(false);
     }
   }, [isOpen]);
 
@@ -85,12 +115,41 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
     setStep('qr');
   };
 
-  const handleConfirmPayment = () => {
-    // Random clearing time between 1-30 minutes (in seconds)
-    const clearingSeconds = Math.floor(Math.random() * 1740) + 60; // 60-1800 seconds
-    setClearingTime(clearingSeconds);
-    setTimeRemaining(clearingSeconds);
-    setStep('pending');
+  const handleConfirmPayment = async () => {
+    if (!loan) return;
+
+    try {
+      setIsProcessing(true);
+
+      // Call the fund-loan edge function to perform the actual database operations
+      const { data, error } = await supabase.functions.invoke('fund-loan', {
+        body: { loan_id: loan.id },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      // Short clearing time for demo (1-5 seconds)
+      const clearingSeconds = Math.floor(Math.random() * 4) + 1;
+      setTimeRemaining(clearingSeconds);
+      setStep('pending');
+
+      toast({
+        title: "Funding Processing",
+        description: "Your loan funding is being verified...",
+      });
+
+      // Refresh data
+      await refresh();
+    } catch (err) {
+      console.error('Funding failed:', err);
+      toast({
+        title: "Funding Failed",
+        description: err instanceof Error ? err.message : 'An error occurred',
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    }
   };
 
   const handleComplete = () => {
@@ -159,7 +218,7 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
                   </div>
                   <div className="text-center">
                     <p className="text-lg font-bold text-primary balance-number">
-                      ₱{interestEarnings.toLocaleString()}
+                      ₱{Math.floor(interestEarnings).toLocaleString()}
                     </p>
                     <p className="text-[10px] text-muted-foreground">Your Earnings</p>
                   </div>
@@ -181,13 +240,15 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
                       <div>
                         <p className="text-[10px] text-success/60 uppercase tracking-wider">Reserve Fund</p>
                         <p className="font-bold text-success balance-number">
-                          ₱{systemStats.reserveFund.toLocaleString()}
+                          ₱{(systemStats?.reserveFund || 0).toLocaleString()}
                         </p>
                       </div>
                       <div>
                         <p className="text-[10px] text-success/60 uppercase tracking-wider">Coverage</p>
                         <p className="font-bold text-success">
-                          {((systemStats.reserveFund / loan.principalAmount) * 100).toFixed(0)}x
+                          {systemStats?.reserveFund && loan.principalAmount 
+                            ? `${Math.floor((systemStats.reserveFund / loan.principalAmount) * 100)}x`
+                            : '∞'}
                         </p>
                       </div>
                     </div>
@@ -218,12 +279,12 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Interest Earned</span>
-                  <span className="font-medium text-success">+₱{interestEarnings.toLocaleString()}</span>
+                  <span className="font-medium text-success">+₱{Math.floor(interestEarnings).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-primary/20">
                   <span className="font-medium text-foreground">Total Return</span>
                   <span className="font-bold text-xl text-primary balance-number">
-                    ₱{totalReturn.toLocaleString()}
+                    ₱{Math.floor(totalReturn).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-1 pt-2">
@@ -292,11 +353,11 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
               <Card className="p-3 bg-muted/30 border-border">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Receiver</span>
-                  <span className="font-medium">{gateway.receiverName}</span>
+                  <span className="font-medium">{gateway.receiverName || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm mt-1">
                   <span className="text-muted-foreground">Number</span>
-                  <span className="font-medium font-mono">{gateway.receiverNumber}</span>
+                  <span className="font-medium font-mono">{gateway.receiverNumber || 'N/A'}</span>
                 </div>
               </Card>
 
@@ -331,14 +392,23 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
                   variant="outline"
                   onClick={() => setStep('details')}
                   className="flex-1"
+                  disabled={isProcessing}
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleConfirmPayment}
                   className="flex-1 bg-success hover:bg-success/80"
+                  disabled={isProcessing}
                 >
-                  I've Paid
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    "I've Paid"
+                  )}
                 </Button>
               </div>
             </motion.div>
@@ -423,34 +493,30 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
                     <span className="font-medium">₱{loan.principalAmount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Interest</span>
-                    <span className="font-medium text-success">+₱{interestEarnings.toLocaleString()}</span>
+                    <span className="text-muted-foreground">Interest Earnings</span>
+                    <span className="font-medium text-success">+₱{Math.floor(interestEarnings).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-success/30">
                     <span className="font-medium">Total Return</span>
                     <span className="font-bold text-xl text-success balance-number">
-                      ₱{totalReturn.toLocaleString()}
+                      ₱{Math.floor(totalReturn).toLocaleString()}
                     </span>
                   </div>
                 </div>
               </Card>
 
-              <div className="flex items-center justify-center gap-2 mb-6 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>Expected return in {loan.duration} days</span>
+              <div className="flex items-center justify-center gap-2 mb-6 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <Shield className="w-5 h-5 text-primary" />
+                <span className="text-sm text-foreground">
+                  Protected by Reserve Fund Auto-Repayment
+                </span>
               </div>
 
-              <Card className="p-3 bg-primary/10 border-primary/30 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <Shield className="w-4 h-4 text-success" />
-                  <span className="text-muted-foreground">
-                    Protected by Reserve Fund Auto-Repayment
-                  </span>
-                </div>
-              </Card>
-
-              <Button onClick={handleComplete} className="w-full bg-primary hover:bg-primary/80">
-                Back to Marketplace
+              <Button
+                onClick={handleComplete}
+                className="w-full bg-success hover:bg-success/80 text-success-foreground font-semibold"
+              >
+                Return to Marketplace
               </Button>
             </motion.div>
           )}
