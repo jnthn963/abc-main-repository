@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, Send, Building2, Wallet, Bitcoin, ArrowRight, 
-  User, Search, Clock, CheckCircle 
+  Send, Building2, Wallet, Bitcoin, ArrowRight, 
+  User, Search, Clock, AlertTriangle 
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { z } from "zod";
+import { amountSchema, memberIdSchema, createTransaction, getMemberData } from "@/stores/memberStore";
 
 // Philippine Banks
 const banks = [
@@ -58,6 +60,60 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("banks");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [amount, setAmount] = useState("");
+  const [memberId, setMemberId] = useState("");
+  const [error, setError] = useState("");
+  
+  const memberData = getMemberData();
+  
+  // Validate and sanitize amount input
+  const handleAmountChange = (value: string) => {
+    const sanitized = value.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+    setAmount(formatted);
+    setError("");
+  };
+  
+  // Validate transfer
+  const handleContinue = () => {
+    const numAmount = parseFloat(amount);
+    
+    // Validate amount
+    const amountResult = amountSchema.safeParse(numAmount);
+    if (!amountResult.success) {
+      setError(amountResult.error.errors[0].message);
+      return;
+    }
+    
+    // Check balance
+    if (numAmount > memberData.vaultBalance) {
+      setError("Insufficient vault balance");
+      return;
+    }
+    
+    // Validate member ID for internal transfers
+    if (activeTab === "internal") {
+      const memberIdResult = memberIdSchema.safeParse(memberId);
+      if (!memberIdResult.success) {
+        setError(memberIdResult.error.errors[0].message);
+        return;
+      }
+    }
+    
+    // Create transaction with 24-hour clearing
+    const destName = activeTab === "internal" ? memberId : 
+      [...banks, ...ewallets, ...cryptos].find(d => d.id === selectedDestination)?.name || "";
+    
+    createTransaction('transfer', numAmount, activeTab, destName);
+    
+    // Reset and close
+    setAmount("");
+    setMemberId("");
+    setSelectedDestination(null);
+    setError("");
+    onClose();
+  };
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: "banks", label: "Banks", icon: <Building2 className="w-4 h-4" /> },

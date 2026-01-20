@@ -1,7 +1,10 @@
-import { TrendingUp, TrendingDown, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, TrendingDown, Zap, HandCoins } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { calculateMarketSentiment, getSystemStats, subscribeMemberStore } from "@/stores/memberStore";
+import LoanRequestModal from "./LoanRequestModal";
 
 const liquidityData = [
   { time: "00:00", value: 1200000 },
@@ -22,7 +25,18 @@ const loanRequests = [
 ];
 
 const AlphaMarketplace = () => {
-  const sentimentValue = 68; // 0-100, higher = more bullish
+  // Calculate sentiment based on loan-to-deposit ratio
+  const [sentimentValue, setSentimentValue] = useState(calculateMarketSentiment());
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const systemStats = getSystemStats();
+
+  // Subscribe to system stats changes
+  useEffect(() => {
+    const unsubscribe = subscribeMemberStore(() => {
+      setSentimentValue(calculateMarketSentiment());
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -37,7 +51,9 @@ const AlphaMarketplace = () => {
             <p className="text-xs text-muted-foreground">24h Trading Activity</p>
           </div>
           <div className="text-right">
-            <p className="balance-number text-xl text-success">₱1,420,500</p>
+            <p className="balance-number text-xl text-success">
+              ₱{(systemStats.totalVaultDeposits / 1000000).toFixed(2)}M
+            </p>
             <div className="flex items-center gap-1 text-success text-xs">
               <TrendingUp className="w-3 h-3" />
               +5.2%
@@ -81,17 +97,22 @@ const AlphaMarketplace = () => {
         </div>
       </Card>
 
-      {/* Sentiment Meter */}
+      {/* Sentiment Meter - Now linked to loan-to-deposit ratio */}
       <Card className="glass-card p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Market Power</span>
+          <div>
+            <span className="text-sm font-medium">Market Power</span>
+            <p className="text-[10px] text-muted-foreground">
+              Loan/Deposit Ratio: {((systemStats.totalActiveLoans / systemStats.totalVaultDeposits) * 100).toFixed(1)}%
+            </p>
+          </div>
           <span className={`text-sm font-bold ${sentimentValue > 50 ? 'text-success' : 'text-destructive'}`}>
             {sentimentValue > 50 ? 'Bullish' : 'Bearish'}
           </span>
         </div>
         <div className="relative h-3 rounded-full overflow-hidden sentiment-gradient">
           <div 
-            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-foreground rounded-full border-2 border-background shadow-lg transition-all"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-foreground rounded-full border-2 border-background shadow-lg transition-all duration-500"
             style={{ left: `calc(${sentimentValue}% - 8px)` }}
           />
         </div>
@@ -105,6 +126,20 @@ const AlphaMarketplace = () => {
             <TrendingUp className="w-3 h-3 text-success" />
           </div>
         </div>
+      </Card>
+
+      {/* Request Loan Button */}
+      <Card className="glass-card p-4 border-primary/30">
+        <Button 
+          onClick={() => setShowLoanModal(true)}
+          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground font-semibold glow-gold"
+        >
+          <HandCoins className="w-4 h-4 mr-2" />
+          Request a Loan
+        </Button>
+        <p className="text-[10px] text-center text-muted-foreground mt-2">
+          Max 50% of vault balance • 6-day aging required
+        </p>
       </Card>
 
       {/* Order Book */}
@@ -143,6 +178,12 @@ const AlphaMarketplace = () => {
           ))}
         </div>
       </Card>
+
+      {/* Loan Request Modal */}
+      <LoanRequestModal 
+        isOpen={showLoanModal} 
+        onClose={() => setShowLoanModal(false)} 
+      />
     </div>
   );
 };

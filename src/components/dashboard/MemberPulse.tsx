@@ -1,25 +1,38 @@
+import { useState, useEffect } from "react";
 import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Send, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-const yieldData = [
-  { day: "Mon", value: 100000 },
-  { day: "Tue", value: 100500 },
-  { day: "Wed", value: 101002 },
-  { day: "Thu", value: 101507 },
-  { day: "Fri", value: 102014 },
-  { day: "Sat", value: 102524 },
-  { day: "Sun", value: 103037 },
-];
+import PendingTransactions from "./PendingTransactions";
+import { getMemberData, subscribeMemberStore } from "@/stores/memberStore";
 
 interface MemberPulseProps {
   onTransferClick?: () => void;
 }
 
 const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
-  const vaultBalance = 103037.50;
-  const frozenBalance = 15000.00;
+  const [memberData, setMemberData] = useState(getMemberData());
+
+  // Subscribe to member data changes
+  useEffect(() => {
+    const unsubscribe = subscribeMemberStore(() => {
+      setMemberData(getMemberData());
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const { vaultBalance, frozenBalance } = memberData;
   const dailyYield = vaultBalance * 0.005;
+
+  // Calculate yield data dynamically
+  const yieldData = [
+    { day: "Mon", value: vaultBalance * 0.97 },
+    { day: "Tue", value: vaultBalance * 0.975 },
+    { day: "Wed", value: vaultBalance * 0.98 },
+    { day: "Thu", value: vaultBalance * 0.985 },
+    { day: "Fri", value: vaultBalance * 0.99 },
+    { day: "Sat", value: vaultBalance * 0.995 },
+    { day: "Sun", value: vaultBalance },
+  ];
 
   return (
     <div className="space-y-4">
@@ -53,7 +66,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
               <ArrowDownRight className="w-3.5 h-3.5 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Frozen (Collateral)</p>
+              <p className="text-xs text-muted-foreground">Frozen (Collateral + Clearing)</p>
               <p className="balance-number text-lg text-destructive">
                 ₱{frozenBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
               </p>
@@ -61,6 +74,9 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           </div>
         </div>
       </Card>
+
+      {/* Pending Transactions with Clearing Timers */}
+      <PendingTransactions />
 
       {/* Yield Graph */}
       <Card className="glass-card p-4">
@@ -92,6 +108,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
                   fontSize: '12px',
                 }}
                 labelStyle={{ color: 'hsl(210 40% 96%)' }}
+                formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Balance']}
               />
               <Area
                 type="monotone"
@@ -122,7 +139,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
             <FileText className="w-5 h-5 text-success" />
           </div>
           <p className="text-sm font-medium">My Loans</p>
-          <p className="text-xs text-muted-foreground">Active: 2</p>
+          <p className="text-xs text-muted-foreground">Active: {memberData.activeLoans.length}</p>
         </Card>
       </div>
     </div>
