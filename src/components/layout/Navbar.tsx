@@ -1,8 +1,12 @@
-import { Shield, User, Bell } from "lucide-react";
+import { Shield, User, Bell, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveTicker from "./LiveTicker";
 
-const Navbar = () => {
+interface NavbarProps {
+  onDepositClick?: () => void;
+}
+
+const Navbar = ({ onDepositClick }: NavbarProps) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
       <div className="flex items-center justify-between h-16 px-6">
@@ -42,7 +46,12 @@ const Navbar = () => {
             </div>
           </div>
 
-          <Button className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-primary-foreground font-semibold animate-glow-pulse">
+          <Button 
+            id="deposit-button"
+            onClick={onDepositClick}
+            className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-primary-foreground font-semibold animate-glow-pulse flex items-center gap-2"
+          >
+            <Wallet className="w-4 h-4" />
             DEPOSIT
           </Button>
         </div>

@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  Shield, AlertTriangle, Power, Sliders, Image as ImageIcon, 
-  Users, Activity, TrendingUp, TrendingDown, Eye, Upload,
+  Shield, AlertTriangle, Power, Sliders, 
+  Users, Activity, TrendingUp, Eye,
   MessageSquare, DollarSign, Clock, ChevronRight, Bell
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import QRGatewayManager from "@/components/admin/QRGatewayManager";
+import { updateGatewaySettings, getGatewaySettings } from "@/stores/gatewayStore";
 
 const GovernorDashboard = () => {
   // Economic Levers
@@ -237,16 +239,12 @@ const GovernorDashboard = () => {
             {/* Gateway & CMS */}
             <div className="col-span-3 space-y-4">
               {/* QR Gateway Manager */}
-              <Card className="p-4 bg-card/50 border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <ImageIcon className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-foreground text-sm">QR Gateway</h3>
-                </div>
-                <div className="aspect-square rounded-lg bg-muted/30 border border-dashed border-border flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 transition-colors">
-                  <Upload className="w-8 h-8 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Drop QR Image</span>
-                </div>
-              </Card>
+              <QRGatewayManager
+                currentQRUrl={getGatewaySettings().qrCodeUrl}
+                onQRUpdate={(qrUrl, receiverName, receiverNumber) => {
+                  updateGatewaySettings(qrUrl, receiverName, receiverNumber);
+                }}
+              />
 
               {/* Quick CMS */}
               <Card className="p-4 bg-card/50 border-border">
