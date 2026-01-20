@@ -286,17 +286,6 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
             </p>
           </div>
         </div>
-
-        {/* Demo Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSimulateInterest}
-          className="w-full mt-3 border-success/30 text-success hover:bg-success/10 text-xs"
-        >
-          <Zap className="w-3 h-3 mr-1" />
-          Simulate Daily Interest (Demo)
-        </Button>
       </Card>
 
       {/* Interest History Modal */}
