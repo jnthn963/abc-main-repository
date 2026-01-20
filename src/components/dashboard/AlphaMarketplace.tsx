@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, Zap, HandCoins } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, HandCoins, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { calculateMarketSentiment, getSystemStats, subscribeMemberStore } from "@/stores/memberStore";
+import { getOpenLoans, subscribeLoanStore } from "@/stores/loanStore";
 import LoanRequestModal from "./LoanRequestModal";
+import LenderFundingModal from "@/components/lending/LenderFundingModal";
+import type { LoanListing } from "@/components/lending/LenderFundingModal";
 
 const liquidityData = [
   { time: "00:00", value: 1200000 },
@@ -16,27 +19,53 @@ const liquidityData = [
   { time: "24:00", value: 1420000 },
 ];
 
-const loanRequests = [
-  { id: 1, user: "A***4", amount: 15000, interest: 12.5, duration: 30, status: "open" },
-  { id: 2, user: "B***2", amount: 8500, interest: 10.0, duration: 30, status: "open" },
-  { id: 3, user: "C***9", amount: 25000, interest: 15.0, duration: 30, status: "open" },
-  { id: 4, user: "D***1", amount: 5000, interest: 8.5, duration: 30, status: "open" },
-  { id: 5, user: "E***7", amount: 50000, interest: 18.0, duration: 30, status: "open" },
-];
-
 const AlphaMarketplace = () => {
   // Calculate sentiment based on loan-to-deposit ratio
   const [sentimentValue, setSentimentValue] = useState(calculateMarketSentiment());
   const [showLoanModal, setShowLoanModal] = useState(false);
+  const [showFundingModal, setShowFundingModal] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<LoanListing | null>(null);
+  const [openLoans, setOpenLoans] = useState(getOpenLoans());
   const systemStats = getSystemStats();
 
-  // Subscribe to system stats changes
+  // Subscribe to system stats and loan changes
   useEffect(() => {
-    const unsubscribe = subscribeMemberStore(() => {
+    const unsubscribeMember = subscribeMemberStore(() => {
       setSentimentValue(calculateMarketSentiment());
     });
-    return () => unsubscribe();
+    const unsubscribeLoan = subscribeLoanStore(() => {
+      setOpenLoans(getOpenLoans());
+    });
+    return () => {
+      unsubscribeMember();
+      unsubscribeLoan();
+    };
   }, []);
+
+  const handleLendClick = (loan: LoanListing) => {
+    setSelectedLoan(loan);
+    setShowFundingModal(true);
+  };
+
+  const handleFundingComplete = (loanId: string) => {
+    // Refresh loans after funding
+    setOpenLoans(getOpenLoans());
+    setShowFundingModal(false);
+    setSelectedLoan(null);
+  };
+
+  // Convert store loans to LoanListing format
+  const loanListings: LoanListing[] = openLoans.map(loan => ({
+    id: loan.id,
+    borrowerId: loan.borrowerId,
+    borrowerAlias: loan.borrowerAlias,
+    principalAmount: loan.principalAmount,
+    interestRate: loan.interestRate,
+    duration: loan.duration,
+    status: loan.status,
+    createdAt: loan.createdAt,
+    collateralAmount: loan.collateralAmount,
+  }));
 
   return (
     <div className="space-y-4">
@@ -128,6 +157,19 @@ const AlphaMarketplace = () => {
         </div>
       </Card>
 
+      {/* Reserve Fund Guarantee Banner */}
+      <Card className="glass-card p-3 bg-success/5 border-success/20">
+        <div className="flex items-center gap-3">
+          <Shield className="w-8 h-8 text-success" />
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-success">Reserve Fund Auto-Repayment</p>
+            <p className="text-[10px] text-muted-foreground">
+              All loans guaranteed by ₱{systemStats.reserveFund.toLocaleString()} reserve
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {/* Request Loan Button */}
       <Card className="glass-card p-4 border-primary/30">
         <Button 
@@ -154,28 +196,35 @@ const AlphaMarketplace = () => {
             <span className="text-right">Action</span>
           </div>
           {/* Rows */}
-          {loanRequests.map((loan) => (
-            <div 
-              key={loan.id} 
-              className="grid grid-cols-4 gap-2 items-center py-2 order-row rounded-lg px-2 -mx-2"
-            >
-              <span className="text-sm font-medium font-mono">{loan.user}</span>
-              <span className="text-sm text-right balance-number">
-                ₱{loan.amount.toLocaleString()}
-              </span>
-              <span className="text-sm text-right text-success font-medium">
-                {loan.interest}%
-              </span>
-              <div className="text-right">
-                <Button 
-                  size="sm" 
-                  className="h-7 px-3 bg-success hover:bg-success/80 text-success-foreground text-xs font-semibold glow-green"
-                >
-                  LEND
-                </Button>
-              </div>
+          {loanListings.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground text-sm">
+              No loan requests available
             </div>
-          ))}
+          ) : (
+            loanListings.map((loan) => (
+              <div 
+                key={loan.id} 
+                className="grid grid-cols-4 gap-2 items-center py-2 order-row rounded-lg px-2 -mx-2"
+              >
+                <span className="text-sm font-medium font-mono">{loan.borrowerAlias}</span>
+                <span className="text-sm text-right balance-number">
+                  ₱{loan.principalAmount.toLocaleString()}
+                </span>
+                <span className="text-sm text-right text-success font-medium">
+                  {loan.interestRate}%
+                </span>
+                <div className="text-right">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleLendClick(loan)}
+                    className="h-7 px-3 bg-success hover:bg-success/80 text-success-foreground text-xs font-semibold glow-green"
+                  >
+                    LEND
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </Card>
 
@@ -183,6 +232,17 @@ const AlphaMarketplace = () => {
       <LoanRequestModal 
         isOpen={showLoanModal} 
         onClose={() => setShowLoanModal(false)} 
+      />
+
+      {/* Lender Funding Modal */}
+      <LenderFundingModal
+        isOpen={showFundingModal}
+        onClose={() => {
+          setShowFundingModal(false);
+          setSelectedLoan(null);
+        }}
+        loan={selectedLoan}
+        onFundingComplete={handleFundingComplete}
       />
     </div>
   );
