@@ -2,43 +2,35 @@ import { useState, useEffect } from "react";
 import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import PendingTransactions from "./PendingTransactions";
-import { getMemberData, subscribeMemberStore } from "@/stores/memberStore";
-import { getLoans, subscribeLoanStore } from "@/stores/loanStore";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
 import InterestDisplay from "@/components/interest/InterestDisplay";
+import { useMemberData } from "@/hooks/useMemberData";
+import { useLoans } from "@/hooks/useLoans";
 
 interface MemberPulseProps {
   onTransferClick?: () => void;
 }
 
 const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
-  const [memberData, setMemberData] = useState(getMemberData());
+  const { memberData, systemStats, loading } = useMemberData();
+  const { myLoansAsBorrower } = useLoans();
   const [showLoansPanel, setShowLoansPanel] = useState(false);
-  const [activeLoansCount, setActiveLoansCount] = useState(0);
 
-  // Subscribe to member data changes
-  useEffect(() => {
-    const unsubscribe = subscribeMemberStore(() => {
-      setMemberData(getMemberData());
-    });
-    return () => unsubscribe();
-  }, []);
+  // Count active funded loans
+  const activeLoansCount = myLoansAsBorrower.filter(l => l.status === 'funded').length;
 
-  // Subscribe to loan data changes and count active loans
-  useEffect(() => {
-    const updateLoansCount = () => {
-      const loans = getLoans();
-      const member = getMemberData();
-      const myActiveLoans = loans.filter(
-        l => l.borrowerId === member.id && l.status === 'funded'
-      );
-      setActiveLoansCount(myActiveLoans.length);
-    };
-
-    updateLoansCount();
-    const unsubscribe = subscribeLoanStore(updateLoansCount);
-    return () => unsubscribe();
-  }, []);
+  if (loading || !memberData) {
+    return (
+      <div className="space-y-4">
+        <Card className="glass-card p-5 border-primary/20 animate-pulse">
+          <div className="h-20 bg-muted/30 rounded" />
+        </Card>
+        <Card className="glass-card p-4 border-destructive/20 animate-pulse">
+          <div className="h-12 bg-muted/30 rounded" />
+        </Card>
+      </div>
+    );
+  }
 
   const { vaultBalance, frozenBalance } = memberData;
 
@@ -55,7 +47,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           </div>
           <div className="flex items-center gap-1 text-success text-xs font-medium">
             <ArrowUpRight className="w-3 h-3" />
-            +0.5%
+            +{systemStats?.vaultInterestRate || 0.5}%
           </div>
         </div>
         <div className="balance-number text-3xl text-success mb-1">
