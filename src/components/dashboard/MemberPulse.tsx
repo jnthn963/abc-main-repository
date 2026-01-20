@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Send, FileText } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import PendingTransactions from "./PendingTransactions";
 import { getMemberData, subscribeMemberStore } from "@/stores/memberStore";
 import { getLoans, subscribeLoanStore } from "@/stores/loanStore";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
+import InterestDisplay from "@/components/interest/InterestDisplay";
 
 interface MemberPulseProps {
   onTransferClick?: () => void;
@@ -41,18 +41,6 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   }, []);
 
   const { vaultBalance, frozenBalance } = memberData;
-  const dailyYield = vaultBalance * 0.005;
-
-  // Calculate yield data dynamically
-  const yieldData = [
-    { day: "Mon", value: vaultBalance * 0.97 },
-    { day: "Tue", value: vaultBalance * 0.975 },
-    { day: "Wed", value: vaultBalance * 0.98 },
-    { day: "Thu", value: vaultBalance * 0.985 },
-    { day: "Fri", value: vaultBalance * 0.99 },
-    { day: "Sat", value: vaultBalance * 0.995 },
-    { day: "Sun", value: vaultBalance },
-  ];
 
   return (
     <div className="space-y-4">
@@ -73,9 +61,6 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
         <div className="balance-number text-3xl text-success mb-1">
           ₱{vaultBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Daily Yield: <span className="text-success">+₱{dailyYield.toFixed(2)}</span>
-        </p>
       </Card>
 
       {/* Frozen Balance */}
@@ -98,49 +83,8 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
       {/* Pending Transactions with Clearing Timers */}
       <PendingTransactions />
 
-      {/* Yield Graph */}
-      <Card className="glass-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">7-Day Yield</span>
-        </div>
-        <div className="h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={yieldData}>
-              <defs>
-                <linearGradient id="yieldGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(145 100% 45%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(145 100% 45%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis 
-                dataKey="day" 
-                axisLine={false} 
-                tickLine={false}
-                tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }}
-              />
-              <YAxis hide domain={['dataMin - 500', 'dataMax + 500']} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(222 47% 10%)',
-                  border: '1px solid hsl(222 30% 25%)',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-                labelStyle={{ color: 'hsl(210 40% 96%)' }}
-                formatter={(value: number) => [`₱${value.toLocaleString()}`, 'Balance']}
-              />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="hsl(145 100% 45%)"
-                strokeWidth={2}
-                fill="url(#yieldGradient)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+      {/* Daily Interest Display */}
+      <InterestDisplay />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3" id="transfer-funds">
