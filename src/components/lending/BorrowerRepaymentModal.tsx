@@ -7,15 +7,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, Unlock, Copy, CheckCircle, Clock, Loader2, AlertTriangle,
-  Wallet, Calendar, User, ArrowRight, Percent, Lock
+  Unlock, Copy, CheckCircle, Clock, Loader2, AlertTriangle,
+  Wallet, User, ArrowRight, Lock
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getGatewaySettings } from "@/stores/gatewayStore";
-import { generateReferenceNumber } from "@/stores/memberStore";
-import type { P2PLoan } from "@/stores/loanStore";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import type { P2PLoan } from "@/hooks/useLoans";
 
 interface BorrowerRepaymentModalProps {
   isOpen: boolean;
@@ -28,16 +28,43 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
   const [step, setStep] = useState<'details' | 'qr' | 'pending' | 'success'>('details');
   const [referenceNumber, setReferenceNumber] = useState("");
   const [copied, setCopied] = useState(false);
-  const [clearingTime, setClearingTime] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  
-  const gateway = getGatewaySettings();
+  const [gateway, setGateway] = useState<{ qrCodeUrl: string | null; receiverName: string | null; receiverNumber: string | null }>({
+    qrCodeUrl: null,
+    receiverName: null,
+    receiverNumber: null,
+  });
+
+  // Fetch gateway settings
+  useEffect(() => {
+    const fetchGateway = async () => {
+      const { data } = await supabase
+        .from('global_settings')
+        .select('qr_gateway_url, receiver_name, receiver_phone')
+        .maybeSingle();
+      
+      if (data) {
+        setGateway({
+          qrCodeUrl: data.qr_gateway_url,
+          receiverName: data.receiver_name,
+          receiverNumber: data.receiver_phone,
+        });
+      }
+    };
+    fetchGateway();
+  }, []);
 
   // Calculate amounts
   const totalRepayment = loan ? loan.principalAmount + loan.interestAmount : 0;
   const daysRemaining = loan?.dueAt 
     ? Math.max(0, Math.ceil((loan.dueAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
     : 0;
+
+  // Generate reference number
+  const generateReferenceNumber = () => {
+    return 'REP-' + Date.now().toString(36).toUpperCase() + '-' + 
+           Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
 
   // Reset state when modal opens
   useEffect(() => {
@@ -74,12 +101,35 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
     setStep('qr');
   };
 
-  const handleConfirmPayment = () => {
-    // Random clearing time between 1-30 minutes (in seconds)
-    const clearingSeconds = Math.floor(Math.random() * 1740) + 60; // 60-1800 seconds
-    setClearingTime(clearingSeconds);
-    setTimeRemaining(clearingSeconds);
-    setStep('pending');
+  const handleConfirmPayment = async () => {
+    if (!loan) return;
+
+    try {
+      // Call the process-repayment edge function
+      const { data, error } = await supabase.functions.invoke('process-repayment', {
+        body: { loan_id: loan.id },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      // Random clearing time between 1-5 seconds for demo
+      const clearingSeconds = Math.floor(Math.random() * 4) + 1;
+      setTimeRemaining(clearingSeconds);
+      setStep('pending');
+
+      toast({
+        title: "Payment Processing",
+        description: "Your repayment is being verified...",
+      });
+    } catch (err) {
+      console.error('Repayment failed:', err);
+      toast({
+        title: "Repayment Failed",
+        description: err instanceof Error ? err.message : 'An error occurred',
+        variant: "destructive",
+      });
+    }
   };
 
   const handleComplete = () => {
@@ -133,7 +183,7 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
                       <User className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-mono font-bold text-foreground">{loan.lenderAlias}</p>
+                      <p className="font-mono font-bold text-foreground">{loan.lenderAlias || 'Pending'}</p>
                       <p className="text-xs text-muted-foreground">Your Lender</p>
                     </div>
                   </div>
@@ -288,11 +338,11 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
               <Card className="p-3 bg-muted/30 border-border">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Receiver</span>
-                  <span className="font-medium">{gateway.receiverName}</span>
+                  <span className="font-medium">{gateway.receiverName || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm mt-1">
                   <span className="text-muted-foreground">Number</span>
-                  <span className="font-medium font-mono">{gateway.receiverNumber}</span>
+                  <span className="font-medium font-mono">{gateway.receiverNumber || 'N/A'}</span>
                 </div>
               </Card>
 
@@ -385,7 +435,7 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Lender</span>
-                    <span className="font-mono">{loan.lenderAlias}</span>
+                    <span className="font-mono">{loan.lenderAlias || 'N/A'}</span>
                   </div>
                 </div>
               </Card>
@@ -430,12 +480,11 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
                 </div>
               </Card>
 
-              <p className="text-sm text-muted-foreground mb-6">
-                Your collateral has been returned to your vault balance.
-              </p>
-
-              <Button onClick={handleComplete} className="w-full bg-primary hover:bg-primary/80">
-                Back to Dashboard
+              <Button
+                onClick={handleComplete}
+                className="w-full bg-success hover:bg-success/80 text-success-foreground font-semibold"
+              >
+                Return to Dashboard
               </Button>
             </motion.div>
           )}

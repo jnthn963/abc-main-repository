@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Building2, Wallet, Bitcoin, ArrowRight, 
-  User, Search, Clock, AlertTriangle 
+  User, Search, Clock, AlertTriangle, Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { z } from "zod";
-import { amountSchema, memberIdSchema, createTransaction, getMemberData } from "@/stores/memberStore";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemberData } from "@/hooks/useMemberData";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
+
+// Validation schemas
+const amountSchema = z.number()
+  .min(100, "Minimum amount is ₱100")
+  .max(10000000, "Maximum amount is ₱10,000,000");
+
+const memberIdSchema = z.string()
+  .regex(/^ABC-\d{4}-\d{4}$/, "Invalid member ID format (ABC-YYYY-XXXX)");
 
 // Philippine Banks
 const banks = [
@@ -57,14 +68,16 @@ interface TransferFundsHubProps {
 }
 
 const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
+  const { user } = useAuth();
+  const { memberData, refresh } = useMemberData();
+  
   const [activeTab, setActiveTab] = useState<TabType>("banks");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [memberId, setMemberId] = useState("");
   const [error, setError] = useState("");
-  
-  const memberData = getMemberData();
+  const [isProcessing, setIsProcessing] = useState(false);
   
   // Validate and sanitize amount input
   const handleAmountChange = (value: string) => {
@@ -75,8 +88,10 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
     setError("");
   };
   
-  // Validate transfer
-  const handleContinue = () => {
+  // Validate transfer and call edge function
+  const handleContinue = async () => {
+    if (!user || !memberData) return;
+    
     const numAmount = parseFloat(amount);
     
     // Validate amount
@@ -101,18 +116,48 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
       }
     }
     
-    // Create transaction with 24-hour clearing
-    const destName = activeTab === "internal" ? memberId : 
-      [...banks, ...ewallets, ...cryptos].find(d => d.id === selectedDestination)?.name || "";
-    
-    createTransaction('transfer', numAmount, activeTab, destName);
-    
-    // Reset and close
-    setAmount("");
-    setMemberId("");
-    setSelectedDestination(null);
-    setError("");
-    onClose();
+    try {
+      setIsProcessing(true);
+      
+      // Call the process-transfer edge function
+      const destName = activeTab === "internal" ? memberId : 
+        [...banks, ...ewallets, ...cryptos].find(d => d.id === selectedDestination)?.name || "";
+      
+      const { data, error: fnError } = await supabase.functions.invoke('process-transfer', {
+        body: {
+          amount: Math.floor(numAmount * 100), // Convert to centavos
+          destination: destName,
+          destination_type: activeTab,
+        },
+      });
+      
+      if (fnError) throw fnError;
+      if (!data.success) throw new Error(data.error);
+      
+      toast({
+        title: "Transfer Initiated",
+        description: `₱${numAmount.toLocaleString()} will be transferred after 24-hour clearing`,
+      });
+      
+      await refresh();
+      
+      // Reset and close
+      setAmount("");
+      setMemberId("");
+      setSelectedDestination(null);
+      setError("");
+      onClose();
+    } catch (err) {
+      console.error('Transfer failed:', err);
+      setError(err instanceof Error ? err.message : 'Transfer failed');
+      toast({
+        title: "Transfer Failed",
+        description: err instanceof Error ? err.message : 'An error occurred',
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -161,6 +206,18 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
         </div>
 
         <div className="p-4 space-y-4">
+          {/* Balance Display */}
+          {memberData && (
+            <Card className="p-3 bg-muted/30 border-border">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Available Balance</span>
+                <span className="font-bold text-success balance-number">
+                  ₱{memberData.vaultBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </Card>
+          )}
+
           {/* Tabs */}
           <div className="flex gap-2 p-1 bg-muted rounded-lg">
             {tabs.map((tab) => (
@@ -230,6 +287,8 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
                   </label>
                   <Input
                     placeholder="ABC-2026-XXXX"
+                    value={memberId}
+                    onChange={(e) => setMemberId(e.target.value.toUpperCase())}
                     className="bg-card border-border font-mono"
                   />
                   <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
@@ -240,6 +299,14 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
               </div>
             )}
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+              <span className="text-sm text-destructive">{error}</span>
+            </div>
+          )}
 
           {/* Amount Input (shows when destination selected) */}
           <AnimatePresence>
@@ -259,8 +326,10 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
                       ₱
                     </span>
                     <Input
-                      type="number"
+                      type="text"
                       placeholder="0.00"
+                      value={amount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
                       className="pl-8 bg-muted border-border text-lg font-mono"
                     />
                   </div>
@@ -274,9 +343,22 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
                   </span>
                 </div>
 
-                <button className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-lg font-semibold text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center gap-2 glow-gold">
-                  Continue
-                  <ArrowRight className="w-4 h-4" />
+                <button 
+                  onClick={handleContinue}
+                  disabled={isProcessing || !amount}
+                  className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-lg font-semibold text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center gap-2 glow-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Continue
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </motion.div>
             )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { X, Megaphone, Sparkles } from "lucide-react";
+import { X, Megaphone, Sparkles, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Announcement {
   id: string;
@@ -10,22 +11,74 @@ interface Announcement {
   mediaUrl?: string;
 }
 
-// Mock CMS data - would come from admin dashboard
-const mockAnnouncement: Announcement = {
-  id: "1",
-  type: "image",
-  title: "Welcome to Alpha Banking! 🎉",
-  body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
-  mediaUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=200&fit=crop",
-};
-
 const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
   const [isVisible, setIsVisible] = useState(true);
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch latest active announcement from CMS
+  useEffect(() => {
+    const fetchAnnouncement = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cms_posts')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_announcement', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          setAnnouncement({
+            id: data.id,
+            type: (data.media_type as "text" | "image" | "video") || "text",
+            title: data.title,
+            body: data.body_text,
+            mediaUrl: data.content_url || undefined,
+          });
+        } else {
+          // Default welcome announcement if none in database
+          setAnnouncement({
+            id: "default",
+            type: "text",
+            title: "Welcome to Alpha Banking! 🎉",
+            body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch announcement:', err);
+        // Fallback announcement
+        setAnnouncement({
+          id: "fallback",
+          type: "text",
+          title: "Welcome to Alpha Banking! 🎉",
+          body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncement();
+  }, []);
 
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(onClose, 300);
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!announcement) return null;
 
   return (
     <AnimatePresence>
@@ -66,11 +119,11 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
               </div>
 
               {/* Media */}
-              {mockAnnouncement.mediaUrl && mockAnnouncement.type === "image" && (
+              {announcement.mediaUrl && announcement.type === "image" && (
                 <div className="relative h-40 overflow-hidden">
                   <img
-                    src={mockAnnouncement.mediaUrl}
-                    alt={mockAnnouncement.title}
+                    src={announcement.mediaUrl}
+                    alt={announcement.title}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
@@ -81,10 +134,10 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
               <div className="p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <h3 className="font-bold text-foreground">{mockAnnouncement.title}</h3>
+                  <h3 className="font-bold text-foreground">{announcement.title}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {mockAnnouncement.body}
+                  {announcement.body}
                 </p>
                 
                 <button
