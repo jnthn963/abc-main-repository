@@ -19,27 +19,6 @@ const liquidityData = [
   { time: "24:00", value: 1420000 },
 ];
 
-// Demo loan listings for visual marketplace activity
-const generateDemoLoans = (): LoanListing[] => {
-  const aliases = ['M***7', 'K***2', 'R***9', 'S***1', 'T***5', 'J***3', 'L***4', 'P***5', 'V***6', 'W***0'];
-  const amounts = [5000, 8500, 12000, 15000, 22000, 28000, 35000, 42000, 48000, 50000];
-  const rates = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15];
-  
-  return aliases.map((alias, i) => ({
-    id: `demo-${i}`,
-    borrowerId: `demo-borrower-${i}`,
-    borrowerAlias: alias,
-    principalAmount: amounts[i],
-    interestRate: rates[i],
-    duration: 30,
-    status: 'open' as const,
-    createdAt: new Date(Date.now() - Math.random() * 48 * 60 * 60 * 1000), // Random within 48hrs
-    collateralAmount: amounts[i] * 0.5,
-  }));
-};
-
-const DEMO_LOANS = generateDemoLoans();
-
 const AlphaMarketplace = () => {
   const { systemStats, calculateMarketSentiment } = useMemberData();
   const { openLoans, loading, refresh } = useLoans();
@@ -55,10 +34,6 @@ const AlphaMarketplace = () => {
   }, [calculateMarketSentiment]);
 
   const handleLendClick = (loan: LoanListing) => {
-    // Don't allow lending on demo loans
-    if (loan.id.startsWith('demo-')) {
-      return;
-    }
     setSelectedLoan(loan);
     setShowFundingModal(true);
   };
@@ -69,8 +44,8 @@ const AlphaMarketplace = () => {
     setSelectedLoan(null);
   };
 
-  // Convert P2PLoan to LoanListing format, fallback to demo loans if empty
-  const realLoans: LoanListing[] = openLoans.map(loan => ({
+  // Convert P2PLoan to LoanListing format
+  const loanListings: LoanListing[] = openLoans.map(loan => ({
     id: loan.id,
     borrowerId: loan.borrowerId,
     borrowerAlias: loan.borrowerAlias,
@@ -81,10 +56,6 @@ const AlphaMarketplace = () => {
     createdAt: loan.createdAt,
     collateralAmount: loan.collateralAmount,
   }));
-  
-  // Show demo loans if no real loans exist (for visual activity)
-  const loanListings = realLoans.length > 0 ? realLoans : DEMO_LOANS;
-  const isDemoMode = realLoans.length === 0;
 
   return (
     <div className="space-y-4">
@@ -205,14 +176,7 @@ const AlphaMarketplace = () => {
 
       {/* Order Book */}
       <Card className="glass-card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">Available Loan Requests</h3>
-          {isDemoMode && (
-            <span className="text-[10px] text-muted-foreground bg-muted/30 px-2 py-0.5 rounded">
-              Demo Activity
-            </span>
-          )}
-        </div>
+        <h3 className="text-sm font-semibold mb-3">Available Loan Requests</h3>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground text-sm animate-pulse">
             Loading loans...
@@ -232,37 +196,29 @@ const AlphaMarketplace = () => {
                 No loan requests available
               </div>
             ) : (
-              loanListings.map((loan) => {
-                const isDemo = loan.id.startsWith('demo-');
-                return (
-                  <div 
-                    key={loan.id} 
-                    className="grid grid-cols-4 gap-2 items-center py-2 order-row rounded-lg px-2 -mx-2"
-                  >
-                    <span className="text-sm font-medium font-mono">{loan.borrowerAlias}</span>
-                    <span className="text-sm text-right balance-number">
-                      ₱{loan.principalAmount.toLocaleString()}
-                    </span>
-                    <span className="text-sm text-right text-success font-medium">
-                      {loan.interestRate}%
-                    </span>
-                    <div className="text-right">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleLendClick(loan)}
-                        disabled={isDemo}
-                        className={`h-7 px-3 text-xs font-semibold ${
-                          isDemo 
-                            ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                            : 'bg-success hover:bg-success/80 text-success-foreground glow-green'
-                        }`}
-                      >
-                        {isDemo ? 'DEMO' : 'LEND'}
-                      </Button>
-                    </div>
+              loanListings.map((loan) => (
+                <div 
+                  key={loan.id} 
+                  className="grid grid-cols-4 gap-2 items-center py-2 order-row rounded-lg px-2 -mx-2"
+                >
+                  <span className="text-sm font-medium font-mono">{loan.borrowerAlias}</span>
+                  <span className="text-sm text-right balance-number">
+                    ₱{loan.principalAmount.toLocaleString()}
+                  </span>
+                  <span className="text-sm text-right text-success font-medium">
+                    {loan.interestRate}%
+                  </span>
+                  <div className="text-right">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleLendClick(loan)}
+                      className="h-7 px-3 bg-success hover:bg-success/80 text-success-foreground text-xs font-semibold glow-green"
+                    >
+                      LEND
+                    </Button>
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </div>
         )}
