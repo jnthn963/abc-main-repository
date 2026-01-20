@@ -12,7 +12,11 @@ const yieldData = [
   { day: "Sun", value: 103037 },
 ];
 
-const MemberPulse = () => {
+interface MemberPulseProps {
+  onTransferClick?: () => void;
+}
+
+const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   const vaultBalance = 103037.50;
   const frozenBalance = 15000.00;
   const dailyYield = vaultBalance * 0.005;
@@ -102,8 +106,11 @@ const MemberPulse = () => {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="glass-card p-4 hover:border-primary/50 cursor-pointer transition-all group">
+      <div className="grid grid-cols-2 gap-3" id="transfer-funds">
+        <Card 
+          className="glass-card p-4 hover:border-primary/50 cursor-pointer transition-all group"
+          onClick={onTransferClick}
+        >
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors">
             <Send className="w-5 h-5 text-primary" />
           </div>
