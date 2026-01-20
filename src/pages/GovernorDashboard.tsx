@@ -3,18 +3,23 @@ import { motion } from "framer-motion";
 import { 
   Shield, AlertTriangle, Power, Sliders, 
   Users, Activity, TrendingUp, Eye,
-  MessageSquare, DollarSign, Clock, ChevronRight, Bell
+  MessageSquare, DollarSign, Clock, ChevronRight, Bell, LogOut
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import QRGatewayManager from "@/components/admin/QRGatewayManager";
+import AdminGatekeeper, { isAdminAuthenticated, clearAdminSession } from "@/components/auth/AdminGatekeeper";
 import { updateGatewaySettings, getGatewaySettings } from "@/stores/gatewayStore";
+import { getSystemStats, saveSystemStats } from "@/stores/memberStore";
 
 const GovernorDashboard = () => {
-  // Economic Levers
-  const [vaultRate, setVaultRate] = useState([0.5]);
-  const [lendingRate, setLendingRate] = useState([15.0]);
+  const [isAuthenticated, setIsAuthenticated] = useState(isAdminAuthenticated());
+  
+  // Economic Levers - load from system stats
+  const systemStats = getSystemStats();
+  const [vaultRate, setVaultRate] = useState([systemStats.vaultInterestRate]);
+  const [lendingRate, setLendingRate] = useState([systemStats.lendingYieldRate]);
   const [borrowerCost, setBorrowerCost] = useState([18.0]);
 
   // System Controls
@@ -24,9 +29,9 @@ const GovernorDashboard = () => {
   // Mock Stats
   const stats = {
     totalMembers: 2847,
-    activeLoans: 156,
-    totalVaultValue: 12450000,
-    reserveFund: 1240500,
+    activeLoans: systemStats.activeLoansCount,
+    totalVaultValue: systemStats.totalVaultDeposits,
+    reserveFund: systemStats.reserveFund,
     pendingWithdrawals: 340000,
     dailyTransactions: 1248,
   };
@@ -52,6 +57,29 @@ const GovernorDashboard = () => {
       default: return "text-muted-foreground";
     }
   };
+
+  // Handle rate changes and save to system stats
+  const handleApplyChanges = () => {
+    const stats = getSystemStats();
+    saveSystemStats({
+      ...stats,
+      vaultInterestRate: vaultRate[0],
+      lendingYieldRate: lendingRate[0],
+    });
+    // Show success feedback (in production, use toast)
+    alert("Economic levers updated successfully!");
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    clearAdminSession();
+    setIsAuthenticated(false);
+  };
+
+  // Show gatekeeper if not authenticated
+  if (!isAuthenticated) {
+    return <AdminGatekeeper onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[hsl(222,47%,4%)]">
@@ -92,6 +120,15 @@ const GovernorDashboard = () => {
                 className="data-[state=checked]:bg-destructive"
               />
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted border border-border transition-colors"
+            >
+              <LogOut className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Logout</span>
+            </button>
           </div>
         </div>
       </header>
@@ -196,7 +233,10 @@ const GovernorDashboard = () => {
                   </div>
                 </div>
 
-                <button className="w-full mt-6 py-2.5 bg-primary/20 border border-primary/50 rounded-lg text-primary font-medium hover:bg-primary/30 transition-colors">
+                <button 
+                  onClick={handleApplyChanges}
+                  className="w-full mt-6 py-2.5 bg-primary/20 border border-primary/50 rounded-lg text-primary font-medium hover:bg-primary/30 transition-colors"
+                >
                   Apply Changes
                 </button>
               </Card>
