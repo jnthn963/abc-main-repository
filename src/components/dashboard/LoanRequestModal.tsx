@@ -1,24 +1,21 @@
 /**
  * Loan Request Modal
  * Implements 50% Collateral Engine and 6-Day Aging Rule
+ * Now using Supabase database instead of localStorage
  */
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, AlertTriangle, Clock, Lock, Percent, CheckCircle, Info } from "lucide-react";
+import { AlertTriangle, Clock, Lock, Percent, CheckCircle, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  getMemberData,
-  calculateMaxLoan,
-  areFundsAged,
-  getAgingTimeRemaining,
-  validateLoanRequest,
-  getSystemStats,
-} from "@/stores/memberStore";
+import { useMemberData } from "@/hooks/useMemberData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface LoanRequestModalProps {
   isOpen: boolean;
@@ -29,13 +26,24 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [referenceNumber, setReferenceNumber] = useState("");
+
+  const { user } = useAuth();
+  const { 
+    memberData, 
+    systemStats, 
+    areFundsAged, 
+    getAgingTimeRemaining,
+    calculateMaxLoan,
+    refresh
+  } = useMemberData();
+
   const [agingTimeRemaining, setAgingTimeRemaining] = useState(getAgingTimeRemaining());
 
-  const member = getMemberData();
-  const systemStats = getSystemStats();
   const maxLoan = calculateMaxLoan();
   const fundsAged = areFundsAged();
-  const interestRate = systemStats.lendingYieldRate;
+  const interestRate = systemStats?.borrowerCostRate || 15.0;
 
   // Update aging countdown
   useEffect(() => {
@@ -45,7 +53,7 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [fundsAged]);
+  }, [fundsAged, getAgingTimeRemaining]);
 
   // Format aging time remaining
   const formatAgingTime = useMemo(() => {
@@ -57,15 +65,13 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
 
   // Calculate loan details
   const loanAmount = parseFloat(amount) || 0;
-  const collateralRequired = loanAmount; // 100% collateral (50% rule means max loan is 50% of balance)
+  const collateralRequired = loanAmount;
   const interestAmount = loanAmount * (interestRate / 100);
   const totalRepayment = loanAmount + interestAmount;
 
   // Validate amount on change
   const handleAmountChange = (value: string) => {
-    // Only allow valid number input
     const sanitized = value.replace(/[^0-9.]/g, '');
-    // Prevent multiple decimal points
     const parts = sanitized.split('.');
     const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
     
@@ -79,25 +85,65 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
   };
 
   const handleSubmit = () => {
-    const validation = validateLoanRequest(loanAmount);
-    if (!validation.valid) {
-      setError(validation.error || "Invalid loan request");
+    if (loanAmount <= 0) {
+      setError("Please enter a valid loan amount");
+      return;
+    }
+    if (loanAmount > maxLoan) {
+      setError(`Maximum loan is ₱${maxLoan.toLocaleString()} (50% of vault balance)`);
+      return;
+    }
+    if (!fundsAged) {
+      setError("Funds must age for 6 days before requesting a loan");
       return;
     }
     setStep('confirm');
   };
 
-  const handleConfirm = () => {
-    // In production, this would create a loan request in the database
-    setStep('success');
+  const handleConfirm = async () => {
+    if (!user || !memberData) return;
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      // Call request-loan edge function
+      const { data, error: fnError } = await supabase.functions.invoke('request-loan', {
+        body: {
+          amount: Math.round(loanAmount * 100), // Convert to centavos
+        },
+      });
+
+      if (fnError) throw fnError;
+
+      if (data?.success) {
+        setReferenceNumber(data.reference_number);
+        await refresh();
+        setStep('success');
+        toast.success("Loan request submitted successfully!");
+      } else {
+        throw new Error(data?.error || "Failed to create loan request");
+      }
+    } catch (err) {
+      console.error("Loan request failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to create loan request");
+      toast.error("Failed to submit loan request");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
     setStep('form');
     setAmount("");
     setError("");
+    setReferenceNumber("");
     onClose();
   };
+
+  if (!memberData || !systemStats) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -143,7 +189,7 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                 <Card className="p-3 bg-muted/30 border-border">
                   <p className="text-xs text-muted-foreground">Vault Balance</p>
                   <p className="text-lg font-bold text-success balance-number">
-                    ₱{member.vaultBalance.toLocaleString()}
+                    ₱{memberData.vaultBalance.toLocaleString()}
                   </p>
                 </Card>
                 <Card className="p-3 bg-muted/30 border-border">
@@ -301,19 +347,39 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                 </div>
               </div>
 
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-destructive flex items-center gap-1 mb-4"
+                >
+                  <AlertTriangle className="w-3 h-3" />
+                  {error}
+                </motion.p>
+              )}
+
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setStep('form')}
                   className="flex-1"
+                  disabled={isSubmitting}
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleConfirm}
                   className="flex-1 bg-success hover:bg-success/80"
+                  disabled={isSubmitting}
                 >
-                  Confirm Request
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Processing...
+                    </span>
+                  ) : (
+                    "Confirm Request"
+                  )}
                 </Button>
               </div>
             </motion.div>
@@ -333,10 +399,14 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
               <h3 className="text-xl font-bold text-foreground mb-2">
                 Loan Request Submitted!
               </h3>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-2">
                 Your loan request for ₱{loanAmount.toLocaleString()} is now listed in the marketplace.
-                A lender will fund it soon.
               </p>
+              {referenceNumber && (
+                <p className="text-xs font-mono text-primary mb-6">
+                  Ref: {referenceNumber}
+                </p>
+              )}
               <Button onClick={handleClose} className="bg-primary hover:bg-primary/80">
                 Back to Dashboard
               </Button>
