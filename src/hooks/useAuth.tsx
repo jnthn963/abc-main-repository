@@ -17,9 +17,10 @@ interface AuthContextType {
     vault_balance: number;
     frozen_balance: number;
     lending_balance: number;
-    membership_tier: string;
-    kyc_status: string;
+    membership_tier: 'bronze' | 'silver' | 'gold';
+    kyc_status: 'pending' | 'verified' | 'rejected';
     onboarding_completed: boolean;
+    created_at: string;
   } | null;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -53,9 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         vault_balance: data.vault_balance,
         frozen_balance: data.frozen_balance,
         lending_balance: data.lending_balance,
-        membership_tier: data.membership_tier,
-        kyc_status: data.kyc_status,
+        membership_tier: data.membership_tier as 'bronze' | 'silver' | 'gold',
+        kyc_status: data.kyc_status as 'pending' | 'verified' | 'rejected',
         onboarding_completed: data.onboarding_completed,
+        created_at: data.created_at,
       });
     }
   };
