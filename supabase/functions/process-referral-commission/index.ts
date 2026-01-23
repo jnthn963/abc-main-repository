@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 
     if (!user_id || !deposit_amount) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing user_id or deposit_amount' }),
+        JSON.stringify({ success: false, error: 'Invalid request parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -39,8 +39,10 @@ Deno.serve(async (req) => {
       .single();
 
     if (userError || !userProfile) {
+      // Log server-side, return generic message
+      console.error('User profile lookup error:', userError);
       return new Response(
-        JSON.stringify({ success: false, error: 'User profile not found' }),
+        JSON.stringify({ success: false, error: 'Unable to process referral commission' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -63,7 +65,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (settingsError) {
-      throw new Error(`Failed to get settings: ${settingsError.message}`);
+      console.error('Settings lookup error:', settingsError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unable to process referral commission' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const commissionRate = settings?.referral_level1_rate || 3; // Default 3%
@@ -89,8 +95,9 @@ Deno.serve(async (req) => {
       .single();
 
     if (referrerError || !referrerProfile) {
+      console.error('Referrer profile lookup error:', referrerError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Referrer profile not found' }),
+        JSON.stringify({ success: false, error: 'Unable to process referral commission' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -105,14 +112,18 @@ Deno.serve(async (req) => {
       .eq('id', userProfile.referrer_id);
 
     if (updateError) {
-      throw new Error(`Failed to credit commission: ${updateError.message}`);
+      console.error('Commission credit error:', updateError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unable to process referral commission' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Generate reference number
     const referenceNumber = `REF-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
     // Create ledger entry for commission
-    await supabase
+    const { error: ledgerError } = await supabase
       .from('ledger')
       .insert({
         user_id: userProfile.referrer_id,
@@ -121,23 +132,23 @@ Deno.serve(async (req) => {
         status: 'completed',
         reference_number: referenceNumber,
         related_user_id: user_id,
-        description: `${commissionRate}% referral commission from ${userProfile.member_id}'s deposit`,
+        description: `Referral commission from deposit`,
         metadata: {
-          referred_member_id: userProfile.member_id,
-          deposit_amount: deposit_amount,
           commission_rate: commissionRate
         }
       });
+
+    if (ledgerError) {
+      // Log but don't fail - commission was already credited
+      console.error('Ledger entry error:', ledgerError);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Referral commission processed successfully',
         data: {
-          referrer_id: userProfile.referrer_id,
           commission_amount: commissionAmount,
-          commission_rate: commissionRate,
-          deposit_amount: deposit_amount,
           reference_number: referenceNumber
         }
       }),
@@ -145,9 +156,12 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error details server-side only
     console.error('Error in process-referral-commission:', error);
+    
+    // Return generic error message to client
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, error: 'An error occurred processing the referral commission.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
