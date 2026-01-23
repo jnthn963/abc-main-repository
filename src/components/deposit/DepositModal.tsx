@@ -9,6 +9,7 @@ import {
   Loader2,
   ArrowRight,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Dialog,
@@ -19,6 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -27,18 +30,17 @@ interface DepositModalProps {
 
 const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const { config, loading: configLoading } = usePublicConfig();
+  const { toast } = useToast();
   const [step, setStep] = useState<"amount" | "qr" | "pending">("amount");
   const [amount, setAmount] = useState("");
   const [amountError, setAmountError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clearingEndsAt, setClearingEndsAt] = useState<string | null>(null);
   const [clearingMinutes, setClearingMinutes] = useState(0);
   const [clearingSeconds, setClearingSeconds] = useState(0);
   const [referenceNumber, setReferenceNumber] = useState("");
-
-  // Generate random clearing time between 1-30 minutes
-  const generateClearingTime = () => {
-    return Math.floor(Math.random() * 30) + 1; // 1-30 minutes
-  };
+  const [transactionId, setTransactionId] = useState<string | null>(null);
 
   // Generate reference number
   const generateReferenceNumber = () => {
@@ -85,12 +87,70 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     }
   };
 
-  // Handle payment confirmation
-  const handleConfirmPayment = () => {
-    const minutes = generateClearingTime();
-    setClearingMinutes(minutes);
-    setClearingSeconds(0);
-    setStep("pending");
+  // Handle payment confirmation - calls process-deposit edge function
+  const handleConfirmPayment = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to make a deposit.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call the process-deposit edge function
+      const response = await supabase.functions.invoke('process-deposit', {
+        body: {
+          amount: Math.floor(parseFloat(amount)),
+          reference_number: referenceNumber,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to process deposit');
+      }
+
+      const result = response.data;
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to process deposit');
+      }
+
+      // Update state with server response
+      setTransactionId(result.data.transaction_id);
+      setClearingEndsAt(result.data.clearing_ends_at);
+      
+      // Calculate remaining time from server's clearing_ends_at
+      const clearingEnd = new Date(result.data.clearing_ends_at);
+      const now = new Date();
+      const diffMs = Math.max(0, clearingEnd.getTime() - now.getTime());
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      
+      setClearingMinutes(diffMins);
+      setClearingSeconds(diffSecs);
+      setStep("pending");
+      
+      toast({
+        title: "Deposit Submitted",
+        description: "Your deposit is pending Governor verification.",
+      });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      toast({
+        title: "Deposit Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Countdown timer effect
@@ -127,6 +187,9 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     setAmount("");
     setAmountError("");
     setCopied(false);
+    setTransactionId(null);
+    setClearingEndsAt(null);
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -329,9 +392,17 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                   </button>
                   <button
                     onClick={handleConfirmPayment}
-                    className="flex-1 py-3 bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity"
+                    disabled={isSubmitting}
+                    className="flex-1 py-3 bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    I've Paid
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "I've Paid"
+                    )}
                   </button>
                 </div>
               </motion.div>
@@ -367,11 +438,12 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
 
                 {/* Status */}
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Payment Clearing
+                  <h3 className="text-lg font-semibold text-foreground flex items-center justify-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-primary" />
+                    Pending Governor Review
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Your deposit is being processed
+                    Your deposit is awaiting verification by the Sovereign Collective
                   </p>
                 </div>
 
@@ -415,10 +487,20 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                 </Card>
 
                 {/* Info Notice */}
-                <p className="text-xs text-muted-foreground">
-                  You will receive a notification once your deposit has cleared.
-                  The 6-day maturity period will begin after clearing.
-                </p>
+                <Card className="p-3 bg-primary/5 border-primary/20">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-primary">
+                        Manual Clearing Mode
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        All deposits require Governor verification before funds are credited. 
+                        The 6-day maturity period will begin after approval.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
 
                 <button
                   onClick={handleClose}
