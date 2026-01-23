@@ -88,10 +88,20 @@ const GovernorDashboard = () => {
         .select('total_reserve_balance')
         .maybeSingle();
 
-      // Count total members
+      // Count total members (using count only - no PII access)
       const { count: memberCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
+
+      // Log administrative dashboard access for audit trail
+      try {
+        await supabase.rpc('log_profile_access', {
+          p_accessed_profile_id: user?.id,
+          p_access_reason: 'Governor Dashboard aggregate statistics view'
+        });
+      } catch {
+        // Non-blocking - don't fail dashboard if audit log fails
+      }
 
       // Count active loans and sum values
       const { data: activeLoans } = await supabase
