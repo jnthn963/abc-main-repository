@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -13,20 +13,14 @@ import QRGatewayManager from "@/components/admin/QRGatewayManager";
 import PendingActionsQueue from "@/components/admin/PendingActionsQueue";
 import PendingActionsSummary from "@/components/admin/PendingActionsSummary";
 import { SecureLogout } from "@/components/auth/SecureLogout";
+import { ConnectionStatusBanner, ConnectionIndicator } from "@/components/common/ConnectionStatusBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-
-interface SystemStats {
-  totalMembers: number;
-  activeLoans: number;
-  totalVaultValue: number;
-  reserveFund: number;
-  pendingWithdrawals: number;
-  dailyTransactions: number;
-}
+import { useGovernorRealtime } from "@/hooks/useGovernorRealtime";
 
 interface AuditEvent {
+  id?: string;
   time: string;
   event: string;
   type: string;
@@ -34,160 +28,32 @@ interface AuditEvent {
 
 const GovernorDashboard = () => {
   const { user, hasRole, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const {
+    stats,
+    settings,
+    auditFeed,
+    loading,
+    error: dataError,
+    refresh,
+    updateSettings,
+    isAuthorized,
+  } = useGovernorRealtime();
   
-  // Economic Levers
-  const [vaultRate, setVaultRate] = useState([0.5]);
-  const [lendingRate, setLendingRate] = useState([15.0]);
-  const [borrowerCost, setBorrowerCost] = useState([18.0]);
-
-  // System Controls
-  const [killSwitch, setKillSwitch] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  // Local state for sliders (optimistic updates)
+  const [vaultRate, setVaultRate] = useState([settings.vaultRate]);
+  const [lendingRate, setLendingRate] = useState([settings.lendingRate]);
+  const [borrowerCost, setBorrowerCost] = useState([settings.borrowerCost]);
+  const [killSwitch, setKillSwitch] = useState(settings.killSwitch);
+  const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenanceMode);
   
-  // Gateway settings
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
-
-  // Stats from database
-  const [stats, setStats] = useState<SystemStats>({
-    totalMembers: 0,
-    activeLoans: 0,
-    totalVaultValue: 0,
-    reserveFund: 0,
-    pendingWithdrawals: 0,
-    dailyTransactions: 0,
-  });
-
-  // Live Audit Feed from database
-  const [auditFeed, setAuditFeed] = useState<AuditEvent[]>([]);
-
-  // Check if user has governor/admin role
-  const isAuthorized = hasRole('governor') || hasRole('admin');
-
-  // Fetch all dashboard data from Supabase
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      // Fetch global settings
-      const { data: settings } = await supabase
-        .from('global_settings')
-        .select('*')
-        .maybeSingle();
-
-      if (settings) {
-        setVaultRate([settings.vault_interest_rate || 0.5]);
-        setLendingRate([settings.lending_yield_rate || 15.0]);
-        setBorrowerCost([settings.borrower_cost_rate || 18.0]);
-        setKillSwitch(settings.system_kill_switch || false);
-        setMaintenanceMode(settings.maintenance_mode || false);
-        setQrUrl(settings.qr_gateway_url);
-      }
-
-      // Fetch reserve fund
-      const { data: reserve } = await supabase
-        .from('reserve_fund')
-        .select('total_reserve_balance')
-        .maybeSingle();
-
-      // Count total members (using count only - no PII access)
-      const { count: memberCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Log administrative dashboard access for audit trail
-      try {
-        await supabase.rpc('log_profile_access', {
-          p_accessed_profile_id: user?.id,
-          p_access_reason: 'Governor Dashboard aggregate statistics view'
-        });
-      } catch {
-        // Non-blocking - don't fail dashboard if audit log fails
-      }
-
-      // Count active loans and sum values
-      const { data: activeLoans } = await supabase
-        .from('p2p_loans')
-        .select('principal_amount')
-        .in('status', ['open', 'funded']);
-
-      // Count pending withdrawals (clearing transactions)
-      const { data: pendingTxns } = await supabase
-        .from('ledger')
-        .select('amount')
-        .eq('status', 'clearing')
-        .eq('type', 'withdrawal');
-
-      // Count today's transactions
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: dailyCount } = await supabase
-        .from('ledger')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today.toISOString());
-
-      // Aggregate vault balance (sum all profiles)
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('vault_balance');
-
-      const totalVault = (profiles || []).reduce((sum, p) => sum + Number(p.vault_balance), 0);
-      const pendingWdAmount = (pendingTxns || []).reduce((sum, t) => sum + Number(t.amount), 0);
-
-      setStats({
-        totalMembers: memberCount || 0,
-        activeLoans: activeLoans?.length || 0,
-        totalVaultValue: totalVault / 100,
-        reserveFund: reserve ? Number(reserve.total_reserve_balance) / 100 : 0,
-        pendingWithdrawals: pendingWdAmount / 100,
-        dailyTransactions: dailyCount || 0,
-      });
-
-      // Fetch recent audit log
-      const { data: auditData } = await supabase
-        .from('admin_audit_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (auditData && auditData.length > 0) {
-        setAuditFeed(auditData.map(a => ({
-          time: new Date(a.created_at).toLocaleTimeString('en-PH', { hour12: false }),
-          event: a.action,
-          type: 'system',
-        })));
-      } else {
-        // Show recent ledger activity if no audit log
-        const { data: recentActivity } = await supabase
-          .from('ledger')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        setAuditFeed((recentActivity || []).map(tx => ({
-          time: new Date(tx.created_at).toLocaleTimeString('en-PH', { hour12: false }),
-          event: `${tx.type.replace(/_/g, ' ').toUpperCase()} - ₱${(Number(tx.amount) / 100).toLocaleString()}`,
-          type: tx.type.includes('deposit') ? 'deposit' : tx.type.includes('withdrawal') ? 'withdraw' : 'system',
-        })));
-      }
-
-    } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Sync local state with realtime settings
   useEffect(() => {
-    if (isAuthorized) {
-      fetchDashboardData();
-    }
-  }, [isAuthorized, fetchDashboardData]);
+    setVaultRate([settings.vaultRate]);
+    setLendingRate([settings.lendingRate]);
+    setBorrowerCost([settings.borrowerCost]);
+    setKillSwitch(settings.killSwitch);
+    setMaintenanceMode(settings.maintenanceMode);
+  }, [settings]);
 
   const getEventColor = (type: string) => {
     switch (type) {
@@ -201,26 +67,20 @@ const GovernorDashboard = () => {
 
   // Handle rate changes and save to database
   const handleApplyChanges = async () => {
-    try {
-      const { error } = await supabase
-        .from('global_settings')
-        .update({
-          vault_interest_rate: vaultRate[0],
-          lending_yield_rate: lendingRate[0],
-          borrower_cost_rate: borrowerCost[0],
-          system_kill_switch: killSwitch,
-          maintenance_mode: maintenanceMode,
-        })
-        .eq('id', (await supabase.from('global_settings').select('id').maybeSingle()).data?.id);
+    const result = await updateSettings({
+      vaultRate: vaultRate[0],
+      lendingRate: lendingRate[0],
+      borrowerCost: borrowerCost[0],
+      killSwitch,
+      maintenanceMode,
+    });
 
-      if (error) throw error;
-
+    if (result.success) {
       toast({
         title: "Success",
         description: "Economic levers updated successfully!",
       });
-    } catch (err) {
-      console.error('Failed to update settings:', err);
+    } else {
       toast({
         title: "Error",
         description: "Failed to update settings",
@@ -231,27 +91,18 @@ const GovernorDashboard = () => {
 
   // Handle QR update
   const handleQRUpdate = async (qrUrl: string, receiverName: string, receiverNumber: string) => {
-    try {
-      const { data: settingsData } = await supabase.from('global_settings').select('id').maybeSingle();
-      
-      const { error } = await supabase
-        .from('global_settings')
-        .update({
-          qr_gateway_url: qrUrl,
-          receiver_name: receiverName,
-          receiver_phone: receiverNumber,
-        })
-        .eq('id', settingsData?.id);
+    const result = await updateSettings({
+      qrUrl,
+      receiverName,
+      receiverPhone: receiverNumber,
+    });
 
-      if (error) throw error;
-
-      setQrUrl(qrUrl);
+    if (result.success) {
       toast({
         title: "Success",
         description: "QR Gateway updated successfully!",
       });
-    } catch (err) {
-      console.error('Failed to update QR:', err);
+    } else {
       toast({
         title: "Error",
         description: "Failed to update QR Gateway",
@@ -301,6 +152,9 @@ const GovernorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[hsl(222,47%,4%)]">
+      {/* Connection Status Banner */}
+      <ConnectionStatusBanner onReconnect={refresh} />
+
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(222,47%,5%)] border-b border-destructive/30 px-6 py-3">
         <div className="flex items-center justify-between max-w-[1800px] mx-auto">
@@ -308,9 +162,12 @@ const GovernorDashboard = () => {
             <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
               <Shield className="w-5 h-5 text-destructive" />
             </div>
-            <div>
-              <h1 className="font-bold text-foreground">Governor Dashboard</h1>
-              <p className="text-xs text-muted-foreground">Alpha Banking Cooperative • Live Data</p>
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="font-bold text-foreground">Governor Dashboard</h1>
+                <p className="text-xs text-muted-foreground">Alpha Banking Cooperative • Real-Time Sync</p>
+              </div>
+              <ConnectionIndicator />
             </div>
           </div>
 
@@ -502,7 +359,7 @@ const GovernorDashboard = () => {
             {/* QR Gateway Manager */}
             <div className="col-span-3">
             <QRGatewayManager 
-                currentQRUrl={qrUrl || ''}
+                currentQRUrl={settings.qrUrl || ''}
                 onQRUpdate={handleQRUpdate}
               />
             </div>

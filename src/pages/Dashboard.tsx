@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecurityHardening } from '@/hooks/useSecurityHardening';
+import { useMemberData } from '@/hooks/useMemberData';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import MemberPulse from '@/components/dashboard/MemberPulse';
@@ -12,10 +13,11 @@ import AlphaAnnouncement from '@/components/onboarding/AlphaAnnouncement';
 import GuidingFingerTutorial from '@/components/onboarding/GuidingFingerTutorial';
 import DepositModal from '@/components/deposit/DepositModal';
 import PendingReviewBanner from '@/components/dashboard/PendingReviewBanner';
+import { ConnectionStatusBanner } from '@/components/common/ConnectionStatusBanner';
 import { Loader2, Shield } from 'lucide-react';
-
 export default function Dashboard() {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const { refresh: refreshMemberData } = useMemberData();
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTransferHub, setShowTransferHub] = useState(false);
@@ -24,6 +26,11 @@ export default function Dashboard() {
   // Apply security hardening
   useSecurityHardening();
 
+  // Handle reconnection - refresh all data
+  const handleReconnect = () => {
+    refreshProfile();
+    refreshMemberData();
+  };
   // Check onboarding status
   useEffect(() => {
     if (profile && !profile.onboarding_completed) {
@@ -68,8 +75,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar onDepositClick={() => setShowDepositModal(true)} />
+      {/* Connection Status Banner */}
+      <ConnectionStatusBanner onReconnect={handleReconnect} />
       
+      <Navbar onDepositClick={() => setShowDepositModal(true)} />
       {/* Main Dashboard */}
       <main className="pt-20 pb-8 px-4 lg:px-6">
         <div className="max-w-[1600px] mx-auto">
