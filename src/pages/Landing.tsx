@@ -163,8 +163,7 @@ export default function Landing() {
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
-              Join the sovereign financial network. Earn daily interest, participate in P2P lending,
-              and build generational wealth with bank-grade security.
+              Enter the Sovereign Republic of Capital. Command a 1.0% Daily Synergy, dominate the P2P Marketplace, and reclaim the generational wealth stolen by the banks. This is not a platform—it is your financial fortress. Built by Filipinos, for Alphas.
             </p>
 
             {/* Countdown Section */}
