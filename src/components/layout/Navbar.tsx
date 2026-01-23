@@ -1,5 +1,6 @@
 import { Shield, User, Bell, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SecureLogout } from "@/components/auth/SecureLogout";
 import LiveTicker from "./LiveTicker";
 
 interface NavbarProps {
@@ -54,6 +55,8 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             <Wallet className="w-4 h-4" />
             DEPOSIT
           </Button>
+          
+          <SecureLogout variant="default" />
         </div>
       </div>
     </nav>

@@ -4,12 +4,13 @@ import { motion } from "framer-motion";
 import { 
   Shield, AlertTriangle, Power, Sliders, 
   Users, Activity, TrendingUp, Eye,
-  DollarSign, Clock, LogOut, Loader2
+  DollarSign, Clock, Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import QRGatewayManager from "@/components/admin/QRGatewayManager";
+import { SecureLogout } from "@/components/auth/SecureLogout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,7 +31,7 @@ interface AuditEvent {
 }
 
 const GovernorDashboard = () => {
-  const { user, hasRole, loading: authLoading, signOut } = useAuth();
+  const { user, hasRole, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   
   // Economic Levers
@@ -247,10 +248,6 @@ const GovernorDashboard = () => {
     }
   };
 
-  // Handle logout using proper Supabase Auth
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   // Show loading while checking auth
   if (authLoading) {
@@ -330,14 +327,8 @@ const GovernorDashboard = () => {
               />
             </div>
 
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted border border-border transition-colors"
-            >
-              <LogOut className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Logout</span>
-            </button>
+            {/* Secure Logout Button */}
+            <SecureLogout variant="governor" />
           </div>
         </div>
       </header>
