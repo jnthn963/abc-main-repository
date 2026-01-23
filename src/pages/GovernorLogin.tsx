@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft, Crown, AlertTriangle, KeyRound } from 'lucide-react';
+import { Shield, Lock, Mail, Loader2, ArrowLeft, Crown, AlertTriangle, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,27 +12,23 @@ import { z } from 'zod';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 // Supreme Governor email - hardcoded for maximum security
-const SUPREME_GOVERNOR_EMAIL = 'governor@alphaecosystem.com';
+const SUPREME_GOVERNOR_EMAIL = 'nangkiljonathan@gmail.com';
 
-const loginSchema = z.object({
+const emailSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Vault Key must be at least 8 characters'),
 });
 
 export default function GovernorLogin() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [step, setStep] = useState<'credentials' | 'verification'>('credentials');
-  const [securityCode, setSecurityCode] = useState('');
-  const [expectedCode, setExpectedCode] = useState('');
+  const [errors, setErrors] = useState<{ email?: string }>({});
+  const [step, setStep] = useState<'email' | 'otp-sent' | 'verification'>('email');
+  const [otpToken, setOtpToken] = useState('');
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTimer, setLockoutTimer] = useState(0);
   
-  const { signIn, hasRole, user } = useAuth();
+  const { hasRole, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -54,38 +50,13 @@ export default function GovernorLogin() {
     }
   }, [lockoutTimer, isLocked]);
 
-  // Generate a secure 6-digit verification code
-  const generateSecurityCode = () => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setExpectedCode(code);
-    
-    // Show code in toast only during development - NEVER log to console
-    // In production, implement real 2FA via email/SMS/TOTP
-    if (import.meta.env.DEV) {
-      toast({
-        title: 'Development Mode - Verification Code',
-        description: `Your code: ${code}`,
-        duration: 15000,
-      });
-    } else {
-      // Production: Send via secure channel (email/SMS)
-      toast({
-        title: 'Verification Code Sent',
-        description: 'Check your registered device for the 6-digit code.',
-        duration: 10000,
-      });
-      // TODO: Integrate with email/SMS service for production 2FA
-    }
-    
-    return code;
-  };
-
-  const handleCredentialSubmit = async (e: React.FormEvent) => {
+  // Handle email submission - request OTP
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isLocked) {
       toast({
-        title: 'Account Temporarily Locked',
+        title: 'Access Temporarily Locked',
         description: `Too many failed attempts. Please wait ${lockoutTimer} seconds.`,
         variant: 'destructive',
       });
@@ -94,13 +65,12 @@ export default function GovernorLogin() {
     
     setErrors({});
     
-    // Validate input
-    const result = loginSchema.safeParse({ email, password });
+    // Validate email
+    const result = emailSchema.safeParse({ email });
     if (!result.success) {
-      const fieldErrors: { email?: string; password?: string } = {};
+      const fieldErrors: { email?: string } = {};
       result.error.errors.forEach((err) => {
         if (err.path[0] === 'email') fieldErrors.email = err.message;
-        if (err.path[0] === 'password') fieldErrors.password = err.message;
       });
       setErrors(fieldErrors);
       return;
@@ -109,96 +79,45 @@ export default function GovernorLogin() {
     setIsLoading(true);
     
     try {
-      const { error } = await signIn(email, password);
+      // Call edge function to send OTP
+      const { data, error } = await supabase.functions.invoke('send-governor-otp', {
+        body: { email },
+      });
       
       if (error) {
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
         
-        // Lock after 3 failed attempts
         if (newAttempts >= 3) {
           setIsLocked(true);
-          setLockoutTimer(60); // 60 second lockout
-          
-          // Log failed governor login attempt
-          await supabase.from('admin_audit_log').insert({
-            admin_id: '00000000-0000-0000-0000-000000000000', // System action
-            action: 'GOVERNOR_LOGIN_LOCKOUT',
-            details: { 
-              description: `Governor login locked after ${newAttempts} failed attempts`,
-              target_email: email 
-            },
-            ip_address: 'client',
-          });
-          
+          setLockoutTimer(60);
           toast({
-            title: 'Account Temporarily Locked',
-            description: 'Too many failed login attempts. Please wait 60 seconds.',
+            title: 'Access Temporarily Locked',
+            description: 'Too many failed attempts. Please wait 60 seconds.',
             variant: 'destructive',
           });
         } else {
           toast({
-            title: 'Authentication Failed',
-            description: `Invalid credentials. ${3 - newAttempts} attempts remaining.`,
-            variant: 'destructive',
-          });
-        }
-      } else {
-        // Check if this is the Supreme Governor account
-        const currentUser = (await supabase.auth.getUser()).data.user;
-        const isSupremeGovernor = email.toLowerCase() === SUPREME_GOVERNOR_EMAIL.toLowerCase();
-        
-        // Check if user has governor role
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', currentUser?.id)
-          .eq('role', 'governor')
-          .single();
-        
-        if (!roles && !isSupremeGovernor) {
-          // User is not a governor - sign them out
-          await supabase.auth.signOut();
-          
-          // Log unauthorized attempt
-          await supabase.from('admin_audit_log').insert({
-            admin_id: '00000000-0000-0000-0000-000000000000', // System action
-            action: 'UNAUTHORIZED_GOVERNOR_ACCESS',
-            details: { 
-              description: 'Non-governor user attempted to access governor login',
-              target_email: email 
-            },
-            ip_address: 'client',
-          });
-          
-          toast({
             title: 'Access Denied',
-            description: 'This portal is reserved for the Supreme Governor only.',
+            description: error.message || 'Governor credentials required.',
             variant: 'destructive',
           });
-          return;
         }
-        
-        // If Supreme Governor, ensure roles are assigned (backup check)
-        if (isSupremeGovernor && currentUser) {
-          // Roles should already be assigned by trigger, but double-check
-          const { data: existingRole } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', currentUser.id)
-            .eq('role', 'governor')
-            .maybeSingle();
-            
-          if (!existingRole) {
-            // Trigger should have handled this, but just in case
-            console.log('Supreme Governor detected - roles should be auto-assigned');
-          }
-        }
-        
-        // Generate verification code for 2-step authentication
-        generateSecurityCode();
-        setStep('verification');
-        setLoginAttempts(0);
+        return;
+      }
+
+      if (data?.success) {
+        setStep('otp-sent');
+        toast({
+          title: 'Verification Code Sent',
+          description: 'Check your email for the secure login link.',
+        });
+      } else {
+        toast({
+          title: 'Request Failed',
+          description: data?.error || 'Unable to send verification code.',
+          variant: 'destructive',
+        });
       }
     } catch (err) {
       toast({
@@ -211,35 +130,116 @@ export default function GovernorLogin() {
     }
   };
 
-  const handleVerificationSubmit = async (e: React.FormEvent) => {
+  // Handle OTP verification
+  const handleOTPVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (securityCode !== expectedCode) {
+    if (otpToken.length !== 6) {
       toast({
-        title: 'Invalid Verification Code',
-        description: 'The code you entered is incorrect. Please try again.',
+        title: 'Invalid Code',
+        description: 'Please enter the complete 6-digit code.',
         variant: 'destructive',
       });
       return;
     }
 
-    // Log successful governor login
-    const currentUser = (await supabase.auth.getUser()).data.user;
-    if (currentUser) {
-      await supabase.from('admin_audit_log').insert({
-        admin_id: currentUser.id,
-        action: 'GOVERNOR_LOGIN_SUCCESS',
-        details: { description: 'Governor successfully authenticated with 2-step verification' },
-        ip_address: 'client',
-      });
-    }
+    setIsLoading(true);
 
-    toast({
-      title: 'Access Granted',
-      description: 'Welcome to the Governor Terminal, Executive.',
-    });
-    
-    navigate('/governor', { replace: true });
+    try {
+      // Verify OTP with Supabase Auth
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otpToken,
+        type: 'email',
+      });
+
+      if (error) {
+        toast({
+          title: 'Verification Failed',
+          description: 'Invalid or expired code. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data.user) {
+        // Check if user has governor role
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'governor')
+          .maybeSingle();
+
+        const isSupremeGovernor = email.toLowerCase() === SUPREME_GOVERNOR_EMAIL.toLowerCase();
+
+        if (!roleData && !isSupremeGovernor) {
+          await supabase.auth.signOut();
+          toast({
+            title: 'Access Denied',
+            description: 'This portal is reserved for the Supreme Governor only.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Log successful governor login
+        await supabase.from('admin_audit_log').insert({
+          admin_id: data.user.id,
+          action: 'GOVERNOR_OTP_LOGIN_SUCCESS',
+          details: { 
+            description: 'Governor authenticated via passwordless OTP',
+            is_supreme: isSupremeGovernor
+          },
+          ip_address: 'client',
+        });
+
+        toast({
+          title: 'Access Granted',
+          description: 'Welcome to the Governor Terminal, Supreme Executive.',
+        });
+        
+        navigate('/governor', { replace: true });
+      }
+    } catch (err) {
+      toast({
+        title: 'Verification Error',
+        description: 'Unable to verify code. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-governor-otp', {
+        body: { email },
+      });
+
+      if (error || !data?.success) {
+        toast({
+          title: 'Resend Failed',
+          description: 'Unable to resend verification code.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Code Resent',
+          description: 'A new verification code has been sent to your email.',
+        });
+      }
+    } catch {
+      toast({
+        title: 'System Error',
+        description: 'Unable to resend code. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -261,32 +261,32 @@ export default function GovernorLogin() {
                 <Crown className="w-8 h-8 text-white" />
               </div>
               <div>
-                <span className="text-3xl font-bold text-red-400">GOVERNOR</span>
-                <p className="text-xs text-red-400/60 uppercase tracking-widest">Executive Portal</p>
+                <span className="text-3xl font-bold text-red-400">SUPREME</span>
+                <p className="text-xs text-red-400/60 uppercase tracking-widest">Governor Portal</p>
               </div>
             </div>
             
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              Restricted Access
+              Passwordless Access
             </h1>
             
             <p className="text-muted-foreground mb-8 max-w-md">
-              This terminal is reserved for authorized Alpha Banking governors and system administrators only.
+              Enhanced security through email-based OTP verification. No passwords to remember or compromise.
             </p>
 
             <div className="space-y-4 p-4 bg-red-950/20 rounded-lg border border-red-900/30">
               <div className="flex items-center gap-3 text-sm text-red-400">
                 <AlertTriangle className="w-5 h-5" />
-                <span className="font-semibold">Security Notices</span>
+                <span className="font-semibold">Security Protocol</span>
               </div>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  <span>All access attempts are logged and monitored</span>
+                  <span>Secure OTP sent directly to verified email</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  <span>2-step verification required for all sessions</span>
+                  <span>All access attempts are logged and monitored</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
@@ -294,7 +294,7 @@ export default function GovernorLogin() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  <span>Unauthorized access will be prosecuted</span>
+                  <span>Supreme Governor exclusive access</span>
                 </div>
               </div>
             </div>
@@ -313,7 +313,7 @@ export default function GovernorLogin() {
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <Crown className="w-8 h-8 text-red-500" />
-            <span className="text-xl font-bold text-red-400">GOVERNOR PORTAL</span>
+            <span className="text-xl font-bold text-red-400">SUPREME GOVERNOR</span>
           </div>
 
           <Link 
@@ -324,7 +324,7 @@ export default function GovernorLogin() {
             Back to Home
           </Link>
 
-          {step === 'credentials' ? (
+          {step === 'email' && (
             <div className="glass-card p-8 border-red-900/30">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4 ring-2 ring-red-500/30">
@@ -332,7 +332,7 @@ export default function GovernorLogin() {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">Governor Access</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Enter your executive credentials
+                  Enter your executive email for secure OTP
                 </p>
               </div>
 
@@ -340,7 +340,7 @@ export default function GovernorLogin() {
                 <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
                   <div className="flex items-center gap-2 text-destructive">
                     <AlertTriangle className="w-5 h-5" />
-                    <span className="font-semibold">Account Temporarily Locked</span>
+                    <span className="font-semibold">Access Temporarily Locked</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Please wait {lockoutTimer} seconds before trying again.
@@ -348,7 +348,7 @@ export default function GovernorLogin() {
                 </div>
               )}
 
-              <form onSubmit={handleCredentialSubmit} className="space-y-6">
+              <form onSubmit={handleEmailSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">
                     Governor Email
@@ -358,7 +358,7 @@ export default function GovernorLogin() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="governor@alphaecosystem.com"
+                      placeholder="Enter your governor email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
@@ -367,34 +367,6 @@ export default function GovernorLogin() {
                   </div>
                   {errors.email && (
                     <p className="text-xs text-destructive">{errors.email}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Master Vault Key
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
-                      disabled={isLoading || isLocked}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-xs text-destructive">{errors.password}</p>
                   )}
                 </div>
 
@@ -407,12 +379,12 @@ export default function GovernorLogin() {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Verifying Identity...
+                      Sending OTP...
                     </>
                   ) : (
                     <>
                       <KeyRound className="w-4 h-4 mr-2" />
-                      Authenticate
+                      Send Verification Code
                     </>
                   )}
                 </Button>
@@ -427,24 +399,84 @@ export default function GovernorLogin() {
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="glass-card p-8 border-red-900/30">
+          )}
+
+          {step === 'otp-sent' && (
+            <div className="glass-card p-8 border-amber-900/30">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 ring-2 ring-amber-500/30">
+                  <Mail className="w-8 h-8 text-amber-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">Check Your Email</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  A secure verification code has been sent to:
+                </p>
+                <p className="text-sm font-medium text-primary mt-2">{email}</p>
+              </div>
+
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => setStep('verification')}
+                  className="w-full bg-amber-600 hover:bg-amber-700" 
+                  size="lg"
+                >
+                  <KeyRound className="w-4 h-4 mr-2" />
+                  Enter Code Manually
+                </Button>
+
+                <div className="text-center text-sm text-muted-foreground">
+                  <p>Or click the magic link in your email</p>
+                </div>
+
+                <Button 
+                  variant="outline"
+                  onClick={handleResendOTP}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Resending...
+                    </>
+                  ) : (
+                    'Resend Code'
+                  )}
+                </Button>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={() => {
+                    setStep('email');
+                    setOtpToken('');
+                  }}
+                  className="text-sm text-muted-foreground hover:text-primary"
+                >
+                  Use a different email
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 'verification' && (
+            <div className="glass-card p-8 border-amber-900/30">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4 ring-2 ring-amber-500/30">
                   <KeyRound className="w-8 h-8 text-amber-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">Verification Required</h2>
+                <h2 className="text-2xl font-bold text-foreground">Enter Verification Code</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Enter the 6-digit code sent to your device
+                  Enter the 6-digit code from your email
                 </p>
               </div>
 
-              <form onSubmit={handleVerificationSubmit} className="space-y-6">
+              <form onSubmit={handleOTPVerify} className="space-y-6">
                 <div className="flex justify-center">
                   <InputOTP 
                     maxLength={6} 
-                    value={securityCode} 
-                    onChange={setSecurityCode}
+                    value={otpToken} 
+                    onChange={setOtpToken}
                   >
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
@@ -461,19 +493,35 @@ export default function GovernorLogin() {
                   type="submit" 
                   className="w-full bg-amber-600 hover:bg-amber-700" 
                   size="lg"
-                  disabled={securityCode.length !== 6}
+                  disabled={otpToken.length !== 6 || isLoading}
                 >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Access Governor Terminal
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="w-4 h-4 mr-2" />
+                      Access Governor Terminal
+                    </>
+                  )}
                 </Button>
               </form>
 
-              <div className="mt-6 text-center">
+              <div className="mt-6 text-center space-y-2">
+                <button 
+                  onClick={handleResendOTP}
+                  disabled={isLoading}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Resend verification code
+                </button>
+                <br />
                 <button 
                   onClick={() => {
-                    setStep('credentials');
-                    setSecurityCode('');
-                    supabase.auth.signOut();
+                    setStep('email');
+                    setOtpToken('');
                   }}
                   className="text-sm text-muted-foreground hover:text-primary"
                 >
@@ -486,7 +534,7 @@ export default function GovernorLogin() {
           {/* Security Indicator */}
           <div className="mt-6 flex items-center justify-center gap-2 text-xs text-red-400/60">
             <Lock className="w-3 h-3" />
-            <span>High-security zone • All activity monitored</span>
+            <span>Supreme security zone • Passwordless OTP • All activity monitored</span>
           </div>
         </motion.div>
       </div>
