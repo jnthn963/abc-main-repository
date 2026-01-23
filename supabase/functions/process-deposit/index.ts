@@ -126,6 +126,33 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Get user's member_id for notification
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('member_id')
+      .eq('id', user.id)
+      .single();
+
+    // Notify governors of new pending action (non-blocking)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/notify-governor`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action_type: 'deposit',
+          member_id: profile?.member_id || 'Unknown',
+          amount: depositAmount,
+          reference_number: finalReference,
+        }),
+      });
+    } catch (notifyErr) {
+      // Non-blocking - don't fail the deposit if notification fails
+      console.error('Governor notification failed (non-blocking):', notifyErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
