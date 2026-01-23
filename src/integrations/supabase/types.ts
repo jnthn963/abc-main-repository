@@ -698,6 +698,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_profile_access: {
+        Args: { p_access_reason?: string; p_accessed_profile_id: string }
+        Returns: undefined
+      }
       process_repayment_atomic: {
         Args: { p_borrower_id: string; p_loan_id: string }
         Returns: Json
