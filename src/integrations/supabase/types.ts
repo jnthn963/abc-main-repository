@@ -368,6 +368,20 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_admin_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_user_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       public_config: {
@@ -447,7 +461,226 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_admin_view: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          frozen_balance: number | null
+          id: string | null
+          kyc_status: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at: string | null
+          lending_balance: number | null
+          member_id: string | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
+          onboarding_completed: boolean | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          referral_code: string | null
+          referrer_id: string | null
+          security_answer_1: string | null
+          security_answer_2: string | null
+          security_question_1: string | null
+          security_question_2: string | null
+          total_referral_earnings: number | null
+          updated_at: string | null
+          vault_balance: number | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          frozen_balance?: number | null
+          id?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at?: string | null
+          lending_balance?: number | null
+          member_id?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          referral_code?: string | null
+          referrer_id?: string | null
+          security_answer_1?: never
+          security_answer_2?: never
+          security_question_1?: string | null
+          security_question_2?: string | null
+          total_referral_earnings?: number | null
+          updated_at?: string | null
+          vault_balance?: number | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          frozen_balance?: number | null
+          id?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at?: string | null
+          lending_balance?: number | null
+          member_id?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          referral_code?: string | null
+          referrer_id?: string | null
+          security_answer_1?: never
+          security_answer_2?: never
+          security_question_1?: string | null
+          security_question_2?: string | null
+          total_referral_earnings?: number | null
+          updated_at?: string | null
+          vault_balance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_admin_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_user_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles_user_view: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          frozen_balance: number | null
+          id: string | null
+          kyc_status: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at: string | null
+          lending_balance: number | null
+          member_id: string | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
+          onboarding_completed: boolean | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          referral_code: string | null
+          referrer_id: string | null
+          security_question_1: string | null
+          security_question_2: string | null
+          total_referral_earnings: number | null
+          updated_at: string | null
+          vault_balance: number | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          frozen_balance?: number | null
+          id?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at?: string | null
+          lending_balance?: number | null
+          member_id?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          referral_code?: string | null
+          referrer_id?: string | null
+          security_question_1?: string | null
+          security_question_2?: string | null
+          total_referral_earnings?: number | null
+          updated_at?: string | null
+          vault_balance?: number | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          frozen_balance?: number | null
+          id?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
+          last_login_at?: string | null
+          lending_balance?: number | null
+          member_id?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          referral_code?: string | null
+          referrer_id?: string | null
+          security_question_1?: string | null
+          security_question_2?: string | null
+          total_referral_earnings?: number | null
+          updated_at?: string | null
+          vault_balance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_admin_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_user_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       apply_daily_interest_atomic: { Args: never; Returns: Json }

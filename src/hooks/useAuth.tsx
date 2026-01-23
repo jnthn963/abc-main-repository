@@ -39,8 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType['profile']>(null);
 
   const fetchProfile = async (userId: string) => {
+    // Use profiles_user_view to avoid exposing security answer hashes
+    // The view excludes security_answer_1 and security_answer_2 columns
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles_user_view')
       .select('*')
       .eq('id', userId)
       .single();
