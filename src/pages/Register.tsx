@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 
 // Step 1: Account Information
 const accountSchema = z.object({
@@ -233,7 +234,19 @@ export default function Register() {
           }
         }
 
-        // Update profile with additional info
+        // Hash security answers client-side before transmission
+        // This eliminates plaintext exposure in browser memory and network transmission
+        // Server-side trigger will detect $2 prefix and skip re-hashing
+        const hashedAnswer1 = await bcrypt.hash(
+          formData.securityAnswer1.toLowerCase().trim(),
+          10
+        );
+        const hashedAnswer2 = await bcrypt.hash(
+          formData.securityAnswer2.toLowerCase().trim(),
+          10
+        );
+
+        // Update profile with additional info (security answers pre-hashed)
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -245,9 +258,9 @@ export default function Register() {
             province: formData.province,
             postal_code: formData.postalCode,
             security_question_1: formData.securityQuestion1,
-            security_answer_1: formData.securityAnswer1,
+            security_answer_1: hashedAnswer1,
             security_question_2: formData.securityQuestion2,
-            security_answer_2: formData.securityAnswer2,
+            security_answer_2: hashedAnswer2,
             referrer_id: referrerId,
             membership_tier: 'founding', // Founding Alpha status!
           })
