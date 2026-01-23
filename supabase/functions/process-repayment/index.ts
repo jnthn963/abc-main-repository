@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 // Process Repayment Edge Function
+// Uses atomic database function with FOR UPDATE locking to prevent race conditions
 // Handles loan repayment with collateral release
-// Includes Reserve Fund auto-repayment guarantee for defaults
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -56,189 +56,39 @@ Deno.serve(async (req) => {
     // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the loan
-    const { data: loan, error: loanError } = await supabase
-      .from('p2p_loans')
-      .select('*')
-      .eq('id', loan_id)
-      .single();
+    // Call atomic repayment function with FOR UPDATE locking
+    // This prevents race conditions with multi-balance updates
+    const { data: result, error: rpcError } = await supabase.rpc('process_repayment_atomic', {
+      p_borrower_id: user.id,
+      p_loan_id: loan_id
+    });
 
-    if (loanError || !loan) {
+    if (rpcError) {
+      // Extract error message from PostgreSQL exception
+      const errorMessage = rpcError.message || 'Repayment failed';
+      const statusCode = errorMessage.includes('not found') ? 404 :
+                         errorMessage.includes('Insufficient') ? 400 :
+                         errorMessage.includes('Only the borrower') ? 403 : 400;
+      
       return new Response(
-        JSON.stringify({ success: false, error: 'Loan not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: errorMessage }),
+        { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Validate loan status
-    if (loan.status !== 'funded') {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Loan is not in funded status' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Only borrower can repay
-    if (loan.borrower_id !== user.id) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Only the borrower can repay this loan' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Calculate repayment amount (principal + interest)
-    const interestAmount = Math.floor(loan.principal_amount * (loan.interest_rate / 100));
-    const totalRepayment = loan.principal_amount + interestAmount;
-
-    // Get borrower's profile
-    const { data: borrowerProfile, error: borrowerError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (borrowerError || !borrowerProfile) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Borrower profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check borrower has sufficient balance
-    if (borrowerProfile.vault_balance < totalRepayment) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Insufficient balance. Repayment amount: ₱${totalRepayment.toLocaleString()} (Principal: ₱${loan.principal_amount.toLocaleString()} + Interest: ₱${interestAmount.toLocaleString()})` 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get lender's profile
-    const { data: lenderProfile, error: lenderError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', loan.lender_id)
-      .single();
-
-    if (lenderError || !lenderProfile) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Lender profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const now = new Date();
-
-    // Update loan status
-    const { error: updateLoanError } = await supabase
-      .from('p2p_loans')
-      .update({
-        status: 'repaid',
-        repaid_at: now.toISOString()
-      })
-      .eq('id', loan_id);
-
-    if (updateLoanError) {
-      throw new Error(`Failed to update loan: ${updateLoanError.message}`);
-    }
-
-    // Deduct repayment from borrower
-    const { error: borrowerUpdateError } = await supabase
-      .from('profiles')
-      .update({
-        vault_balance: borrowerProfile.vault_balance - totalRepayment,
-        // Release collateral from frozen back to vault
-        frozen_balance: Math.max(0, borrowerProfile.frozen_balance - loan.collateral_amount)
-      })
-      .eq('id', user.id);
-
-    if (borrowerUpdateError) {
-      throw new Error(`Failed to update borrower balance: ${borrowerUpdateError.message}`);
-    }
-
-    // Credit lender (principal returns to vault, interest as profit)
-    const { error: lenderUpdateError } = await supabase
-      .from('profiles')
-      .update({
-        vault_balance: lenderProfile.vault_balance + totalRepayment,
-        lending_balance: Math.max(0, lenderProfile.lending_balance - loan.principal_amount)
-      })
-      .eq('id', loan.lender_id);
-
-    if (lenderUpdateError) {
-      throw new Error(`Failed to update lender balance: ${lenderUpdateError.message}`);
-    }
-
-    // Create ledger entries
-    // Borrower repayment
-    await supabase
-      .from('ledger')
-      .insert({
-        user_id: user.id,
-        type: 'loan_repayment',
-        amount: totalRepayment,
-        status: 'completed',
-        reference_number: `REPAY-${loan.reference_number}`,
-        related_loan_id: loan_id,
-        related_user_id: loan.lender_id,
-        description: `Loan repayment (Principal: ₱${loan.principal_amount} + Interest: ₱${interestAmount})`
-      });
-
-    // Collateral release
-    await supabase
-      .from('ledger')
-      .insert({
-        user_id: user.id,
-        type: 'collateral_release',
-        amount: loan.collateral_amount,
-        status: 'completed',
-        reference_number: `COLREL-${loan.reference_number}`,
-        related_loan_id: loan_id,
-        description: `Collateral released after loan repayment`
-      });
-
-    // Lender receives repayment
-    await supabase
-      .from('ledger')
-      .insert({
-        user_id: loan.lender_id,
-        type: 'loan_repayment',
-        amount: totalRepayment,
-        status: 'completed',
-        reference_number: `RECV-REPAY-${loan.reference_number}`,
-        related_loan_id: loan_id,
-        related_user_id: user.id,
-        description: `Received loan repayment`
-      });
-
-    // Lender receives interest as profit
-    await supabase
-      .from('ledger')
-      .insert({
-        user_id: loan.lender_id,
-        type: 'lending_profit',
-        amount: interestAmount,
-        status: 'completed',
-        reference_number: `PROFIT-${loan.reference_number}`,
-        related_loan_id: loan_id,
-        description: `Lending profit from loan ${loan.reference_number}`
-      });
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Loan repaid successfully',
         data: {
-          loan_id: loan_id,
-          reference_number: loan.reference_number,
-          principal_amount: loan.principal_amount,
-          interest_amount: interestAmount,
-          total_repayment: totalRepayment,
-          collateral_released: loan.collateral_amount,
-          borrower_new_vault_balance: borrowerProfile.vault_balance - totalRepayment,
-          repaid_at: now.toISOString()
+          loan_id: result.loan_id,
+          reference_number: result.reference_number,
+          principal_amount: result.principal_amount,
+          interest_amount: result.interest_amount,
+          total_repayment: result.total_repayment,
+          collateral_released: result.collateral_released,
+          borrower_new_vault_balance: result.borrower_new_vault_balance,
+          repaid_at: result.repaid_at
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

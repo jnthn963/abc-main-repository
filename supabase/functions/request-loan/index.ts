@@ -6,12 +6,8 @@ const corsHeaders = {
 };
 
 // Request Loan Edge Function
-// Server-side validation for P2P loan requests
+// Uses atomic database function with FOR UPDATE locking to prevent race conditions
 // Enforces: 50% collateral rule, 6-day aging requirement, 28-day capital lock
-
-const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000; // 144 hours
-const CAPITAL_LOCK_DAYS = 28;
-const LOAN_DURATION_DAYS = 30;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -50,14 +46,11 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { amount } = body;
 
-    // Validate amount (Integer Rule: whole pesos only, min 100, max 5M)
+    // Validate amount (Integer Rule: whole pesos only)
     const loanAmount = Math.floor(Number(amount));
-    if (isNaN(loanAmount) || loanAmount < 100 || loanAmount > 5000000) {
+    if (isNaN(loanAmount)) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Invalid amount. Must be between ₱100 and ₱5,000,000' 
-        }),
+        JSON.stringify({ success: false, error: 'Invalid amount' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -65,146 +58,38 @@ Deno.serve(async (req) => {
     // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check system status
-    const { data: settings } = await supabase
-      .from('global_settings')
-      .select('system_kill_switch, maintenance_mode, lending_yield_rate')
-      .single();
+    // Call atomic loan request function with FOR UPDATE locking
+    // This prevents race conditions and collateral double-locking
+    const { data: result, error: rpcError } = await supabase.rpc('request_loan_atomic', {
+      p_user_id: user.id,
+      p_amount: loanAmount
+    });
 
-    if (settings?.system_kill_switch || settings?.maintenance_mode) {
+    if (rpcError) {
+      // Extract error message from PostgreSQL exception
+      const errorMessage = rpcError.message || 'Loan request failed';
+      const statusCode = errorMessage.includes('not found') ? 404 :
+                         errorMessage.includes('unavailable') ? 503 : 400;
+      
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'System is currently unavailable' 
-        }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: errorMessage }),
+        { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Get user's profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check 6-day aging requirement
-    const accountAge = Date.now() - new Date(profile.created_at).getTime();
-    if (accountAge < SIX_DAYS_MS) {
-      const remainingDays = Math.ceil((SIX_DAYS_MS - accountAge) / (24 * 60 * 60 * 1000));
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Your account must be at least 6 days old to request a loan. ${remainingDays} days remaining.` 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check 50% collateral rule (loan cannot exceed 50% of vault balance)
-    const maxLoan = Math.floor(profile.vault_balance * 0.5);
-    if (loanAmount > maxLoan) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Loan amount exceeds maximum. Based on 50% collateral rule, your maximum loan is ₱${maxLoan.toLocaleString()}` 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Calculate collateral (100% of loan amount for full coverage)
-    const collateralAmount = loanAmount;
-
-    // Check sufficient balance for collateral
-    if (profile.vault_balance < collateralAmount) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Insufficient vault balance for collateral' 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Generate reference number
-    const referenceNumber = `LOAN-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
-    // Lock collateral (move from vault to frozen)
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        vault_balance: profile.vault_balance - collateralAmount,
-        frozen_balance: profile.frozen_balance + collateralAmount
-      })
-      .eq('id', user.id);
-
-    if (updateError) {
-      throw new Error(`Failed to lock collateral: ${updateError.message}`);
-    }
-
-    // Create loan request
-    const { data: loan, error: loanError } = await supabase
-      .from('p2p_loans')
-      .insert({
-        borrower_id: user.id,
-        principal_amount: loanAmount,
-        interest_rate: settings?.lending_yield_rate || 15,
-        collateral_amount: collateralAmount,
-        duration_days: LOAN_DURATION_DAYS,
-        capital_lock_days: CAPITAL_LOCK_DAYS,
-        status: 'open',
-        reference_number: referenceNumber
-      })
-      .select()
-      .single();
-
-    if (loanError) {
-      // Rollback collateral lock
-      await supabase
-        .from('profiles')
-        .update({
-          vault_balance: profile.vault_balance,
-          frozen_balance: profile.frozen_balance
-        })
-        .eq('id', user.id);
-
-      throw new Error(`Failed to create loan: ${loanError.message}`);
-    }
-
-    // Create collateral lock ledger entry
-    await supabase
-      .from('ledger')
-      .insert({
-        user_id: user.id,
-        type: 'collateral_lock',
-        amount: collateralAmount,
-        status: 'completed',
-        reference_number: `COL-${referenceNumber}`,
-        related_loan_id: loan.id,
-        description: `Collateral locked for loan ${referenceNumber}`
-      });
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Loan request created successfully',
         data: {
-          loan_id: loan.id,
-          reference_number: referenceNumber,
-          principal_amount: loanAmount,
-          collateral_amount: collateralAmount,
-          interest_rate: settings?.lending_yield_rate || 15,
+          loan_id: result.loan_id,
+          reference_number: result.reference_number,
+          principal_amount: result.principal_amount,
+          collateral_amount: result.collateral_amount,
+          interest_rate: result.interest_rate,
           status: 'open',
-          duration_days: LOAN_DURATION_DAYS,
-          capital_lock_days: CAPITAL_LOCK_DAYS
+          duration_days: 30,
+          capital_lock_days: 28
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -420,6 +420,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_daily_interest_atomic: { Args: never; Returns: Json }
+      fund_loan_atomic: {
+        Args: { p_lender_id: string; p_loan_id: string }
+        Returns: Json
+      }
       generate_member_id: { Args: never; Returns: string }
       generate_reference_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -428,6 +433,29 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      process_repayment_atomic: {
+        Args: { p_borrower_id: string; p_loan_id: string }
+        Returns: Json
+      }
+      process_transfer_atomic: {
+        Args: {
+          p_amount: number
+          p_destination: string
+          p_destination_type: string
+          p_recipient_member_id?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      release_clearing_atomic: { Args: never; Returns: Json }
+      request_loan_atomic: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      verify_security_answer: {
+        Args: { p_answer: string; p_question_num: number; p_user_id: string }
         Returns: boolean
       }
     }
