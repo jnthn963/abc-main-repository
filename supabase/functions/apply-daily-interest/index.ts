@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 // The Midnight Interest Cron Job
+// Uses atomic database function with FOR UPDATE locking to prevent race conditions
 // Distributes 0.5% daily vault dividends to all members
 // Uses floor() to enforce the Integer Rule (no centavos)
 
@@ -20,119 +21,25 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get current interest rate from global settings
-    const { data: settings, error: settingsError } = await supabase
-      .from('global_settings')
-      .select('vault_interest_rate, system_kill_switch, maintenance_mode')
-      .single();
+    // Call atomic daily interest function with FOR UPDATE locking
+    // This prevents race conditions during concurrent balance updates
+    const { data: result, error: rpcError } = await supabase.rpc('apply_daily_interest_atomic');
 
-    if (settingsError) {
-      throw new Error(`Failed to get settings: ${settingsError.message}`);
-    }
-
-    // Check if system is operational
-    if (settings.system_kill_switch || settings.maintenance_mode) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'System is in maintenance or kill switch is active' 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const interestRate = settings.vault_interest_rate / 100; // Convert percentage to decimal
-
-    // Get all profiles with positive vault balance
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, vault_balance, member_id')
-      .gt('vault_balance', 0);
-
-    if (profilesError) {
-      throw new Error(`Failed to get profiles: ${profilesError.message}`);
-    }
-
-    let totalInterestDistributed = 0;
-    let membersProcessed = 0;
-    const errors: string[] = [];
-
-    // Process each profile
-    for (const profile of profiles || []) {
-      try {
-        // Calculate interest using floor() for Integer Rule
-        const interestAmount = Math.floor(profile.vault_balance * interestRate);
-        
-        if (interestAmount <= 0) continue;
-
-        const newBalance = profile.vault_balance + interestAmount;
-        const referenceNumber = `INT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${profile.member_id.slice(-4)}`;
-
-        // Update vault balance
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ vault_balance: newBalance })
-          .eq('id', profile.id);
-
-        if (updateError) {
-          errors.push(`Profile ${profile.member_id}: ${updateError.message}`);
-          continue;
-        }
-
-        // Record in ledger
-        const { error: ledgerError } = await supabase
-          .from('ledger')
-          .insert({
-            user_id: profile.id,
-            type: 'vault_interest',
-            amount: interestAmount,
-            status: 'completed',
-            reference_number: referenceNumber,
-            description: `Daily vault interest at ${settings.vault_interest_rate}%`,
-            metadata: {
-              previous_balance: profile.vault_balance,
-              interest_rate: settings.vault_interest_rate,
-              new_balance: newBalance
-            }
-          });
-
-        if (ledgerError) {
-          errors.push(`Ledger for ${profile.member_id}: ${ledgerError.message}`);
-          continue;
-        }
-
-        // Record in interest history
-        await supabase
-          .from('interest_history')
-          .insert({
-            user_id: profile.id,
-            previous_balance: profile.vault_balance,
-            interest_rate: settings.vault_interest_rate,
-            interest_amount: interestAmount,
-            new_balance: newBalance,
-            reference_number: referenceNumber
-          });
-
-        totalInterestDistributed += interestAmount;
-        membersProcessed++;
-
-      } catch (err) {
-        errors.push(`Profile ${profile.member_id}: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      }
+    if (rpcError) {
+      throw new Error(`Daily interest calculation failed: ${rpcError.message}`);
     }
 
     return new Response(
       JSON.stringify({
-        success: true,
-        message: 'Daily interest calculation completed',
+        success: result.success,
+        message: result.message,
         stats: {
-          members_processed: membersProcessed,
-          total_interest_distributed: totalInterestDistributed,
-          interest_rate: settings.vault_interest_rate,
-          errors_count: errors.length,
-          timestamp: new Date().toISOString()
-        },
-        errors: errors.length > 0 ? errors : undefined
+          members_processed: result.members_processed,
+          total_interest_distributed: result.total_interest_distributed,
+          interest_rate: result.interest_rate,
+          errors_count: result.errors_count,
+          timestamp: result.timestamp
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

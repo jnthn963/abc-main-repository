@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Shield, AlertTriangle, Power, Sliders, 
   Users, Activity, TrendingUp, Eye,
-  MessageSquare, DollarSign, Clock, ChevronRight, Bell, LogOut, Loader2
+  DollarSign, Clock, LogOut, Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import QRGatewayManager from "@/components/admin/QRGatewayManager";
-import AdminGatekeeper, { isAdminAuthenticated, clearAdminSession } from "@/components/auth/AdminGatekeeper";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SystemStats {
   totalMembers: number;
@@ -28,19 +29,8 @@ interface AuditEvent {
   type: string;
 }
 
-interface GlobalSettings {
-  vault_interest_rate: number;
-  lending_yield_rate: number;
-  borrower_cost_rate: number;
-  system_kill_switch: boolean;
-  maintenance_mode: boolean;
-  qr_gateway_url: string | null;
-  receiver_name: string | null;
-  receiver_phone: string | null;
-}
-
 const GovernorDashboard = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(isAdminAuthenticated());
+  const { user, hasRole, loading: authLoading, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   
   // Economic Levers
@@ -67,6 +57,9 @@ const GovernorDashboard = () => {
 
   // Live Audit Feed from database
   const [auditFeed, setAuditFeed] = useState<AuditEvent[]>([]);
+
+  // Check if user has governor/admin role
+  const isAuthorized = hasRole('governor') || hasRole('admin');
 
   // Fetch all dashboard data from Supabase
   const fetchDashboardData = useCallback(async () => {
@@ -127,7 +120,6 @@ const GovernorDashboard = () => {
 
       const totalVault = (profiles || []).reduce((sum, p) => sum + Number(p.vault_balance), 0);
       const pendingWdAmount = (pendingTxns || []).reduce((sum, t) => sum + Number(t.amount), 0);
-      const totalActiveLoansValue = (activeLoans || []).reduce((sum, l) => sum + Number(l.principal_amount), 0);
 
       setStats({
         totalMembers: memberCount || 0,
@@ -179,10 +171,10 @@ const GovernorDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthorized) {
       fetchDashboardData();
     }
-  }, [isAuthenticated, fetchDashboardData]);
+  }, [isAuthorized, fetchDashboardData]);
 
   const getEventColor = (type: string) => {
     switch (type) {
@@ -255,15 +247,36 @@ const GovernorDashboard = () => {
     }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    clearAdminSession();
-    setIsAuthenticated(false);
+  // Handle logout using proper Supabase Auth
+  const handleLogout = async () => {
+    await signOut();
   };
 
-  // Show gatekeeper if not authenticated
-  if (!isAuthenticated) {
-    return <AdminGatekeeper onAuthenticated={() => setIsAuthenticated(true)} />;
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[hsl(222,47%,4%)] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Verifying credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to dashboard if not authorized (no governor/admin role)
+  if (!isAuthorized) {
+    toast({
+      title: "Access Denied",
+      description: "You do not have permission to access the Governor Dashboard.",
+      variant: "destructive",
+    });
+    return <Navigate to="/dashboard" replace />;
   }
 
   if (loading) {
@@ -453,7 +466,7 @@ const GovernorDashboard = () => {
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {auditFeed.length === 0 ? (
                     <div className="py-8 text-center text-muted-foreground text-sm">
-                      No activity recorded yet
+                      No recent activity
                     </div>
                   ) : (
                     auditFeed.map((event, idx) => (
@@ -462,15 +475,10 @@ const GovernorDashboard = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="flex items-start gap-3 py-2 px-3 rounded-lg hover:bg-muted/30 transition-colors"
+                        className="flex items-center gap-3 p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
                       >
-                        <span className="terminal-text text-muted-foreground shrink-0">
-                          [{event.time}]
-                        </span>
-                        <span className={`terminal-text ${getEventColor(event.type)} flex-1`}>
-                          {event.event}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-xs text-muted-foreground font-mono w-16">{event.time}</span>
+                        <span className={`text-sm ${getEventColor(event.type)}`}>{event.event}</span>
                       </motion.div>
                     ))
                   )}
@@ -478,50 +486,33 @@ const GovernorDashboard = () => {
               </Card>
             </div>
 
-            {/* Gateway & CMS */}
-            <div className="col-span-3 space-y-4">
-              {/* QR Gateway Manager */}
-              <QRGatewayManager
-                currentQRUrl={qrUrl || ""}
+            {/* QR Gateway Manager */}
+            <div className="col-span-3">
+            <QRGatewayManager 
+                currentQRUrl={qrUrl || ''}
                 onQRUpdate={handleQRUpdate}
               />
+            </div>
+          </div>
 
-              {/* Quick CMS */}
-              <Card className="p-4 bg-card/50 border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <Bell className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-foreground text-sm">Post Announcement</h3>
-                </div>
-                <textarea
-                  placeholder="Write announcement..."
-                  className="w-full h-20 p-3 rounded-lg bg-muted/30 border border-border text-sm resize-none focus:outline-none focus:border-primary/50"
-                />
-                <div className="flex gap-2 mt-2">
-                  <button className="flex-1 py-2 text-xs bg-muted rounded-lg hover:bg-muted/70 transition-colors">
-                    + Image
-                  </button>
-                  <button className="flex-1 py-2 text-xs bg-muted rounded-lg hover:bg-muted/70 transition-colors">
-                    + Video
-                  </button>
-                  <button className="flex-1 py-2 text-xs bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
-                    Publish
-                  </button>
-                </div>
+          {/* Additional Sections */}
+          <div className="grid grid-cols-12 gap-6 mt-6">
+            {/* CMS Manager Placeholder */}
+            <div className="col-span-6">
+              <Card className="p-5 bg-card/50 border-border">
+                <h2 className="font-semibold text-foreground mb-4">Content Management</h2>
+                <p className="text-sm text-muted-foreground">
+                  Manage announcements, news, and platform content here.
+                </p>
               </Card>
+            </div>
 
-              {/* Concierge Queue */}
-              <Card className="p-4 bg-card/50 border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-success" />
-                    <h3 className="font-semibold text-foreground text-sm">Concierge Queue</h3>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-xs font-medium">
-                    Coming Soon
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground text-center py-4">
-                  Real-time member support will be enabled
+            {/* Alpha Concierge Placeholder */}
+            <div className="col-span-6">
+              <Card className="p-5 bg-card/50 border-border">
+                <h2 className="font-semibold text-foreground mb-4">Alpha Concierge Settings</h2>
+                <p className="text-sm text-muted-foreground">
+                  Configure AI assistant behavior and response templates.
                 </p>
               </Card>
             </div>

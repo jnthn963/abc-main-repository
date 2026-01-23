@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 // Hourly Clearing Release Cron Job
+// Uses atomic database function with FOR UPDATE locking to prevent race conditions
 // Moves funds from frozen_balance to vault_balance after 24-hour clearing period
 
 Deno.serve(async (req) => {
@@ -19,83 +20,24 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all clearing transactions that have passed their clearing period
-    const { data: clearingTransactions, error: txError } = await supabase
-      .from('ledger')
-      .select('*')
-      .eq('status', 'clearing')
-      .lt('clearing_ends_at', new Date().toISOString());
+    // Call atomic clearing release function with FOR UPDATE locking
+    // This prevents race conditions during concurrent balance operations
+    const { data: result, error: rpcError } = await supabase.rpc('release_clearing_atomic');
 
-    if (txError) {
-      throw new Error(`Failed to get clearing transactions: ${txError.message}`);
-    }
-
-    let transactionsCleared = 0;
-    const errors: string[] = [];
-
-    for (const tx of clearingTransactions || []) {
-      try {
-        // Update transaction status to completed
-        const { error: updateTxError } = await supabase
-          .from('ledger')
-          .update({ 
-            status: 'completed',
-            cleared_at: new Date().toISOString()
-          })
-          .eq('id', tx.id);
-
-        if (updateTxError) {
-          errors.push(`Transaction ${tx.reference_number}: ${updateTxError.message}`);
-          continue;
-        }
-
-        // Handle different transaction types
-        if (tx.type === 'deposit') {
-          // For deposits, move from frozen to vault
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('vault_balance, frozen_balance')
-            .eq('id', tx.user_id)
-            .single();
-
-          if (profileError) {
-            errors.push(`Profile for ${tx.reference_number}: ${profileError.message}`);
-            continue;
-          }
-
-          // Move amount from frozen to vault
-          const { error: balanceError } = await supabase
-            .from('profiles')
-            .update({
-              vault_balance: profile.vault_balance + tx.amount,
-              frozen_balance: Math.max(0, profile.frozen_balance - tx.amount)
-            })
-            .eq('id', tx.user_id);
-
-          if (balanceError) {
-            errors.push(`Balance update for ${tx.reference_number}: ${balanceError.message}`);
-            continue;
-          }
-        }
-
-        transactionsCleared++;
-
-      } catch (err) {
-        errors.push(`Transaction ${tx.reference_number}: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      }
+    if (rpcError) {
+      throw new Error(`Clearing release failed: ${rpcError.message}`);
     }
 
     return new Response(
       JSON.stringify({
-        success: true,
-        message: 'Clearing release completed',
+        success: result.success,
+        message: result.message,
         stats: {
-          transactions_cleared: transactionsCleared,
-          total_found: clearingTransactions?.length || 0,
-          errors_count: errors.length,
-          timestamp: new Date().toISOString()
-        },
-        errors: errors.length > 0 ? errors : undefined
+          transactions_cleared: result.transactions_cleared,
+          total_found: result.total_found,
+          errors_count: result.errors_count,
+          timestamp: result.timestamp
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
