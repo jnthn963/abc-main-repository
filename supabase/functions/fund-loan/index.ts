@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Loan funded successfully',
+        message: 'Loan funding submitted for review',
         data: {
           loan_id: result.loan_id,
           reference_number: result.reference_number,
@@ -110,7 +110,9 @@ Deno.serve(async (req) => {
           due_date: result.due_date,
           capital_unlock_date: result.capital_unlock_date,
           lender_new_vault_balance: result.lender_new_vault_balance,
-          lender_new_lending_balance: result.lender_new_lending_balance
+          lender_new_lending_balance: result.lender_new_lending_balance,
+          status: 'pending_review',
+          message: 'Your loan funding is pending Governor verification of 200% collateral.'
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -111,15 +111,16 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Transfer initiated successfully',
+        message: 'Transfer submitted for review',
         data: {
           reference_number: result.reference_number,
           amount: result.amount,
           destination: destination,
-          status: 'clearing',
+          status: 'pending_review',
           clearing_ends_at: result.clearing_ends_at,
           new_vault_balance: result.new_vault_balance,
-          new_frozen_balance: result.new_frozen_balance
+          new_frozen_balance: result.new_frozen_balance,
+          message: 'Your transfer is pending Governor verification.'
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

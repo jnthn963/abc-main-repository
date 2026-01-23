@@ -104,16 +104,17 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Loan request created successfully',
+        message: 'Loan request submitted for review',
         data: {
           loan_id: result.loan_id,
           reference_number: result.reference_number,
           principal_amount: result.principal_amount,
           collateral_amount: result.collateral_amount,
           interest_rate: result.interest_rate,
-          status: 'open',
+          status: 'pending_review',
           duration_days: 30,
-          capital_lock_days: 28
+          capital_lock_days: 28,
+          message: 'Your loan request is pending Governor verification before appearing in the marketplace.'
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
