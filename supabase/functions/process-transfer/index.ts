@@ -5,6 +5,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Sanitize error messages to prevent internal details from leaking to clients
+function sanitizeErrorMessage(error: string): string {
+  // Map known safe error patterns to user-friendly messages
+  const safeErrors: Record<string, string> = {
+    'Insufficient': 'Insufficient funds for this transaction',
+    'not found': 'The requested resource was not found',
+    'frozen': 'This operation is temporarily unavailable',
+    'maintenance': 'System is under maintenance. Please try again later',
+    'minimum': 'Amount does not meet the minimum requirement',
+    'maximum': 'Amount exceeds the maximum limit',
+    'limit': 'Transaction limit exceeded',
+  };
+
+  // Check if error matches any safe pattern
+  for (const [pattern, message] of Object.entries(safeErrors)) {
+    if (error.toLowerCase().includes(pattern.toLowerCase())) {
+      return message;
+    }
+  }
+
+  // Default generic message for unknown errors
+  return 'An error occurred processing your request. Please try again.';
+}
+
 // Process Transfer Edge Function
 // Uses atomic database function with FOR UPDATE locking to prevent race conditions
 // Enforces: balance checks, limits, 24-hour clearing
@@ -23,7 +47,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ success: false, error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -37,7 +61,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ success: false, error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -48,9 +72,9 @@ Deno.serve(async (req) => {
 
     // Validate amount (Integer Rule: whole pesos only)
     const transferAmount = Math.floor(Number(amount));
-    if (isNaN(transferAmount)) {
+    if (isNaN(transferAmount) || transferAmount <= 0) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid amount' }),
+        JSON.stringify({ success: false, error: 'Please enter a valid amount' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -69,14 +93,17 @@ Deno.serve(async (req) => {
     });
 
     if (rpcError) {
-      // Extract error message from PostgreSQL exception
-      const errorMessage = rpcError.message || 'Transfer failed';
-      const statusCode = errorMessage.includes('Insufficient') ? 400 :
-                         errorMessage.includes('not found') ? 404 :
-                         errorMessage.includes('frozen') || errorMessage.includes('maintenance') ? 503 : 400;
+      // Log full error details server-side only
+      console.error('Transfer RPC error:', rpcError);
+      
+      // Return sanitized error message to client
+      const sanitizedMessage = sanitizeErrorMessage(rpcError.message || '');
+      const statusCode = rpcError.message?.includes('Insufficient') ? 400 :
+                         rpcError.message?.includes('not found') ? 404 :
+                         rpcError.message?.includes('frozen') || rpcError.message?.includes('maintenance') ? 503 : 400;
       
       return new Response(
-        JSON.stringify({ success: false, error: errorMessage }),
+        JSON.stringify({ success: false, error: sanitizedMessage }),
         { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -99,9 +126,12 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error details server-side only
     console.error('Error in process-transfer:', error);
+    
+    // Return generic error message to client
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, error: 'An error occurred processing your transfer. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

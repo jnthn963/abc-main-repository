@@ -5,6 +5,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Sanitize error messages to prevent internal details from leaking to clients
+function sanitizeErrorMessage(error: string): string {
+  const safeErrors: Record<string, string> = {
+    'Insufficient': 'Insufficient funds to fund this loan',
+    'not found': 'Loan request not found or no longer available',
+    'unavailable': 'This loan is no longer available for funding',
+    'already funded': 'This loan has already been funded',
+    'own loan': 'You cannot fund your own loan request',
+  };
+
+  for (const [pattern, message] of Object.entries(safeErrors)) {
+    if (error.toLowerCase().includes(pattern.toLowerCase())) {
+      return message;
+    }
+  }
+
+  return 'An error occurred processing your request. Please try again.';
+}
+
 // Fund Loan Edge Function
 // Uses atomic database function with FOR UPDATE locking to prevent race conditions
 // Enforces: balance checks, 28-day capital lock, auto-repayment guarantee
@@ -23,7 +42,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ success: false, error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -37,7 +56,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ success: false, error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -48,7 +67,7 @@ Deno.serve(async (req) => {
 
     if (!loan_id) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Loan ID is required' }),
+        JSON.stringify({ success: false, error: 'Please select a loan to fund' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -64,14 +83,17 @@ Deno.serve(async (req) => {
     });
 
     if (rpcError) {
-      // Extract error message from PostgreSQL exception
-      const errorMessage = rpcError.message || 'Loan funding failed';
-      const statusCode = errorMessage.includes('not found') ? 404 :
-                         errorMessage.includes('unavailable') ? 503 :
-                         errorMessage.includes('Insufficient') ? 400 : 400;
+      // Log full error details server-side only
+      console.error('Fund loan RPC error:', rpcError);
+      
+      // Return sanitized error message to client
+      const sanitizedMessage = sanitizeErrorMessage(rpcError.message || '');
+      const statusCode = rpcError.message?.includes('not found') ? 404 :
+                         rpcError.message?.includes('unavailable') ? 503 :
+                         rpcError.message?.includes('Insufficient') ? 400 : 400;
       
       return new Response(
-        JSON.stringify({ success: false, error: errorMessage }),
+        JSON.stringify({ success: false, error: sanitizedMessage }),
         { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -95,9 +117,12 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error details server-side only
     console.error('Error in fund-loan:', error);
+    
+    // Return generic error message to client
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, error: 'An error occurred processing your loan funding. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

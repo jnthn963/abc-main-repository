@@ -26,7 +26,14 @@ Deno.serve(async (req) => {
     const { data: result, error: rpcError } = await supabase.rpc('apply_daily_interest_atomic');
 
     if (rpcError) {
-      throw new Error(`Daily interest calculation failed: ${rpcError.message}`);
+      // Log full error details server-side only
+      console.error('Daily interest RPC error:', rpcError);
+      
+      // Return generic error - internal cron job doesn't need detailed client messages
+      return new Response(
+        JSON.stringify({ success: false, error: 'Interest calculation failed. Please contact support.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(
@@ -45,9 +52,12 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error details server-side only
     console.error('Error in apply-daily-interest:', error);
+    
+    // Return generic error message
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ success: false, error: 'An error occurred during interest calculation.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
