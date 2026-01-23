@@ -59,15 +59,23 @@ export default function GovernorLogin() {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setExpectedCode(code);
     
-    // In production, this would be sent via email/SMS
-    // For now, we'll display it in a toast (development only)
-    console.log('Governor verification code:', code);
-    
-    toast({
-      title: 'Verification Code Sent',
-      description: `Code: ${code} (Development mode - check console in production)`,
-      duration: 10000,
-    });
+    // Show code in toast only during development - NEVER log to console
+    // In production, implement real 2FA via email/SMS/TOTP
+    if (import.meta.env.DEV) {
+      toast({
+        title: 'Development Mode - Verification Code',
+        description: `Your code: ${code}`,
+        duration: 15000,
+      });
+    } else {
+      // Production: Send via secure channel (email/SMS)
+      toast({
+        title: 'Verification Code Sent',
+        description: 'Check your registered device for the 6-digit code.',
+        duration: 10000,
+      });
+      // TODO: Integrate with email/SMS service for production 2FA
+    }
     
     return code;
   };
