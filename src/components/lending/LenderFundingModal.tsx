@@ -50,11 +50,11 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
     receiverNumber: null,
   });
 
-  // Fetch gateway settings from database
+  // Fetch gateway settings from public_config (accessible to all users)
   useEffect(() => {
     const fetchGateway = async () => {
       const { data } = await supabase
-        .from('global_settings')
+        .from('public_config')
         .select('qr_gateway_url, receiver_name, receiver_phone')
         .maybeSingle();
       
@@ -67,6 +67,18 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
       }
     };
     fetchGateway();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('lender-funding-gateway')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'public_config' },
+        () => fetchGateway()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Calculate earnings

@@ -71,16 +71,16 @@ export function useMemberData() {
     }
   }, [profile]);
 
-  // Fetch system stats from global_settings and reserve_fund
+  // Fetch system stats from public_config and reserve_fund
   const fetchSystemStats = useCallback(async () => {
     try {
-      const [settingsResult, reserveResult, loansResult] = await Promise.all([
-        supabase.from('global_settings').select('*').maybeSingle(),
+      const [publicConfigResult, reserveResult, loansResult] = await Promise.all([
+        supabase.from('public_config').select('*').maybeSingle(),
         supabase.from('reserve_fund').select('*').maybeSingle(),
         supabase.from('p2p_loans').select('principal_amount').in('status', ['open', 'funded']),
       ]);
 
-      const settings = settingsResult.data;
+      const publicConfig = publicConfigResult.data;
       const reserve = reserveResult.data;
       const loans = loansResult.data || [];
 
@@ -91,9 +91,9 @@ export function useMemberData() {
         totalActiveLoans: totalLoans,
         activeLoansCount: loans.length,
         reserveFund: reserve ? Number(reserve.total_reserve_balance) / 100 : 0,
-        vaultInterestRate: settings?.vault_interest_rate || 0.5,
-        lendingYieldRate: settings?.lending_yield_rate || 15.0,
-        borrowerCostRate: settings?.borrower_cost_rate || 15.0,
+        vaultInterestRate: publicConfig?.vault_interest_rate || 0.5,
+        lendingYieldRate: publicConfig?.lending_yield_rate || 15.0,
+        borrowerCostRate: 15.0, // Not exposed in public_config for security
       });
     } catch (err) {
       console.error('Failed to fetch system stats:', err);

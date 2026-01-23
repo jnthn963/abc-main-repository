@@ -35,11 +35,11 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
     receiverNumber: null,
   });
 
-  // Fetch gateway settings
+  // Fetch gateway settings from public_config (accessible to all users)
   useEffect(() => {
     const fetchGateway = async () => {
       const { data } = await supabase
-        .from('global_settings')
+        .from('public_config')
         .select('qr_gateway_url, receiver_name, receiver_phone')
         .maybeSingle();
       
@@ -52,6 +52,18 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
       }
     };
     fetchGateway();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('borrower-repayment-gateway')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'public_config' },
+        () => fetchGateway()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Calculate amounts

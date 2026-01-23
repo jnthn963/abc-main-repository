@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -6,13 +6,13 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Trash2,
   Save,
   X,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QRGatewayManagerProps {
   currentQRUrl: string;
@@ -24,12 +24,34 @@ const QRGatewayManager = ({
   onQRUpdate,
 }: QRGatewayManagerProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [receiverName, setReceiverName] = useState("Alpha Banking Cooperative");
   const [receiverNumber, setReceiverNumber] = useState("+63 917 XXX XXXX");
   const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch current config on mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const { data } = await supabase
+          .from('public_config')
+          .select('receiver_name, receiver_phone')
+          .maybeSingle();
+
+        if (data) {
+          setReceiverName(data.receiver_name || "Alpha Banking Cooperative");
+          setReceiverNumber(data.receiver_phone || "+63 917 XXX XXXX");
+        }
+      } catch (err) {
+        console.error('Failed to fetch config:', err);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   // Validate file type
   const isValidFileType = (file: File): boolean => {
@@ -54,6 +76,9 @@ const QRGatewayManager = ({
       toast.error("File too large. Maximum size is 5MB.");
       return;
     }
+
+    // Store the file for upload
+    setSelectedFile(file);
 
     // Create preview URL
     const reader = new FileReader();
@@ -89,26 +114,90 @@ const QRGatewayManager = ({
     if (file) handleFileSelect(file);
   };
 
-  // Handle save
+  // Handle save - upload to Supabase Storage and update public_config
   const handleSave = async () => {
-    if (!previewUrl && !hasChanges) return;
+    if (!hasChanges) return;
 
     setIsUploading(true);
 
-    // Simulate upload delay (in production, this would be an actual API call)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      let publicUrl = currentQRUrl;
 
-    // Update the QR code globally
-    onQRUpdate(previewUrl || currentQRUrl, receiverName, receiverNumber);
+      // If there's a new file to upload
+      if (selectedFile) {
+        // Generate unique filename
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `qr-gateway-${Date.now()}.${fileExt}`;
 
-    setIsUploading(false);
-    setHasChanges(false);
-    toast.success("QR Gateway updated successfully! Changes are now live.");
+        // Delete old QR code if exists
+        if (currentQRUrl && currentQRUrl.includes('qr-codes')) {
+          try {
+            const oldPath = currentQRUrl.split('qr-codes/')[1]?.split('?')[0];
+            if (oldPath) {
+              await supabase.storage.from('qr-codes').remove([oldPath]);
+            }
+          } catch (err) {
+            console.warn('Failed to delete old QR code:', err);
+          }
+        }
+
+        // Upload new QR code to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('qr-codes')
+          .upload(fileName, selectedFile, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('qr-codes')
+          .getPublicUrl(uploadData.path);
+
+        publicUrl = urlData.publicUrl;
+      }
+
+      // Update public_config table (this triggers realtime sync to all users)
+      const { data: configData } = await supabase
+        .from('public_config')
+        .select('id')
+        .maybeSingle();
+
+      if (configData?.id) {
+        const { error: updateError } = await supabase
+          .from('public_config')
+          .update({
+            qr_gateway_url: publicUrl,
+            receiver_name: receiverName,
+            receiver_phone: receiverNumber,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', configData.id);
+
+        if (updateError) throw updateError;
+      }
+
+      // Also update global_settings for backward compatibility
+      onQRUpdate(publicUrl, receiverName, receiverNumber);
+
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setHasChanges(false);
+      toast.success("QR Gateway updated successfully! Changes are now live for all users.");
+    } catch (err) {
+      console.error('Failed to save QR Gateway:', err);
+      toast.error("Failed to update QR Gateway. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Handle remove preview
   const handleRemovePreview = () => {
     setPreviewUrl(null);
+    setSelectedFile(null);
     setHasChanges(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -270,7 +359,7 @@ const QRGatewayManager = ({
           {isUploading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Syncing Globally...
+              Uploading & Syncing...
             </>
           ) : (
             <>
