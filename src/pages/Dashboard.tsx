@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSecurityHardening } from '@/hooks/useSecurityHardening';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import MemberPulse from '@/components/dashboard/MemberPulse';
@@ -19,6 +20,9 @@ export default function Dashboard() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTransferHub, setShowTransferHub] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  
+  // Apply security hardening
+  useSecurityHardening();
 
   // Check onboarding status
   useEffect(() => {
