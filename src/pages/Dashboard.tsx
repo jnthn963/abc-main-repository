@@ -10,6 +10,7 @@ import AlphaConcierge from '@/components/dashboard/AlphaConcierge';
 import AlphaAnnouncement from '@/components/onboarding/AlphaAnnouncement';
 import GuidingFingerTutorial from '@/components/onboarding/GuidingFingerTutorial';
 import DepositModal from '@/components/deposit/DepositModal';
+import PendingReviewBanner from '@/components/dashboard/PendingReviewBanner';
 import { Loader2, Shield } from 'lucide-react';
 
 export default function Dashboard() {
@@ -77,6 +78,9 @@ export default function Dashboard() {
               Your sovereign financial dashboard • Member ID: {profile?.member_id || 'Loading...'}
             </p>
           </div>
+
+          {/* Pending Review Banner - Shows when user has pending transactions */}
+          <PendingReviewBanner />
 
           {/* Three Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
