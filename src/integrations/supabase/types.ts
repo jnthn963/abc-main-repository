@@ -497,6 +497,7 @@ export type Database = {
           interest_rate: number | null
           member_id: string | null
           reference_number: string | null
+          source_table: string | null
           user_id: string | null
           user_name: string | null
         }
@@ -732,6 +733,7 @@ export type Database = {
       generate_member_id: { Args: never; Returns: string }
       generate_reference_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      get_pending_action_counts: { Args: never; Returns: Json }
       governor_approve_action: {
         Args: {
           p_action_id: string
