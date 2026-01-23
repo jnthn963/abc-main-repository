@@ -370,6 +370,36 @@ export type Database = {
           },
         ]
       }
+      public_config: {
+        Row: {
+          id: string
+          lending_yield_rate: number
+          qr_gateway_url: string | null
+          receiver_name: string | null
+          receiver_phone: string | null
+          updated_at: string
+          vault_interest_rate: number
+        }
+        Insert: {
+          id?: string
+          lending_yield_rate?: number
+          qr_gateway_url?: string | null
+          receiver_name?: string | null
+          receiver_phone?: string | null
+          updated_at?: string
+          vault_interest_rate?: number
+        }
+        Update: {
+          id?: string
+          lending_yield_rate?: number
+          qr_gateway_url?: string | null
+          receiver_name?: string | null
+          receiver_phone?: string | null
+          updated_at?: string
+          vault_interest_rate?: number
+        }
+        Relationships: []
+      }
       reserve_fund: {
         Row: {
           fee_accumulation: number

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X,
   QrCode,
   Clock,
   Copy,
@@ -19,14 +18,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { usePublicConfig } from "@/hooks/usePublicConfig";
 
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
-  qrCodeUrl: string; // URL of the QR code image from admin settings
 }
 
-const DepositModal = ({ isOpen, onClose, qrCodeUrl }: DepositModalProps) => {
+const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
+  const { config, loading: configLoading } = usePublicConfig();
   const [step, setStep] = useState<"amount" | "qr" | "pending">("amount");
   const [amount, setAmount] = useState("");
   const [amountError, setAmountError] = useState("");
@@ -256,9 +256,13 @@ const DepositModal = ({ isOpen, onClose, qrCodeUrl }: DepositModalProps) => {
                 {/* QR Code */}
                 <div className="flex justify-center">
                   <div className="p-4 bg-white rounded-xl shadow-lg">
-                    {qrCodeUrl ? (
+                    {configLoading ? (
+                      <div className="w-48 h-48 flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                      </div>
+                    ) : config?.qrGatewayUrl ? (
                       <img
-                        src={qrCodeUrl}
+                        src={config.qrGatewayUrl}
                         alt="Payment QR Code"
                         className="w-48 h-48 object-contain"
                       />
@@ -269,6 +273,14 @@ const DepositModal = ({ isOpen, onClose, qrCodeUrl }: DepositModalProps) => {
                     )}
                   </div>
                 </div>
+
+                {/* Receiver Info */}
+                {config && (
+                  <div className="text-center text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground">{config.receiverName}</p>
+                    <p className="font-mono">{config.receiverPhone}</p>
+                  </div>
+                )}
 
                 {/* Reference Number */}
                 <Card className="p-3 bg-muted/30 border-border">

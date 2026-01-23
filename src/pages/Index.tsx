@@ -8,14 +8,12 @@ import AlphaAnnouncement from "@/components/onboarding/AlphaAnnouncement";
 import GuidingFingerTutorial from "@/components/onboarding/GuidingFingerTutorial";
 import TransferFundsHub from "@/components/dashboard/TransferFundsHub";
 import DepositModal from "@/components/deposit/DepositModal";
-import { getGatewaySettings, subscribeToGateway } from "@/stores/gatewayStore";
 
 const Index = () => {
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTransferHub, setShowTransferHub] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   // Check if user has seen onboarding
@@ -27,21 +25,6 @@ const Index = () => {
     } else {
       setHasSeenOnboarding(true);
     }
-  }, []);
-
-  // Subscribe to gateway settings changes
-  useEffect(() => {
-    const updateQR = () => {
-      const settings = getGatewaySettings();
-      setQrCodeUrl(settings.qrCodeUrl);
-    };
-    
-    // Initial load
-    updateQR();
-    
-    // Subscribe to changes
-    const unsubscribe = subscribeToGateway(updateQR);
-    return () => unsubscribe();
   }, []);
 
   const handleAnnouncementClose = () => {
@@ -115,7 +98,6 @@ const Index = () => {
       <DepositModal
         isOpen={showDepositModal}
         onClose={() => setShowDepositModal(false)}
-        qrCodeUrl={qrCodeUrl}
       />
     </div>
   );

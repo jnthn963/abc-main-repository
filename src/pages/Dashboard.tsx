@@ -10,7 +10,6 @@ import AlphaConcierge from '@/components/dashboard/AlphaConcierge';
 import AlphaAnnouncement from '@/components/onboarding/AlphaAnnouncement';
 import GuidingFingerTutorial from '@/components/onboarding/GuidingFingerTutorial';
 import DepositModal from '@/components/deposit/DepositModal';
-import { getGatewaySettings, subscribeToGateway } from '@/stores/gatewayStore';
 import { Loader2, Shield } from 'lucide-react';
 
 export default function Dashboard() {
@@ -19,19 +18,6 @@ export default function Dashboard() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTransferHub, setShowTransferHub] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
-
-  // Subscribe to gateway settings for QR code
-  useEffect(() => {
-    const updateQR = () => {
-      const settings = getGatewaySettings();
-      setQrCodeUrl(settings.qrCodeUrl);
-    };
-    
-    updateQR();
-    const unsubscribe = subscribeToGateway(updateQR);
-    return () => unsubscribe();
-  }, []);
 
   // Check onboarding status
   useEffect(() => {
@@ -134,7 +120,6 @@ export default function Dashboard() {
       <DepositModal
         isOpen={showDepositModal}
         onClose={() => setShowDepositModal(false)}
-        qrCodeUrl={qrCodeUrl}
       />
     </div>
   );
