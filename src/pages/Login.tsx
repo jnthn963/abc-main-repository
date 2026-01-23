@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSecurityHardening } from '@/hooks/useSecurityHardening';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -25,6 +26,9 @@ export default function Login() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Apply security hardening
+  useSecurityHardening();
   
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 

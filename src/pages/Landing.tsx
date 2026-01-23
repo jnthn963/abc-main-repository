@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Shield, Wallet, TrendingUp, Users, Clock, Lock, ArrowRight, Zap, Award, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-
+import { useSecurityHardening } from '@/hooks/useSecurityHardening';
 // Founding Alpha countdown target: March 31, 2026
 const FOUNDING_ALPHA_END = new Date('2026-03-31T23:59:59');
 interface TimeLeft {
@@ -68,6 +68,9 @@ export default function Landing() {
     loading
   } = useAuth();
   const navigate = useNavigate();
+
+  // Apply security hardening
+  useSecurityHardening();
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
