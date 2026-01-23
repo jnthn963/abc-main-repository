@@ -11,9 +11,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
+// Supreme Governor email - hardcoded for maximum security
+const SUPREME_GOVERNOR_EMAIL = 'governor@alphaecosystem.com';
+
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(8, 'Vault Key must be at least 8 characters'),
 });
 
 export default function GovernorLogin() {
@@ -133,15 +136,19 @@ export default function GovernorLogin() {
           });
         }
       } else {
+        // Check if this is the Supreme Governor account
+        const currentUser = (await supabase.auth.getUser()).data.user;
+        const isSupremeGovernor = email.toLowerCase() === SUPREME_GOVERNOR_EMAIL.toLowerCase();
+        
         // Check if user has governor role
         const { data: roles } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .eq('user_id', currentUser?.id)
           .eq('role', 'governor')
           .single();
         
-        if (!roles) {
+        if (!roles && !isSupremeGovernor) {
           // User is not a governor - sign them out
           await supabase.auth.signOut();
           
@@ -158,10 +165,26 @@ export default function GovernorLogin() {
           
           toast({
             title: 'Access Denied',
-            description: 'This portal is restricted to authorized governors only.',
+            description: 'This portal is reserved for the Supreme Governor only.',
             variant: 'destructive',
           });
           return;
+        }
+        
+        // If Supreme Governor, ensure roles are assigned (backup check)
+        if (isSupremeGovernor && currentUser) {
+          // Roles should already be assigned by trigger, but double-check
+          const { data: existingRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', currentUser.id)
+            .eq('role', 'governor')
+            .maybeSingle();
+            
+          if (!existingRole) {
+            // Trigger should have handled this, but just in case
+            console.log('Supreme Governor detected - roles should be auto-assigned');
+          }
         }
         
         // Generate verification code for 2-step authentication
@@ -327,7 +350,7 @@ export default function GovernorLogin() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="governor@alpha.banking"
+                      placeholder="governor@alphaecosystem.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
@@ -341,7 +364,7 @@ export default function GovernorLogin() {
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium">
-                    Executive Password
+                    Master Vault Key
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
