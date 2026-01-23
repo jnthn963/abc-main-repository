@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import QRGatewayManager from "@/components/admin/QRGatewayManager";
+import PendingActionsQueue from "@/components/admin/PendingActionsQueue";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -379,6 +380,11 @@ const GovernorDashboard = () => {
                 <p className={`text-xl font-bold balance-number text-${stat.color}`}>{stat.value}</p>
               </Card>
             ))}
+          </div>
+
+          {/* Pending Actions Queue - Full Width */}
+          <div className="mb-6">
+            <PendingActionsQueue />
           </div>
 
           <div className="grid grid-cols-12 gap-6">

@@ -164,6 +164,9 @@ export type Database = {
       ledger: {
         Row: {
           amount: number
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           cleared_at: string | null
           clearing_ends_at: string | null
           created_at: string
@@ -172,6 +175,7 @@ export type Database = {
           id: string
           metadata: Json | null
           reference_number: string
+          rejection_reason: string | null
           related_loan_id: string | null
           related_user_id: string | null
           status: Database["public"]["Enums"]["transaction_status"]
@@ -181,6 +185,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           cleared_at?: string | null
           clearing_ends_at?: string | null
           created_at?: string
@@ -189,6 +196,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reference_number: string
+          rejection_reason?: string | null
           related_loan_id?: string | null
           related_user_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
@@ -198,6 +206,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           cleared_at?: string | null
           clearing_ends_at?: string | null
           created_at?: string
@@ -206,6 +217,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reference_number?: string
+          rejection_reason?: string | null
           related_loan_id?: string | null
           related_user_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
@@ -217,6 +229,9 @@ export type Database = {
       }
       p2p_loans: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           auto_repay_triggered: boolean
           borrower_id: string
           capital_lock_days: number
@@ -231,11 +246,15 @@ export type Database = {
           lender_id: string | null
           principal_amount: number
           reference_number: string
+          rejection_reason: string | null
           repaid_at: string | null
           status: Database["public"]["Enums"]["loan_status"]
           updated_at: string
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           auto_repay_triggered?: boolean
           borrower_id: string
           capital_lock_days?: number
@@ -250,11 +269,15 @@ export type Database = {
           lender_id?: string | null
           principal_amount: number
           reference_number: string
+          rejection_reason?: string | null
           repaid_at?: string | null
           status?: Database["public"]["Enums"]["loan_status"]
           updated_at?: string
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           auto_repay_triggered?: boolean
           borrower_id?: string
           capital_lock_days?: number
@@ -269,6 +292,7 @@ export type Database = {
           lender_id?: string | null
           principal_amount?: number
           reference_number?: string
+          rejection_reason?: string | null
           repaid_at?: string | null
           status?: Database["public"]["Enums"]["loan_status"]
           updated_at?: string
@@ -461,6 +485,23 @@ export type Database = {
       }
     }
     Views: {
+      pending_actions_queue: {
+        Row: {
+          action_type: string | null
+          amount: number | null
+          approval_status: string | null
+          collateral_amount: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          interest_rate: number | null
+          member_id: string | null
+          reference_number: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: []
+      }
       profiles_admin_view: {
         Row: {
           address_line1: string | null
@@ -691,6 +732,16 @@ export type Database = {
       generate_member_id: { Args: never; Returns: string }
       generate_reference_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      governor_approve_action: {
+        Args: {
+          p_action_id: string
+          p_action_type: string
+          p_approve: boolean
+          p_governor_id: string
+          p_rejection_reason?: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
