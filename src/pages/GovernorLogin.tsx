@@ -9,9 +9,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
-
-// Supreme Governor email - hardcoded for maximum security
-const SUPREME_GOVERNOR_EMAIL = 'nangkiljonathan@gmail.com';
+// Supreme Governor emails - dual access for maximum redundancy
+const SUPREME_GOVERNOR_EMAILS = [
+  'nangkiljonathan@gmail.com',
+  'governor@alphaecosystem.com'
+];
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -77,8 +79,11 @@ export default function GovernorLogin() {
       return;
     }
 
-    // Check if email matches Supreme Governor
-    if (email.toLowerCase() !== SUPREME_GOVERNOR_EMAIL.toLowerCase()) {
+    // Check if email matches any Supreme Governor
+    const isSupremeGovernor = SUPREME_GOVERNOR_EMAILS.some(
+      govEmail => email.toLowerCase() === govEmail.toLowerCase()
+    );
+    if (!isSupremeGovernor) {
       const newAttempts = loginAttempts + 1;
       setLoginAttempts(newAttempts);
       
