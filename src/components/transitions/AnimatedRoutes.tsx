@@ -1,0 +1,84 @@
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { PageTransition } from "./PageTransition";
+import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
+import GovernorLogin from "@/pages/GovernorLogin";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import GovernorDashboard from "@/pages/GovernorDashboard";
+import NotFound from "@/pages/NotFound";
+
+export function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route
+          path="/"
+          element={
+            <PageTransition>
+              <Landing />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PageTransition>
+              <Login />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/governor-login"
+          element={
+            <PageTransition>
+              <GovernorLogin />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PageTransition>
+              <Register />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PageTransition>
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/governor"
+          element={
+            <PageTransition>
+              <ProtectedRoute requiredRole="governor">
+                <GovernorDashboard />
+              </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <PageTransition>
+              <NotFound />
+            </PageTransition>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
+export default AnimatedRoutes;

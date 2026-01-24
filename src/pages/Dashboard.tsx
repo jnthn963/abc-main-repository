@@ -14,8 +14,9 @@ import GuidingFingerTutorial from '@/components/onboarding/GuidingFingerTutorial
 import DepositModal from '@/components/deposit/DepositModal';
 import PendingReviewBanner from '@/components/dashboard/PendingReviewBanner';
 import { ConnectionStatusBanner } from '@/components/common/ConnectionStatusBanner';
-import { Loader2, Shield } from 'lucide-react';
 import FloatingMemberCard from '@/components/dashboard/FloatingMemberCard';
+import { SovereignMonolith } from '@/components/transitions/SovereignMonolith';
+import { StaggeredContainer, StaggeredItem } from '@/components/transitions/StaggeredContainer';
 
 export default function Dashboard() {
   const { user, profile, loading, refreshProfile } = useAuth();
@@ -60,19 +61,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <Shield className="w-16 h-16 text-primary mx-auto animate-pulse" />
-            <Loader2 className="w-8 h-8 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-spin" />
-          </div>
-          <p className="text-muted-foreground terminal-text">
-            LOADING ALPHA TERMINAL...
-          </p>
-        </div>
-      </div>
-    );
+    return <SovereignMonolith message="LOADING ALPHA TERMINAL..." />;
   }
 
   return (
@@ -84,36 +73,44 @@ export default function Dashboard() {
       {/* Main Dashboard */}
       <main className="pt-20 pb-8 px-4 lg:px-6">
         <div className="max-w-[1600px] mx-auto">
-          {/* Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-1">
-              Good Morning, <span className="gradient-gold">{profile?.display_name || 'Alpha Member'}</span>
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Your sovereign financial dashboard • Member ID: {profile?.member_id || 'Loading...'}
-            </p>
-          </div>
+          {/* Header with staggered animation */}
+          <StaggeredContainer className="mb-6">
+            <StaggeredItem>
+              <h2 className="text-2xl font-bold mb-1">
+                Good Morning, <span className="gradient-gold">{profile?.display_name || 'Alpha Member'}</span>
+              </h2>
+            </StaggeredItem>
+            <StaggeredItem>
+              <p className="text-sm text-muted-foreground">
+                Your sovereign financial dashboard • Member ID: {profile?.member_id || 'Loading...'}
+              </p>
+            </StaggeredItem>
+          </StaggeredContainer>
 
           {/* Pending Review Banner - Shows when user has pending transactions */}
-          <PendingReviewBanner />
+          <StaggeredContainer>
+            <StaggeredItem>
+              <PendingReviewBanner />
+            </StaggeredItem>
+          </StaggeredContainer>
 
-          {/* Three Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Three Column Layout with staggered entry */}
+          <StaggeredContainer className="grid grid-cols-1 lg:grid-cols-12 gap-6" staggerDelay={0.15}>
             {/* Left Column - Member Pulse (30%) */}
-            <div className="lg:col-span-3" id="vault-balance">
+            <StaggeredItem className="lg:col-span-3" id="vault-balance">
               <MemberPulse onTransferClick={() => setShowTransferHub(true)} />
-            </div>
+            </StaggeredItem>
 
             {/* Center Column - Alpha Marketplace (40%) */}
-            <div className="lg:col-span-5" id="marketplace">
+            <StaggeredItem className="lg:col-span-5" id="marketplace">
               <AlphaMarketplace />
-            </div>
+            </StaggeredItem>
 
             {/* Right Column - Sovereign Feed (30%) */}
-            <div className="lg:col-span-4" id="news-feed">
+            <StaggeredItem className="lg:col-span-4" id="news-feed">
               <SovereignFeed />
-            </div>
-          </div>
+            </StaggeredItem>
+          </StaggeredContainer>
         </div>
       </main>
 
