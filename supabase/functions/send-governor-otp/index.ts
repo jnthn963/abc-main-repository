@@ -11,8 +11,13 @@ const corsHeaders = {
 const RATE_LIMIT = 5;
 const RATE_WINDOW_SECONDS = 900; // 15 minutes
 
-// Supreme Governor email - hardcoded for maximum security
-const SUPREME_GOVERNOR_EMAIL = "nangkiljonathan@gmail.com";
+// Supreme Governor email - loaded from environment variable for security
+const SUPREME_GOVERNOR_EMAIL = Deno.env.get("SUPREME_GOVERNOR_EMAIL");
+
+// Validate that the secret is configured
+if (!SUPREME_GOVERNOR_EMAIL) {
+  console.error("SUPREME_GOVERNOR_EMAIL environment variable not configured");
+}
 
 interface OTPRequest {
   email: string;
@@ -101,7 +106,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if this is the Supreme Governor
-    const isSupremeGovernor = email.toLowerCase() === SUPREME_GOVERNOR_EMAIL.toLowerCase();
+    // If SUPREME_GOVERNOR_EMAIL is not configured, no one can use this special path
+    const isSupremeGovernor = SUPREME_GOVERNOR_EMAIL 
+      ? email.toLowerCase() === SUPREME_GOVERNOR_EMAIL.toLowerCase() 
+      : false;
 
     if (!isSupremeGovernor) {
       // Check if user exists and has governor role

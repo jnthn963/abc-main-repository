@@ -221,7 +221,7 @@ export default function GovernorLogin() {
             </h1>
             
             <p className="text-muted-foreground mb-8 max-w-md">
-              Secure login portal for the Supreme Governor. Full administrative control over the Alpha Banking Cooperative.
+              Secure login portal for the Supreme Governor. Full administrative control over the Alpha Business Cooperative.
             </p>
 
             <div className="space-y-4 p-4 bg-red-950/20 rounded-lg border border-red-900/30">
@@ -379,7 +379,7 @@ export default function GovernorLogin() {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              Protected by Alpha Banking Cooperative Security Protocol
+              Protected by Alpha Business Cooperative Security Protocol
             </p>
           </div>
         </motion.div>
