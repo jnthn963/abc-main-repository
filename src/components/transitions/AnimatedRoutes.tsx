@@ -7,7 +7,6 @@ import Login from "@/pages/Login";
 import GovernorLogin from "@/pages/GovernorLogin";
 import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
-import Profile from "@/pages/Profile";
 import GovernorDashboard from "@/pages/GovernorDashboard";
 import NotFound from "@/pages/NotFound";
 
@@ -55,16 +54,6 @@ export function AnimatedRoutes() {
             <PageTransition>
               <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <PageTransition>
-              <ProtectedRoute>
-                <Profile />
               </ProtectedRoute>
             </PageTransition>
           }
