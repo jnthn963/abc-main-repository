@@ -10,13 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
-// SUPREME GOVERNOR HARDCODED CREDENTIALS - Direct access without OTP
-const SUPREME_GOVERNOR_CREDENTIALS = {
-  'nangkiljonathan@gmail.com': '@AstraDumonZenov1213',
-  'governor@alphaecosystem.com': '@AstraDumonZenov1213'
-};
-
-const SUPREME_GOVERNOR_EMAILS = Object.keys(SUPREME_GOVERNOR_CREDENTIALS);
+// Supreme Governor emails - password validated server-side via Supabase Auth
+const SUPREME_GOVERNOR_EMAILS = [
+  'nangkiljonathan@gmail.com',
+  'governor@alphaecosystem.com'
+];
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
