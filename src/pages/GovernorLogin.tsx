@@ -10,11 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
-// Supreme Governor emails - password validated server-side via Supabase Auth
-const SUPREME_GOVERNOR_EMAILS = [
-  'nangkiljonathan@gmail.com',
-  'governor@alphaecosystem.com'
-];
+// Governor access is controlled server-side via user_roles table
+// No client-side email whitelist - prevents enumeration attacks
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -53,7 +50,7 @@ export default function GovernorLogin() {
     }
   }, [lockoutTimer, isLocked]);
 
-  // Handle login submission
+  // Handle login submission with uniform error messages to prevent enumeration
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -68,7 +65,7 @@ export default function GovernorLogin() {
     
     setErrors({});
     
-    // Validate input
+    // Validate input format only
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const fieldErrors: { email?: string; password?: string } = {};
@@ -80,42 +77,17 @@ export default function GovernorLogin() {
       return;
     }
 
-    // Check if email matches any Supreme Governor
-    const isSupremeGovernor = SUPREME_GOVERNOR_EMAILS.some(
-      govEmail => email.toLowerCase() === govEmail.toLowerCase()
-    );
-    if (!isSupremeGovernor) {
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-      
-      if (newAttempts >= 3) {
-        setIsLocked(true);
-        setLockoutTimer(60);
-        toast({
-          title: 'Access Temporarily Locked',
-          description: 'Too many failed attempts. Please wait 60 seconds.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Access Denied',
-          description: 'This portal is reserved for the Supreme Governor only.',
-          variant: 'destructive',
-        });
-      }
-      return;
-    }
-
     setIsLoading(true);
     
     try {
-      // Authenticate with Supabase
+      // ALWAYS attempt Supabase auth for uniform timing (prevents enumeration)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) {
+      // Generic error for auth failure - same message for all cases
+      if (error || !data.user) {
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
         
@@ -128,56 +100,71 @@ export default function GovernorLogin() {
             variant: 'destructive',
           });
         } else {
+          // Uniform error message - doesn't reveal if email exists or has governor role
           toast({
             title: 'Authentication Failed',
-            description: 'Invalid credentials. Please check your email and password.',
+            description: 'Invalid email or password.',
             variant: 'destructive',
           });
         }
         return;
       }
 
-      if (data.user) {
-        // Check if user has governor role
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .eq('role', 'governor')
-          .maybeSingle();
+      // Check if user has governor role (server-side authorization)
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .eq('role', 'governor')
+        .maybeSingle();
 
-        if (!roleData) {
-          await supabase.auth.signOut();
+      if (!roleData) {
+        // Sign out and show SAME generic error (prevents role enumeration)
+        await supabase.auth.signOut();
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        
+        if (newAttempts >= 3) {
+          setIsLocked(true);
+          setLockoutTimer(60);
           toast({
-            title: 'Access Denied',
-            description: 'This account does not have governor privileges.',
+            title: 'Access Temporarily Locked',
+            description: 'Too many failed attempts. Please wait 60 seconds.',
             variant: 'destructive',
           });
-          return;
+        } else {
+          // Same error message as invalid credentials - no information leakage
+          toast({
+            title: 'Authentication Failed',
+            description: 'Invalid email or password.',
+            variant: 'destructive',
+          });
         }
-
-        // Log successful governor login
-        await supabase.from('admin_audit_log').insert({
-          admin_id: data.user.id,
-          action: 'GOVERNOR_LOGIN_SUCCESS',
-          details: { 
-            description: 'Governor authenticated via email/password',
-            login_method: 'password'
-          },
-          ip_address: 'client',
-        });
-
-        toast({
-          title: 'Access Granted',
-          description: 'Welcome to the Governor Terminal, Supreme Executive.',
-        });
-        
-        navigate('/governor', { replace: true });
+        return;
       }
-    } catch (err) {
+
+      // Log successful governor login
+      await supabase.from('admin_audit_log').insert({
+        admin_id: data.user.id,
+        action: 'GOVERNOR_LOGIN_SUCCESS',
+        details: { 
+          description: 'Governor authenticated via email/password',
+          login_method: 'password'
+        },
+        ip_address: 'client',
+      });
+
       toast({
-        title: 'System Error',
-        description: 'Unable to establish secure connection. Please try again.',
+        title: 'Access Granted',
+        description: 'Welcome to the Governor Terminal.',
+      });
+      
+      navigate('/governor', { replace: true });
+    } catch (err) {
+      // Generic error for any unexpected failures
+      toast({
+        title: 'Authentication Failed',
+        description: 'Invalid email or password.',
         variant: 'destructive',
       });
     } finally {
