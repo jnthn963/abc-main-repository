@@ -1,6 +1,8 @@
+import { Link } from "react-router-dom";
 import { Shield, User, Bell, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SecureLogout } from "@/components/auth/SecureLogout";
+import { useAuth } from "@/hooks/useAuth";
 import LiveTicker from "./LiveTicker";
 
 interface NavbarProps {
@@ -8,11 +10,13 @@ interface NavbarProps {
 }
 
 const Navbar = ({ onDepositClick }: NavbarProps) => {
+  const { profile } = useAuth();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left: Logo */}
-        <div className="flex items-center gap-3">
+        <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-amber-700 flex items-center justify-center glow-gold">
             <span className="text-xl font-bold text-primary-foreground">α</span>
           </div>
@@ -20,7 +24,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             <h1 className="text-lg font-bold gradient-gold">Alpha Business</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cooperative</p>
           </div>
-        </div>
+        </Link>
 
         {/* Center: Live Ticker */}
         <div className="flex-1 max-w-2xl mx-4 hidden md:block">
@@ -34,18 +38,33 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
           </button>
           
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/50 border border-border">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center">
-              <User className="w-4 h-4 text-primary-foreground" />
+          {/* Profile Link */}
+          <Link 
+            to="/profile"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/50 border border-border hover:border-[#D4AF37]/30 transition-colors"
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center overflow-hidden">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-4 h-4 text-primary-foreground" />
+              )}
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-medium">A***7</p>
+              <p className="text-sm font-medium">
+                {profile?.display_name 
+                  ? `${profile.display_name.slice(0, 1)}***${profile.display_name.slice(-1)}`
+                  : 'Member'
+                }
+              </p>
               <div className="flex items-center gap-1">
                 <Shield className="w-3 h-3 text-success" />
-                <span className="text-[10px] text-success">Verified</span>
+                <span className="text-[10px] text-success">
+                  {profile?.kyc_status === 'verified' ? 'Verified' : 'Pending'}
+                </span>
               </div>
             </div>
-          </div>
+          </Link>
 
           <Button 
             id="deposit-button"
