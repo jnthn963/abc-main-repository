@@ -36,27 +36,34 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Vault Balance Card */}
-      <Card className="glass-card p-5 border-primary/20">
+      {/* Vault Balance Card - Polished Gold Theme */}
+      <Card className="glass-card p-5 border-[#D4AF37]/30 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Wallet className="w-4 h-4 text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
+              <Wallet className="w-4 h-4 text-[#D4AF37]" />
             </div>
             <span className="text-sm text-muted-foreground">Vault Balance</span>
           </div>
-          <div className="flex items-center gap-1 text-success text-xs font-medium">
+          <div className="flex items-center gap-1 text-[#D4AF37] text-xs font-medium">
             <ArrowUpRight className="w-3 h-3" />
             +{systemStats?.vaultInterestRate || 0.5}%
           </div>
         </div>
-        <div className="balance-number text-3xl text-success mb-1">
+        <div 
+          className="balance-number text-3xl mb-1"
+          style={{
+            background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 60%, #8B7500 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
           ₱{vaultBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
         </div>
       </Card>
 
-      {/* Frozen Balance */}
-      <Card className="glass-card p-4 border-destructive/20">
+      {/* Frozen Balance - Obsidian Theme */}
+      <Card className="glass-card p-4 border-destructive/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-destructive/20 flex items-center justify-center">
@@ -78,20 +85,20 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
       {/* Daily Interest Display */}
       <InterestDisplay />
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Gold Accent Theme */}
       <div className="grid grid-cols-2 gap-3" id="transfer-funds">
         <Card 
-          className="glass-card p-4 hover:border-primary/50 cursor-pointer transition-all group"
+          className="glass-card p-4 border-[#D4AF37]/20 hover:border-[#D4AF37]/50 cursor-pointer transition-all group bg-gradient-to-b from-[#1a1a1a]/50 to-[#0d0d0d]/50"
           onClick={onTransferClick}
         >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors">
-            <Send className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center mb-2 group-hover:bg-[#D4AF37]/20 transition-colors">
+            <Send className="w-5 h-5 text-[#D4AF37]" />
           </div>
           <p className="text-sm font-medium">Transfer Funds</p>
           <p className="text-xs text-muted-foreground">Banks • E-Wallets</p>
         </Card>
         <Card 
-          className="glass-card p-4 hover:border-success/50 cursor-pointer transition-all group"
+          className="glass-card p-4 border-success/20 hover:border-success/50 cursor-pointer transition-all group bg-gradient-to-b from-[#1a1a1a]/50 to-[#0d0d0d]/50"
           onClick={() => setShowLoansPanel(true)}
         >
           <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center mb-2 group-hover:bg-success/20 transition-colors">

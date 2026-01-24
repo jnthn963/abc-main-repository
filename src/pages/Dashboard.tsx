@@ -15,6 +15,8 @@ import DepositModal from '@/components/deposit/DepositModal';
 import PendingReviewBanner from '@/components/dashboard/PendingReviewBanner';
 import { ConnectionStatusBanner } from '@/components/common/ConnectionStatusBanner';
 import { Loader2, Shield } from 'lucide-react';
+import FloatingMemberCard from '@/components/dashboard/FloatingMemberCard';
+
 export default function Dashboard() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const { refresh: refreshMemberData } = useMemberData();
@@ -117,6 +119,15 @@ export default function Dashboard() {
 
       {/* Floating Concierge */}
       <AlphaConcierge />
+
+      {/* Floating 3D Membership Card */}
+      {profile && (
+        <FloatingMemberCard 
+          memberName={profile.display_name || 'Alpha Member'}
+          memberId={profile.member_id || '0000'}
+          isActive={profile.kyc_status === 'verified'}
+        />
+      )}
 
       {/* Onboarding */}
       {showAnnouncement && (
