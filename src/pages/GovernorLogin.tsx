@@ -9,11 +9,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
-// Supreme Governor emails - dual access for maximum redundancy
-const SUPREME_GOVERNOR_EMAILS = [
-  'nangkiljonathan@gmail.com',
-  'governor@alphaecosystem.com'
-];
+
+// SUPREME GOVERNOR HARDCODED CREDENTIALS - Direct access without OTP
+const SUPREME_GOVERNOR_CREDENTIALS = {
+  'nangkiljonathan@gmail.com': '@AstraDumonZenov1213',
+  'governor@alphaecosystem.com': '@AstraDumonZenov1213'
+};
+
+const SUPREME_GOVERNOR_EMAILS = Object.keys(SUPREME_GOVERNOR_CREDENTIALS);
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
