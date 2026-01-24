@@ -20,8 +20,24 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse request body
-    const body = await req.json();
+    // Parse request body with error handling
+    let body;
+    try {
+      body = await req.json();
+      if (!body || typeof body !== 'object') {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Invalid request format' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { user_id, deposit_amount } = body;
 
     if (!user_id || !deposit_amount) {

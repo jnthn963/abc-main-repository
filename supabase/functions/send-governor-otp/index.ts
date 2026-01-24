@@ -35,7 +35,24 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    const { email }: OTPRequest = await req.json();
+    // Parse request body with error handling
+    let email: string;
+    try {
+      const body = await req.json();
+      if (!body || typeof body !== 'object') {
+        return new Response(
+          JSON.stringify({ error: "Invalid request format" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      email = body.email;
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // Validate email format
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
