@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limit configuration: 10 deposits per hour per user
+const RATE_LIMIT = 10;
+const RATE_WINDOW_SECONDS = 3600; // 1 hour
+
 // Sanitize error messages to prevent internal details from leaking to clients
 function sanitizeErrorMessage(error: string): string {
   const safeErrors: Record<string, string> = {
@@ -25,7 +29,7 @@ function sanitizeErrorMessage(error: string): string {
 
 // Process Deposit Edge Function
 // Records deposits with pending_review status for Governor approval
-// Enforces: Integer Rule, min/max limits, 24-hour clearing
+// Enforces: Integer Rule, min/max limits, 24-hour clearing, rate limiting
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -60,6 +64,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Use service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check rate limit
+    const rateLimitKey = `deposit:${user.id}`;
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_key: rateLimitKey,
+      p_limit: RATE_LIMIT,
+      p_window_seconds: RATE_WINDOW_SECONDS
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (allowed === false) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Too many deposit requests. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Parse request body
     const body = await req.json();
     const { amount, reference_number } = body;
@@ -87,9 +113,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Use service role for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Generate reference number if not provided
     const { data: refData } = await supabase.rpc('generate_reference_number');
