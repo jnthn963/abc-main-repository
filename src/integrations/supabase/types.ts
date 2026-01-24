@@ -41,6 +41,78 @@ export type Database = {
         }
         Relationships: []
       }
+      cdc_config: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          include_old_data: boolean | null
+          operations: string[] | null
+          table_name: string
+          updated_at: string | null
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          include_old_data?: boolean | null
+          operations?: string[] | null
+          table_name: string
+          updated_at?: string | null
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          include_old_data?: boolean | null
+          operations?: string[] | null
+          table_name?: string
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      cdc_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string | null
+          request_id: number | null
+          table_name: string
+          webhook_response: string | null
+          webhook_status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id?: string | null
+          request_id?: number | null
+          table_name: string
+          webhook_response?: string | null
+          webhook_status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string | null
+          request_id?: number | null
+          table_name?: string
+          webhook_response?: string | null
+          webhook_status?: string | null
+        }
+        Relationships: []
+      }
       cms_posts: {
         Row: {
           author_id: string | null
@@ -698,7 +770,18 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      cleanup_cdc_events: { Args: { p_days_old?: number }; Returns: number }
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      disable_cdc_on_table: { Args: { p_table_name: string }; Returns: Json }
+      enable_cdc_on_table: {
+        Args: {
+          p_include_old_data?: boolean
+          p_operations?: string[]
+          p_table_name: string
+          p_webhook_url: string
+        }
+        Returns: Json
+      }
       fund_loan_atomic: {
         Args: { p_lender_id: string; p_loan_id: string }
         Returns: Json
@@ -706,6 +789,7 @@ export type Database = {
       generate_member_id: { Args: never; Returns: string }
       generate_reference_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      get_cdc_stats: { Args: never; Returns: Json }
       get_pending_action_counts: { Args: never; Returns: Json }
       get_pending_actions: {
         Args: never
