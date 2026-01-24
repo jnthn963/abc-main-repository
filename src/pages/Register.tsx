@@ -271,7 +271,7 @@ export default function Register() {
       }
 
       toast({
-        title: 'Welcome to Alpha Banking!',
+        title: 'Welcome to Alpha Business!',
         description: 'Your Founding Alpha membership has been activated.',
       });
       

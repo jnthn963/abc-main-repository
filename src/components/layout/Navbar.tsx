@@ -13,11 +13,11 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left: Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center glow-gold">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-amber-700 flex items-center justify-center glow-gold">
             <span className="text-xl font-bold text-primary-foreground">α</span>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold gradient-gold">Alpha Banking</h1>
+            <h1 className="text-lg font-bold gradient-gold">Alpha Business</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cooperative</p>
           </div>
         </div>

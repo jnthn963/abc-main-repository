@@ -1,5 +1,5 @@
 -- =====================================================
--- ALPHA BANKING COOPERATIVE (ABC) - COMPLETE SCHEMA EXPORT
+-- ALPHA BUSINESS COOPERATIVE (ABC) - COMPLETE SCHEMA EXPORT
 -- Generated: 2026-01-24
 -- For migration to external Supabase project
 -- =====================================================

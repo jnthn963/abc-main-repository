@@ -97,7 +97,7 @@ export default function Login() {
             >
               <div className="flex items-center gap-3 mb-8">
                 <Shield className="w-12 h-12 text-primary" />
-                <span className="text-3xl font-bold gradient-gold">ALPHA BANKING</span>
+                <span className="text-3xl font-bold gradient-gold">ALPHA BUSINESS</span>
               </div>
               
               <h1 className="text-4xl font-bold text-foreground mb-4">
@@ -140,7 +140,7 @@ export default function Login() {
               {/* Mobile Header */}
               <div className="lg:hidden flex items-center gap-3 mb-8">
                 <Shield className="w-8 h-8 text-primary" />
-                <span className="text-xl font-bold gradient-gold">ALPHA BANKING</span>
+                <span className="text-xl font-bold gradient-gold">ALPHA BUSINESS</span>
               </div>
 
               <AccountRecovery
@@ -170,7 +170,7 @@ export default function Login() {
           >
             <div className="flex items-center gap-3 mb-8">
               <Shield className="w-12 h-12 text-primary" />
-              <span className="text-3xl font-bold gradient-gold">ALPHA BANKING</span>
+              <span className="text-3xl font-bold gradient-gold">ALPHA BUSINESS</span>
             </div>
             
             <h1 className="text-4xl font-bold text-foreground mb-4">
@@ -210,7 +210,7 @@ export default function Login() {
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <Shield className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold gradient-gold">ALPHA BANKING</span>
+            <span className="text-xl font-bold gradient-gold">ALPHA BUSINESS</span>
           </div>
 
           <Link 
