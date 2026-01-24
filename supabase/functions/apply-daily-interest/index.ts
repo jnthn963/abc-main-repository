@@ -19,6 +19,17 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
+    // CRITICAL: Verify service role authorization for cron job security
+    // Prevents unauthorized triggering of interest distribution
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.includes(supabaseServiceKey)) {
+      console.error('Unauthorized cron job attempt - missing or invalid service role key');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized - service role required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Call atomic daily interest function with FOR UPDATE locking
