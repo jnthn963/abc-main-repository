@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useSecurityHardening } from '@/hooks/useSecurityHardening';
+import AccountRecovery from '@/components/auth/AccountRecovery';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -16,6 +17,7 @@ const loginSchema = z.object({
 });
 
 export default function Login() {
+  const [showRecovery, setShowRecovery] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -76,6 +78,81 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
+  // Show recovery flow
+  if (showRecovery) {
+    return (
+      <div className="min-h-screen bg-background flex">
+        {/* Left Panel - Branding */}
+        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
+          <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-success/10 rounded-full blur-3xl" />
+          
+          <div className="relative z-10 flex flex-col justify-center px-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <Shield className="w-12 h-12 text-primary" />
+                <span className="text-3xl font-bold gradient-gold">ALPHA BANKING</span>
+              </div>
+              
+              <h1 className="text-4xl font-bold text-foreground mb-4">
+                Account Recovery
+              </h1>
+              
+              <p className="text-muted-foreground mb-8 max-w-md">
+                Verify your identity using your security questions to recover access to your account.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <span>Secure verification process</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <span>Rate-limited for protection</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <span>Answers never exposed</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Right Panel - Recovery Form */}
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="recovery"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-md"
+            >
+              {/* Mobile Header */}
+              <div className="lg:hidden flex items-center gap-3 mb-8">
+                <Shield className="w-8 h-8 text-primary" />
+                <span className="text-xl font-bold gradient-gold">ALPHA BANKING</span>
+              </div>
+
+              <AccountRecovery
+                onBack={() => setShowRecovery(false)}
+                onSuccess={() => setShowRecovery(false)}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -178,9 +255,18 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowRecovery(true)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input

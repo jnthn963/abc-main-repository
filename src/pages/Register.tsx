@@ -25,7 +25,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 
 // Step 1: Account Information
 const accountSchema = z.object({
@@ -234,19 +233,7 @@ export default function Register() {
           }
         }
 
-        // Hash security answers client-side before transmission
-        // This eliminates plaintext exposure in browser memory and network transmission
-        // Server-side trigger will detect $2 prefix and skip re-hashing
-        const hashedAnswer1 = await bcrypt.hash(
-          formData.securityAnswer1.toLowerCase().trim(),
-          10
-        );
-        const hashedAnswer2 = await bcrypt.hash(
-          formData.securityAnswer2.toLowerCase().trim(),
-          10
-        );
-
-        // Update profile with additional info (security answers pre-hashed)
+        // Update profile with non-sensitive info
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -257,10 +244,6 @@ export default function Register() {
             city: formData.city,
             province: formData.province,
             postal_code: formData.postalCode,
-            security_question_1: formData.securityQuestion1,
-            security_answer_1: hashedAnswer1,
-            security_question_2: formData.securityQuestion2,
-            security_answer_2: hashedAnswer2,
             referrer_id: referrerId,
             membership_tier: 'founding', // Founding Alpha status!
           })
@@ -268,6 +251,22 @@ export default function Register() {
 
         if (updateError) {
           console.error('Profile update error:', updateError);
+        }
+
+        // Store security credentials via secure server-side RPC
+        // This hashes answers server-side, never exposing the algorithm to client
+        const { error: credError } = await supabase.rpc('set_security_credentials', {
+          p_user_id: user.id,
+          p_question_1: formData.securityQuestion1,
+          p_answer_1: formData.securityAnswer1.toLowerCase().trim(),
+          p_question_2: formData.securityQuestion2,
+          p_answer_2: formData.securityAnswer2.toLowerCase().trim()
+        });
+
+        if (credError) {
+          console.error('Security credentials error:', credError);
+          // Don't block registration for credential storage failure
+          // User can reset them later via account recovery
         }
       }
 
