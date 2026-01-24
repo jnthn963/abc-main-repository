@@ -50,11 +50,23 @@ export default function GovernorLogin() {
     }
   }, [lockoutTimer, isLocked]);
 
-  // Handle login submission with uniform error messages to prevent enumeration
+  // Handle login submission with uniform error messages and timing to prevent enumeration
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const startTime = Date.now();
+    const MIN_RESPONSE_TIME = 800; // Minimum 800ms to prevent timing oracle attacks
+    
+    // Helper to ensure uniform timing on all responses
+    const uniformDelay = async () => {
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(0, MIN_RESPONSE_TIME - elapsed);
+      if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    };
     
     if (isLocked) {
+      await uniformDelay();
       toast({
         title: 'Access Temporarily Locked',
         description: `Too many failed attempts. Please wait ${lockoutTimer} seconds.`,
@@ -74,6 +86,7 @@ export default function GovernorLogin() {
         if (err.path[0] === 'password') fieldErrors.password = err.message;
       });
       setErrors(fieldErrors);
+      await uniformDelay();
       return;
     }
 
@@ -90,6 +103,8 @@ export default function GovernorLogin() {
       if (error || !data.user) {
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
+        
+        await uniformDelay(); // Ensure uniform timing before showing error
         
         if (newAttempts >= 3) {
           setIsLocked(true);
@@ -124,6 +139,8 @@ export default function GovernorLogin() {
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
         
+        await uniformDelay(); // Ensure uniform timing before showing error
+        
         if (newAttempts >= 3) {
           setIsLocked(true);
           setLockoutTimer(60);
@@ -154,6 +171,8 @@ export default function GovernorLogin() {
         ip_address: 'client',
       });
 
+      await uniformDelay(); // Ensure uniform timing even on success
+      
       toast({
         title: 'Access Granted',
         description: 'Welcome to the Governor Terminal.',
@@ -161,6 +180,7 @@ export default function GovernorLogin() {
       
       navigate('/governor', { replace: true });
     } catch (err) {
+      await uniformDelay(); // Ensure uniform timing on errors
       // Generic error for any unexpected failures
       toast({
         title: 'Authentication Failed',
