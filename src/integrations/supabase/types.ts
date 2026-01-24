@@ -320,10 +320,6 @@ export type Database = {
           province: string | null
           referral_code: string | null
           referrer_id: string | null
-          security_answer_1: string | null
-          security_answer_2: string | null
-          security_question_1: string | null
-          security_question_2: string | null
           total_referral_earnings: number
           updated_at: string
           vault_balance: number
@@ -348,10 +344,6 @@ export type Database = {
           province?: string | null
           referral_code?: string | null
           referrer_id?: string | null
-          security_answer_1?: string | null
-          security_answer_2?: string | null
-          security_question_1?: string | null
-          security_question_2?: string | null
           total_referral_earnings?: number
           updated_at?: string
           vault_balance?: number
@@ -376,10 +368,6 @@ export type Database = {
           province?: string | null
           referral_code?: string | null
           referrer_id?: string | null
-          security_answer_1?: string | null
-          security_answer_2?: string | null
-          security_question_1?: string | null
-          security_question_2?: string | null
           total_referral_earnings?: number
           updated_at?: string
           vault_balance?: number
@@ -572,73 +560,11 @@ export type Database = {
           province: string | null
           referral_code: string | null
           referrer_id: string | null
-          security_answer_1: string | null
-          security_answer_2: string | null
           security_question_1: string | null
           security_question_2: string | null
           total_referral_earnings: number | null
           updated_at: string | null
           vault_balance: number | null
-        }
-        Insert: {
-          address_line1?: string | null
-          address_line2?: string | null
-          city?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          email?: string | null
-          frozen_balance?: number | null
-          id?: string | null
-          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
-          last_login_at?: string | null
-          lending_balance?: number | null
-          member_id?: string | null
-          membership_tier?:
-            | Database["public"]["Enums"]["membership_tier"]
-            | null
-          onboarding_completed?: boolean | null
-          phone?: string | null
-          postal_code?: string | null
-          province?: string | null
-          referral_code?: string | null
-          referrer_id?: string | null
-          security_answer_1?: never
-          security_answer_2?: never
-          security_question_1?: string | null
-          security_question_2?: string | null
-          total_referral_earnings?: number | null
-          updated_at?: string | null
-          vault_balance?: number | null
-        }
-        Update: {
-          address_line1?: string | null
-          address_line2?: string | null
-          city?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          email?: string | null
-          frozen_balance?: number | null
-          id?: string | null
-          kyc_status?: Database["public"]["Enums"]["kyc_status"] | null
-          last_login_at?: string | null
-          lending_balance?: number | null
-          member_id?: string | null
-          membership_tier?:
-            | Database["public"]["Enums"]["membership_tier"]
-            | null
-          onboarding_completed?: boolean | null
-          phone?: string | null
-          postal_code?: string | null
-          province?: string | null
-          referral_code?: string | null
-          referrer_id?: string | null
-          security_answer_1?: never
-          security_answer_2?: never
-          security_question_1?: string | null
-          security_question_2?: string | null
-          total_referral_earnings?: number | null
-          updated_at?: string | null
-          vault_balance?: number | null
         }
         Relationships: [
           {
@@ -823,6 +749,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      initiate_account_recovery: { Args: { p_email: string }; Returns: Json }
       log_profile_access: {
         Args: { p_access_reason?: string; p_accessed_profile_id: string }
         Returns: undefined
@@ -855,6 +782,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      verify_recovery_answers: {
+        Args: { p_answer_1: string; p_answer_2: string; p_user_id: string }
+        Returns: Json
       }
       verify_security_answer: {
         Args: { p_answer: string; p_question_num: number; p_user_id: string }
