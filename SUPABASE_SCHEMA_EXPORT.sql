@@ -1343,11 +1343,25 @@ INSERT INTO public.reserve_fund (id, total_reserve_balance, total_payouts_made, 
 VALUES (gen_random_uuid(), 0, 0, 0);
 
 -- =====================================================
+-- STEP 14: CONFIGURE CDC WEBHOOKS
+-- =====================================================
+-- CDC webhook endpoint for your external Supabase project:
+-- https://onlacjgyixikndtrxcug.supabase.co/functions/v1/cdc-webhook
+
+INSERT INTO public.cdc_config (table_name, webhook_url, operations, include_old_data, enabled)
+VALUES 
+  ('profiles', 'https://onlacjgyixikndtrxcug.supabase.co/functions/v1/cdc-webhook', ARRAY['INSERT', 'UPDATE', 'DELETE'], true, true),
+  ('ledger', 'https://onlacjgyixikndtrxcug.supabase.co/functions/v1/cdc-webhook', ARRAY['INSERT', 'UPDATE'], true, true),
+  ('p2p_loans', 'https://onlacjgyixikndtrxcug.supabase.co/functions/v1/cdc-webhook', ARRAY['INSERT', 'UPDATE'], true, true)
+ON CONFLICT (table_name) DO UPDATE SET
+  webhook_url = EXCLUDED.webhook_url,
+  updated_at = NOW();
+
+-- =====================================================
 -- MIGRATION COMPLETE
 -- =====================================================
 -- After running this schema:
 -- 1. Update Supabase Auth settings (enable email confirmations as needed)
--- 2. Update CDC webhook URLs to point to your external Supabase project
--- 3. Deploy edge functions from supabase/functions/ directory
--- 4. Configure storage buckets if needed
+-- 2. Deploy edge functions from supabase/functions/ directory
+-- 3. Configure storage buckets if needed
 -- =====================================================
