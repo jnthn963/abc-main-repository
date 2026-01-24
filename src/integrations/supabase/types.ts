@@ -480,6 +480,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_credentials: {
+        Row: {
+          created_at: string
+          security_answer_1: string | null
+          security_answer_2: string | null
+          security_question_1: string | null
+          security_question_2: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          security_answer_1?: string | null
+          security_answer_2?: string | null
+          security_question_1?: string | null
+          security_question_2?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          security_answer_1?: string | null
+          security_answer_2?: string | null
+          security_question_1?: string | null
+          security_question_2?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -655,8 +685,6 @@ export type Database = {
           province: string | null
           referral_code: string | null
           referrer_id: string | null
-          security_question_1: string | null
-          security_question_2: string | null
           total_referral_earnings: number | null
           updated_at: string | null
           vault_balance: number | null
@@ -683,8 +711,6 @@ export type Database = {
           province?: string | null
           referral_code?: string | null
           referrer_id?: string | null
-          security_question_1?: string | null
-          security_question_2?: string | null
           total_referral_earnings?: number | null
           updated_at?: string | null
           vault_balance?: number | null
@@ -711,8 +737,6 @@ export type Database = {
           province?: string | null
           referral_code?: string | null
           referrer_id?: string | null
-          security_question_1?: string | null
-          security_question_2?: string | null
           total_referral_earnings?: number | null
           updated_at?: string | null
           vault_balance?: number | null
@@ -775,6 +799,13 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_security_questions: {
+        Args: { p_user_id: string }
+        Returns: {
+          question_1: string
+          question_2: string
+        }[]
+      }
       governor_approve_action: {
         Args: {
           p_action_id: string
@@ -814,6 +845,16 @@ export type Database = {
       request_loan_atomic: {
         Args: { p_amount: number; p_user_id: string }
         Returns: Json
+      }
+      set_security_credentials: {
+        Args: {
+          p_answer_1: string
+          p_answer_2: string
+          p_question_1: string
+          p_question_2: string
+          p_user_id: string
+        }
+        Returns: boolean
       }
       verify_security_answer: {
         Args: { p_answer: string; p_question_num: number; p_user_id: string }
