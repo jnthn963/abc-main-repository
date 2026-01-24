@@ -7,6 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limit configuration: 5 OTP requests per 15 minutes per email/IP
+const RATE_LIMIT = 5;
+const RATE_WINDOW_SECONDS = 900; // 15 minutes
+
 // Supreme Governor email - hardcoded for maximum security
 const SUPREME_GOVERNOR_EMAIL = "nangkiljonathan@gmail.com";
 
@@ -38,6 +42,44 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ error: "Invalid email format" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Get IP for rate limiting (unauthenticated endpoint)
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    
+    // Check rate limit by email and IP
+    const rateLimitKeyEmail = `gov_otp:email:${email.toLowerCase()}`;
+    const rateLimitKeyIP = `gov_otp:ip:${clientIP}`;
+    
+    const { data: emailAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      p_key: rateLimitKeyEmail,
+      p_limit: RATE_LIMIT,
+      p_window_seconds: RATE_WINDOW_SECONDS
+    });
+
+    const { data: ipAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      p_key: rateLimitKeyIP,
+      p_limit: RATE_LIMIT * 2, // Slightly higher limit for IP to handle shared networks
+      p_window_seconds: RATE_WINDOW_SECONDS
+    });
+
+    if (emailAllowed === false || ipAllowed === false) {
+      // Log rate limit violation
+      await supabaseAdmin.from("admin_audit_log").insert({
+        admin_id: "00000000-0000-0000-0000-000000000000",
+        action: "GOVERNOR_OTP_RATE_LIMITED",
+        details: { 
+          description: "OTP request rate limited",
+          target_email: email,
+          ip_address: clientIP
+        },
+        ip_address: clientIP,
+      });
+
+      return new Response(
+        JSON.stringify({ error: "Too many attempts. Please try again later." }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -83,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
             description: "Non-governor attempted OTP request",
             target_email: email 
           },
-          ip_address: req.headers.get("x-forwarded-for") || "unknown",
+          ip_address: clientIP,
         });
 
         return new Response(
@@ -119,7 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
         target_email: email,
         is_supreme: isSupremeGovernor
       },
-      ip_address: req.headers.get("x-forwarded-for") || "unknown",
+      ip_address: clientIP,
     });
 
     return new Response(

@@ -5,9 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limit configuration: 50 notifications per minute (internal service)
+const RATE_LIMIT = 50;
+const RATE_WINDOW_SECONDS = 60; // 1 minute
+
 // Governor Notification Edge Function
 // Sends email notifications to governors when new pending actions require review
 // This function can be called after creating deposits, transfers, or loans
+// Includes rate limiting to prevent notification flooding
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,6 +24,26 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check rate limit (global for this endpoint to prevent notification flooding)
+    const rateLimitKey = `notify_governor:global`;
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_key: rateLimitKey,
+      p_limit: RATE_LIMIT,
+      p_window_seconds: RATE_WINDOW_SECONDS
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (allowed === false) {
+      console.log('Governor notification rate limited - too many requests');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Notification rate limit exceeded' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Parse request body
     const body = await req.json();

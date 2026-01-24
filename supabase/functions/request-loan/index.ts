@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limit configuration: 5 loan requests per day per user
+const RATE_LIMIT = 5;
+const RATE_WINDOW_SECONDS = 86400; // 24 hours
+
 // Sanitize error messages to prevent internal details from leaking to clients
 function sanitizeErrorMessage(error: string): string {
   const safeErrors: Record<string, string> = {
@@ -28,7 +32,7 @@ function sanitizeErrorMessage(error: string): string {
 
 // Request Loan Edge Function
 // Uses atomic database function with FOR UPDATE locking to prevent race conditions
-// Enforces: 50% collateral rule, 6-day aging requirement, 28-day capital lock
+// Enforces: 50% collateral rule, 6-day aging requirement, 28-day capital lock, rate limiting
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -63,6 +67,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Use service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check rate limit
+    const rateLimitKey = `loan_request:${user.id}`;
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_key: rateLimitKey,
+      p_limit: RATE_LIMIT,
+      p_window_seconds: RATE_WINDOW_SECONDS
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (allowed === false) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Too many loan requests. Please try again tomorrow.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Parse request body
     const body = await req.json();
     const { amount } = body;
@@ -75,9 +101,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Use service role for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Call atomic loan request function with FOR UPDATE locking
     // This prevents race conditions and collateral double-locking

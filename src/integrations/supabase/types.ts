@@ -438,6 +438,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reserve_fund: {
         Row: {
           fee_accumulation: number
@@ -726,6 +744,11 @@ export type Database = {
     }
     Functions: {
       apply_daily_interest_atomic: { Args: never; Returns: Json }
+      check_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
+      }
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       fund_loan_atomic: {
         Args: { p_lender_id: string; p_loan_id: string }
         Returns: Json

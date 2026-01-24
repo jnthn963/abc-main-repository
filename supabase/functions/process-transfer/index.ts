@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limit configuration: 20 transfers per hour per user
+const RATE_LIMIT = 20;
+const RATE_WINDOW_SECONDS = 3600; // 1 hour
+
 // Sanitize error messages to prevent internal details from leaking to clients
 function sanitizeErrorMessage(error: string): string {
   // Map known safe error patterns to user-friendly messages
@@ -31,7 +35,7 @@ function sanitizeErrorMessage(error: string): string {
 
 // Process Transfer Edge Function
 // Uses atomic database function with FOR UPDATE locking to prevent race conditions
-// Enforces: balance checks, limits, 24-hour clearing
+// Enforces: balance checks, limits, 24-hour clearing, rate limiting
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -66,6 +70,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Use service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check rate limit
+    const rateLimitKey = `transfer:${user.id}`;
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_key: rateLimitKey,
+      p_limit: RATE_LIMIT,
+      p_window_seconds: RATE_WINDOW_SECONDS
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (allowed === false) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Too many transfer requests. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Parse request body
     const body = await req.json();
     const { amount, destination, destination_type, recipient_member_id } = body;
@@ -78,9 +104,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Use service role for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Call atomic transfer function with FOR UPDATE locking
     // This prevents race conditions and double-spending
