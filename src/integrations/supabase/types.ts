@@ -757,6 +757,24 @@ export type Database = {
       generate_reference_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       get_pending_action_counts: { Args: never; Returns: Json }
+      get_pending_actions: {
+        Args: never
+        Returns: {
+          action_type: string
+          amount: number
+          approval_status: string
+          collateral_amount: number
+          created_at: string
+          description: string
+          id: string
+          interest_rate: number
+          member_id: string
+          reference_number: string
+          source_table: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       governor_approve_action: {
         Args: {
           p_action_id: string
