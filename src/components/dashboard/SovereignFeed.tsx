@@ -45,22 +45,22 @@ const SovereignFeed = () => {
 
   return (
     <div className="space-y-4">
-      {/* Alpha Announcements */}
-      <Card className="glass-card p-4">
+      {/* Alpha Announcements - Obsidian Theme */}
+      <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
         <div className="flex items-center gap-2 mb-3">
-          <Megaphone className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">Alpha Announcements</h3>
+          <Megaphone className="w-4 h-4 text-[#D4AF37]" />
+          <h3 className="text-sm font-semibold text-[#D4AF37]">Alpha Announcements</h3>
         </div>
         <div className="space-y-3">
           {announcements.map((post) => (
             <div 
               key={post.id}
-              className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors group"
+              className="p-3 rounded-lg bg-[#1a1a1a]/50 hover:bg-[#1a1a1a]/80 cursor-pointer transition-colors group border border-transparent hover:border-[#D4AF37]/20"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[10px]">
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#D4AF37]/20 text-[#D4AF37] text-[10px]">
                       {getTypeIcon(post.type)}
                       {post.type}
                     </span>
@@ -69,15 +69,15 @@ const SovereignFeed = () => {
                   <h4 className="text-sm font-medium truncate">{post.title}</h4>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{post.body}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-[#D4AF37] transition-colors shrink-0" />
               </div>
             </div>
           ))}
         </div>
       </Card>
 
-      {/* Live Audit Trail */}
-      <Card className="glass-card p-4">
+      {/* Live Audit Trail - Success/Gold Theme */}
+      <Card className="glass-card p-4 border-success/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
         <div className="flex items-center gap-2 mb-3">
           <Clock className="w-4 h-4 text-success" />
           <h3 className="text-sm font-semibold">Live Audit Trail</h3>
@@ -87,9 +87,9 @@ const SovereignFeed = () => {
           {auditEvents.map((event, index) => (
             <div 
               key={index}
-              className="flex items-start gap-2 py-1.5 border-b border-border/30 last:border-0"
+              className="flex items-start gap-2 py-1.5 border-b border-[#D4AF37]/10 last:border-0"
             >
-              <span className="terminal-text text-muted-foreground shrink-0">
+              <span className="terminal-text text-[#D4AF37]/60 shrink-0">
                 [{event.time}]
               </span>
               <span className="terminal-text text-foreground/80 leading-relaxed">

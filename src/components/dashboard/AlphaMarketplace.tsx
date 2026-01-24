@@ -59,18 +59,25 @@ const AlphaMarketplace = () => {
 
   return (
     <div className="space-y-4">
-      {/* Liquidity Chart */}
-      <Card className="glass-card p-4">
+      {/* Liquidity Chart - Obsidian Theme */}
+      <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
+              <Zap className="w-4 h-4 text-[#D4AF37]" />
               Co-op Liquidity Index
             </h3>
             <p className="text-xs text-muted-foreground">24h Trading Activity</p>
           </div>
           <div className="text-right">
-            <p className="balance-number text-xl text-success">
+            <p 
+              className="balance-number text-xl"
+              style={{
+                background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 60%, #8B7500 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
               ₱{((systemStats?.totalVaultDeposits || 0) / 1000000).toFixed(2)}M
             </p>
             <div className="flex items-center gap-1 text-success text-xs">
@@ -84,8 +91,8 @@ const AlphaMarketplace = () => {
             <AreaChart data={liquidityData}>
               <defs>
                 <linearGradient id="liquidityGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(45 93% 47%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(45 93% 47%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis 
@@ -97,8 +104,8 @@ const AlphaMarketplace = () => {
               <YAxis hide domain={['dataMin - 50000', 'dataMax + 50000']} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(222 47% 10%)',
-                  border: '1px solid hsl(222 30% 25%)',
+                  backgroundColor: '#0d0d0d',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
                   borderRadius: '8px',
                   fontSize: '12px',
                 }}
@@ -107,7 +114,7 @@ const AlphaMarketplace = () => {
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="hsl(45 93% 47%)"
+                stroke="#D4AF37"
                 strokeWidth={2}
                 fill="url(#liquidityGradient)"
               />
@@ -116,11 +123,11 @@ const AlphaMarketplace = () => {
         </div>
       </Card>
 
-      {/* Sentiment Meter - Now linked to loan-to-deposit ratio */}
-      <Card className="glass-card p-4">
+      {/* Sentiment Meter - Gold Accent Theme */}
+      <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <span className="text-sm font-medium">Market Power</span>
+            <span className="text-sm font-medium text-[#D4AF37]">Market Power</span>
             <p className="text-[10px] text-muted-foreground">
               Loan/Deposit Ratio: {systemStats ? ((systemStats.totalActiveLoans / systemStats.totalVaultDeposits) * 100).toFixed(1) : '0.0'}%
             </p>
@@ -129,7 +136,12 @@ const AlphaMarketplace = () => {
             {sentimentValue > 50 ? 'Bullish' : 'Bearish'}
           </span>
         </div>
-        <div className="relative h-3 rounded-full overflow-hidden sentiment-gradient">
+        <div 
+          className="relative h-3 rounded-full overflow-hidden"
+          style={{
+            background: 'linear-gradient(90deg, hsl(0 100% 55%), #D4AF37, hsl(145 100% 45%))',
+          }}
+        >
           <div 
             className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-foreground rounded-full border-2 border-background shadow-lg transition-all duration-500"
             style={{ left: `calc(${sentimentValue}% - 8px)` }}
@@ -160,11 +172,15 @@ const AlphaMarketplace = () => {
         </div>
       </Card>
 
-      {/* Request Loan Button */}
-      <Card className="glass-card p-4 border-primary/30">
+      {/* Request Loan Button - Premium Gold CTA */}
+      <Card className="glass-card p-4 border-[#D4AF37]/40 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
         <Button 
           onClick={() => setShowLoanModal(true)}
-          className="w-full bg-primary hover:bg-primary/80 text-primary-foreground font-semibold glow-gold"
+          className="w-full font-semibold text-black"
+          style={{
+            background: 'linear-gradient(145deg, #D4AF37, #8B7500)',
+            boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)',
+          }}
         >
           <HandCoins className="w-4 h-4 mr-2" />
           Request a Loan
@@ -175,7 +191,7 @@ const AlphaMarketplace = () => {
       </Card>
 
       {/* Order Book */}
-      <Card className="glass-card p-4">
+      <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
         <h3 className="text-sm font-semibold mb-3">Available Loan Requests</h3>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground text-sm animate-pulse">
