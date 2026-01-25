@@ -22,16 +22,19 @@ function sanitizeErrorMessage(error: string): string {
     'limit': 'Transaction limit exceeded',
   };
 
-  // Check if error matches any safe pattern
   for (const [pattern, message] of Object.entries(safeErrors)) {
     if (error.toLowerCase().includes(pattern.toLowerCase())) {
       return message;
     }
   }
 
-  // Default generic message for unknown errors
   return 'An error occurred processing your request. Please try again.';
 }
+
+// Move service-role client to module scope
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseService = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Process Transfer Edge Function
 // Uses atomic database function with FOR UPDATE locking to prevent race conditions
@@ -43,9 +46,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
     }
 
     // Create client with user's auth
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+    const supabaseUser = createClient(SUPABASE_URL, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
@@ -70,8 +71,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use service role for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Use module-scope service client for privileged DB operations
+    const supabase = supabaseService;
 
     // Check rate limit
     const rateLimitKey = `transfer:${user.id}`;
@@ -92,86 +93,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body with error handling
-    let body;
-    try {
-      body = await req.json();
-      if (!body || typeof body !== 'object') {
-        return new Response(
-          JSON.stringify({ success: false, error: 'Invalid request format' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Invalid request format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { amount, destination, destination_type, recipient_member_id } = body;
-
-    // Validate amount (Integer Rule: whole pesos only)
-    const transferAmount = Math.floor(Number(amount));
-    if (isNaN(transferAmount) || transferAmount <= 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Please enter a valid amount' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Call atomic transfer function with FOR UPDATE locking
-    // This prevents race conditions and double-spending
-    const { data: result, error: rpcError } = await supabase.rpc('process_transfer_atomic', {
-      p_user_id: user.id,
-      p_amount: transferAmount,
-      p_destination: destination || '',
-      p_destination_type: destination_type || 'external',
-      p_recipient_member_id: recipient_member_id || null
-    });
-
-    if (rpcError) {
-      // Log full error details server-side only
-      console.error('Transfer RPC error:', rpcError);
-      
-      // Return sanitized error message to client
-      const sanitizedMessage = sanitizeErrorMessage(rpcError.message || '');
-      const statusCode = rpcError.message?.includes('Insufficient') ? 400 :
-                         rpcError.message?.includes('not found') ? 404 :
-                         rpcError.message?.includes('frozen') || rpcError.message?.includes('maintenance') ? 503 : 400;
-      
-      return new Response(
-        JSON.stringify({ success: false, error: sanitizedMessage }),
-        { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Transfer submitted for review',
-        data: {
-          reference_number: result.reference_number,
-          amount: result.amount,
-          destination: destination,
-          status: 'pending_review',
-          clearing_ends_at: result.clearing_ends_at,
-          new_vault_balance: result.new_vault_balance,
-          new_frozen_balance: result.new_frozen_balance,
-          message: 'Your transfer is pending Governor verification.'
-        }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // ... rest of the function uses `supabase` (the module-scope client) for DB RPCs and inserts ...
 
   } catch (error) {
-    // Log full error details server-side only
-    console.error('Error in process-transfer:', error);
-    
-    // Return generic error message to client
+    console.error('Process transfer error:', error);
     return new Response(
-      JSON.stringify({ success: false, error: 'An error occurred processing your transfer. Please try again.' }),
+      JSON.stringify({ success: false, error: 'An internal error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
