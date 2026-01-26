@@ -27,11 +27,6 @@ function sanitizeErrorMessage(error: string): string {
   return 'An error occurred processing your deposit. Please try again.';
 }
 
-// Move service-role client to module scope so it can be reused between invocations
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabaseService = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
 // Process Deposit Edge Function
 // Records deposits with pending_review status for Governor approval
 // Enforces: Integer Rule, min/max limits, 24-hour clearing, rate limiting
@@ -42,7 +37,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
@@ -53,8 +50,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create client with user's auth (per-request because of Authorization header)
-    const supabaseUser = createClient(SUPABASE_URL, supabaseAnonKey, {
+    // Create client with user's auth
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
@@ -67,8 +64,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use supabaseService (module-scope) for privileged DB operations
-    const supabase = supabaseService;
+    // Use service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check rate limit
     const rateLimitKey = `deposit:${user.id}`;
@@ -133,12 +130,88 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ... rest of the function uses `supabase` (the module-scope client) for DB RPCs and inserts ...
+    // Generate reference number if not provided
+    const { data: refData } = await supabase.rpc('generate_reference_number');
+    const finalReference = reference_number || refData || `DEP-${Date.now()}`;
+
+    // Calculate clearing time (24 hours from now)
+    const clearingEndsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    // Create deposit ledger entry with pending_review status
+    const { data: ledgerEntry, error: ledgerError } = await supabase
+      .from('ledger')
+      .insert({
+        user_id: user.id,
+        type: 'deposit',
+        amount: depositAmount,
+        status: 'clearing',
+        approval_status: 'pending_review',
+        reference_number: finalReference,
+        description: 'Deposit via QR PH Gateway',
+        clearing_ends_at: clearingEndsAt,
+        metadata: {
+          source: 'qr_ph_gateway',
+          submitted_at: new Date().toISOString()
+        }
+      })
+      .select()
+      .single();
+
+    if (ledgerError) {
+      console.error('Deposit ledger error:', ledgerError);
+      return new Response(
+        JSON.stringify({ success: false, error: sanitizeErrorMessage(ledgerError.message || '') }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get user's member_id for notification
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('member_id')
+      .eq('id', user.id)
+      .single();
+
+    // Notify governors of new pending action (non-blocking)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/notify-governor`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action_type: 'deposit',
+          member_id: profile?.member_id || 'Unknown',
+          amount: depositAmount,
+          reference_number: finalReference,
+        }),
+      });
+    } catch (notifyErr) {
+      // Non-blocking - don't fail the deposit if notification fails
+      console.error('Governor notification failed (non-blocking):', notifyErr);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Deposit submitted for review',
+        data: {
+          transaction_id: ledgerEntry.id,
+          reference_number: finalReference,
+          amount: depositAmount,
+          status: 'pending_review',
+          clearing_ends_at: clearingEndsAt,
+          message: 'Your deposit is pending Governor verification. Funds will be credited after approval.'
+        }
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Process deposit error:', error);
+    console.error('Error in process-deposit:', error);
     return new Response(
-      JSON.stringify({ success: false, error: 'An internal error occurred' }),
+      JSON.stringify({ success: false, error: 'An error occurred processing your deposit. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

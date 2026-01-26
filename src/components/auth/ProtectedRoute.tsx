@@ -1,7 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Shield } from 'lucide-react';
-import { SovereignMonolith } from '@/components/transitions/SovereignMonolith';
+import { Loader2, Shield } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,7 +12,19 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const location = useLocation();
 
   if (loading) {
-    return <SovereignMonolith message="AUTHENTICATING SECURE SESSION..." />;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <Shield className="w-16 h-16 text-primary mx-auto animate-pulse" />
+            <Loader2 className="w-8 h-8 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-spin" />
+          </div>
+          <p className="text-muted-foreground terminal-text">
+            AUTHENTICATING SECURE SESSION...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
