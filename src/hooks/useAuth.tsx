@@ -21,6 +21,7 @@ interface AuthContextType {
     kyc_status: 'pending' | 'verified' | 'rejected';
     onboarding_completed: boolean;
     created_at: string;
+    avatar_url: string | null;
   } | null;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -39,11 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType['profile']>(null);
 
   const fetchProfile = async (userId: string) => {
-    // Use profiles_user_view to avoid exposing security answer hashes
-    // The view excludes security_answer_1 and security_answer_2 columns
+    // Fetch from profiles table directly to get avatar_url
     const { data, error } = await supabase
-      .from('profiles_user_view')
-      .select('*')
+      .from('profiles')
+      .select('id, member_id, display_name, email, vault_balance, frozen_balance, lending_balance, membership_tier, kyc_status, onboarding_completed, created_at, avatar_url')
       .eq('id', userId)
       .single();
 
@@ -60,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         kyc_status: data.kyc_status as 'pending' | 'verified' | 'rejected',
         onboarding_completed: data.onboarding_completed,
         created_at: data.created_at,
+        avatar_url: data.avatar_url,
       });
     }
   };
