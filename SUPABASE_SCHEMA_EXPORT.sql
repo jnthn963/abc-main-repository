@@ -44,6 +44,7 @@ CREATE TABLE public.profiles (
   display_name TEXT,
   email TEXT,
   phone TEXT,
+  avatar_url TEXT,
   address_line1 TEXT,
   address_line2 TEXT,
   city TEXT,
