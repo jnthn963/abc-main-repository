@@ -1,12 +1,12 @@
 /**
- * Governor Dashboard Realtime Hook
- * Provides real-time updates for all Governor Dashboard data
+ * ABC Master Build: Governor Dashboard Polling Hook
+ * Replaces websockets with 10-second polling for stability
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { usePollingRefresh } from '@/hooks/usePollingRefresh';
 
 export interface GovernorStats {
   totalMembers: number;
@@ -36,6 +36,8 @@ export interface AuditEvent {
   adminId?: string;
 }
 
+const POLLING_INTERVAL = 10000; // 10 seconds for governor dashboard
+
 export function useGovernorRealtime() {
   const { user, hasRole } = useAuth();
   const [stats, setStats] = useState<GovernorStats>({
@@ -59,16 +61,17 @@ export function useGovernorRealtime() {
   const [auditFeed, setAuditFeed] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isFetchingRef = useRef(false);
 
-  const channelsRef = useRef<RealtimeChannel[]>([]);
   const isAuthorized = hasRole('governor') || hasRole('admin');
 
   // Fetch all dashboard data
   const fetchDashboardData = useCallback(async () => {
-    if (!isAuthorized) return;
+    if (!isAuthorized || isFetchingRef.current) return;
 
+    isFetchingRef.current = true;
+    
     try {
-      setLoading(true);
       setError(null);
 
       // Parallel fetch all data
@@ -107,20 +110,20 @@ export function useGovernorRealtime() {
         });
       }
 
-      // Calculate stats
-      const totalVault = (profilesResult.data || []).reduce(
+      // Calculate stats with Whole Peso Mandate
+      const totalVault = Math.floor((profilesResult.data || []).reduce(
         (sum, p) => sum + Number(p.vault_balance), 0
-      );
-      const pendingWdAmount = (pendingTxnsResult.data || []).reduce(
+      ) / 100);
+      const pendingWdAmount = Math.floor((pendingTxnsResult.data || []).reduce(
         (sum, t) => sum + Number(t.amount), 0
-      );
+      ) / 100);
 
       setStats({
         totalMembers: memberCountResult.count || 0,
         activeLoans: activeLoansResult.data?.length || 0,
-        totalVaultValue: totalVault / 100,
-        reserveFund: reserveResult.data ? Number(reserveResult.data.total_reserve_balance) / 100 : 0,
-        pendingWithdrawals: pendingWdAmount / 100,
+        totalVaultValue: totalVault,
+        reserveFund: reserveResult.data ? Math.floor(Number(reserveResult.data.total_reserve_balance) / 100) : 0,
+        pendingWithdrawals: pendingWdAmount,
         dailyTransactions: dailyCountResult.count || 0,
       });
 
@@ -144,124 +147,32 @@ export function useGovernorRealtime() {
         setAuditFeed((recentActivity || []).map(tx => ({
           id: tx.id,
           time: new Date(tx.created_at).toLocaleTimeString('en-PH', { hour12: false }),
-          event: `${tx.type.replace(/_/g, ' ').toUpperCase()} - ₱${(Number(tx.amount) / 100).toLocaleString()}`,
+          event: `${tx.type.replace(/_/g, ' ').toUpperCase()} - ₱${Math.floor(Number(tx.amount) / 100).toLocaleString()}`,
           type: tx.type.includes('deposit') ? 'deposit' : tx.type.includes('withdrawal') ? 'withdraw' : 'system',
         })));
       }
 
+      setLoading(false);
     } catch (err) {
       console.error('Failed to fetch governor data:', err);
-      setError('Failed to load dashboard data. Reconnecting...');
+      setError('Failed to load dashboard data');
     } finally {
-      setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [isAuthorized]);
 
-  // Subscribe to realtime changes
-  useEffect(() => {
-    if (!isAuthorized || !user) return;
+  // Polling-based refresh (replaces websocket realtime)
+  usePollingRefresh(fetchDashboardData, {
+    interval: POLLING_INTERVAL,
+    enabled: isAuthorized && !!user,
+    immediate: true,
+  });
 
-    // Subscribe to global_settings changes
-    const settingsChannel = supabase
-      .channel('governor-settings')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'global_settings' },
-        (payload) => {
-          console.log('Settings changed:', payload);
-          if (payload.new) {
-            const newSettings = payload.new as Record<string, unknown>;
-            setSettings(prev => ({
-              ...prev,
-              vaultRate: (newSettings.vault_interest_rate as number) || prev.vaultRate,
-              lendingRate: (newSettings.lending_yield_rate as number) || prev.lendingRate,
-              borrowerCost: (newSettings.borrower_cost_rate as number) || prev.borrowerCost,
-              killSwitch: (newSettings.system_kill_switch as boolean) ?? prev.killSwitch,
-              maintenanceMode: (newSettings.maintenance_mode as boolean) ?? prev.maintenanceMode,
-              qrUrl: (newSettings.qr_gateway_url as string) || prev.qrUrl,
-            }));
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to ledger changes for stats updates
-    const ledgerChannel = supabase
-      .channel('governor-ledger')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'ledger' },
-        () => {
-          // Refetch stats on any ledger change
-          fetchDashboardData();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to p2p_loans changes
-    const loansChannel = supabase
-      .channel('governor-loans')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'p2p_loans' },
-        () => {
-          fetchDashboardData();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to profiles changes for member stats
-    const profilesChannel = supabase
-      .channel('governor-profiles')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'profiles' },
-        () => {
-          fetchDashboardData();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to audit log for live feed
-    const auditChannel = supabase
-      .channel('governor-audit')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'admin_audit_log' },
-        (payload) => {
-          if (payload.new) {
-            const newEvent = payload.new as Record<string, unknown>;
-            setAuditFeed(prev => [{
-              id: newEvent.id as string,
-              time: new Date(newEvent.created_at as string).toLocaleTimeString('en-PH', { hour12: false }),
-              event: newEvent.action as string,
-              type: 'system',
-              adminId: newEvent.admin_id as string,
-            }, ...prev.slice(0, 14)]);
-          }
-        }
-      )
-      .subscribe();
-
-    channelsRef.current = [settingsChannel, ledgerChannel, loansChannel, profilesChannel, auditChannel];
-
-    return () => {
-      channelsRef.current.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
-      channelsRef.current = [];
-    };
-  }, [isAuthorized, user, fetchDashboardData]);
-
-  // Initial fetch
-  useEffect(() => {
-    if (isAuthorized) {
-      fetchDashboardData();
-    }
-  }, [isAuthorized, fetchDashboardData]);
-
-  // Update settings in database
+  // Update settings in database with optimistic update
   const updateSettings = useCallback(async (updates: Partial<GovernorSettings>) => {
+    // Optimistic update
+    setSettings(prev => ({ ...prev, ...updates }));
+    
     try {
       const { data: settingsData } = await supabase
         .from('global_settings')
@@ -289,15 +200,14 @@ export function useGovernorRealtime() {
 
       if (error) throw error;
 
-      // Local update will be overwritten by realtime subscription
-      setSettings(prev => ({ ...prev, ...updates }));
-
       return { success: true };
     } catch (err) {
       console.error('Failed to update settings:', err);
+      // Revert on error
+      fetchDashboardData();
       return { success: false, error: err };
     }
-  }, []);
+  }, [fetchDashboardData]);
 
   return {
     stats,
