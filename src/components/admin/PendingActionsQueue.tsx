@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
@@ -25,6 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { usePollingRefresh } from "@/hooks/usePollingRefresh";
 
 interface PendingAction {
   action_type: string;
@@ -147,22 +148,12 @@ const PendingActionsQueue = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchPendingActions();
-  }, [fetchPendingActions]);
-
-  // Subscribe to realtime changes
-  useEffect(() => {
-    const channel = supabase
-      .channel('pending-actions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ledger' }, fetchPendingActions)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_loans' }, fetchPendingActions)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchPendingActions]);
+  // Poll every 10s instead of realtime subscriptions
+  usePollingRefresh(fetchPendingActions, {
+    interval: 10000,
+    enabled: true,
+    immediate: true,
+  });
 
   const handleApprove = async (action: PendingAction) => {
     if (!user) return;
