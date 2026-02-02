@@ -3,10 +3,12 @@
  * Replaces localStorage loanStore with real database queries
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
+import { usePollingRefresh } from '@/hooks/usePollingRefresh';
+import { runDeduped } from '@/lib/requestController';
 
 export interface P2PLoan {
   id: string;
@@ -77,78 +79,99 @@ export function useLoans() {
   const [myLoansAsLender, setMyLoansAsLender] = useState<P2PLoan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const didInitialFetchRef = useRef(false);
+
+  const POLLING_INTERVAL = 15000; // Emergency stability: >= 10s
 
   // Fetch all loans with member aliases
-  const fetchLoans = useCallback(async () => {
+  const fetchLoans = useCallback(async (opts: { silent?: boolean } = {}) => {
     if (!user) return;
+    const silent = opts.silent === true;
 
     try {
-      setLoading(true);
+      if (!silent || !didInitialFetchRef.current) setLoading(true);
 
-      // Fetch open loans (available for funding)
-      const { data: openLoansData, error: openError } = await supabase
-        .from('p2p_loans')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+      const result = await runDeduped(
+        `loans:all:${user.id}`,
+        async () => {
+          // Fetch open loans (available for funding)
+          const { data: openLoansData, error: openError } = await supabase
+            .from('p2p_loans')
+            .select('*')
+            .eq('status', 'open')
+            .order('created_at', { ascending: false });
 
-      if (openError) throw openError;
+          if (openError) throw openError;
 
-      // Fetch my loans as borrower
-      const { data: borrowerLoansData, error: borrowerError } = await supabase
-        .from('p2p_loans')
-        .select('*')
-        .eq('borrower_id', user.id)
-        .order('created_at', { ascending: false });
+          // Fetch my loans as borrower
+          const { data: borrowerLoansData, error: borrowerError } = await supabase
+            .from('p2p_loans')
+            .select('*')
+            .eq('borrower_id', user.id)
+            .order('created_at', { ascending: false });
 
-      if (borrowerError) throw borrowerError;
+          if (borrowerError) throw borrowerError;
 
-      // Fetch my loans as lender
-      const { data: lenderLoansData, error: lenderError } = await supabase
-        .from('p2p_loans')
-        .select('*')
-        .eq('lender_id', user.id)
-        .order('created_at', { ascending: false });
+          // Fetch my loans as lender
+          const { data: lenderLoansData, error: lenderError } = await supabase
+            .from('p2p_loans')
+            .select('*')
+            .eq('lender_id', user.id)
+            .order('created_at', { ascending: false });
 
-      if (lenderError) throw lenderError;
+          if (lenderError) throw lenderError;
 
-      // Collect all unique user IDs
-      const allLoans = [...(openLoansData || []), ...(borrowerLoansData || []), ...(lenderLoansData || [])];
-      const userIds = new Set<string>();
-      allLoans.forEach(loan => {
-        userIds.add(loan.borrower_id);
-        if (loan.lender_id) userIds.add(loan.lender_id);
-      });
+          // Collect all unique user IDs
+          const allLoans = [
+            ...(openLoansData || []),
+            ...(borrowerLoansData || []),
+            ...(lenderLoansData || []),
+          ];
+          const userIds = new Set<string>();
+          allLoans.forEach((loan) => {
+            userIds.add(loan.borrower_id);
+            if (loan.lender_id) userIds.add(loan.lender_id);
+          });
 
-      // Fetch all relevant profiles
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, member_id')
-        .in('id', Array.from(userIds));
+          // Fetch all relevant profiles
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, member_id')
+            .in('id', Array.from(userIds));
 
-      const profilesMap = new Map<string, { member_id: string }>();
-      (profiles || []).forEach(p => profilesMap.set(p.id, { member_id: p.member_id }));
+          const profilesMap = new Map<string, { member_id: string }>();
+          (profiles || []).forEach((p) => profilesMap.set(p.id, { member_id: p.member_id }));
 
-      // Transform loans
-      const transformedOpenLoans = await Promise.all(
-        (openLoansData || []).map(loan => transformLoan(loan, profilesMap))
+          // Transform loans
+          const transformedOpenLoans = await Promise.all(
+            (openLoansData || []).map((loan) => transformLoan(loan, profilesMap))
+          );
+          const transformedBorrowerLoans = await Promise.all(
+            (borrowerLoansData || []).map((loan) => transformLoan(loan, profilesMap))
+          );
+          const transformedLenderLoans = await Promise.all(
+            (lenderLoansData || []).map((loan) => transformLoan(loan, profilesMap))
+          );
+
+          return {
+            open: transformedOpenLoans,
+            borrower: transformedBorrowerLoans,
+            lender: transformedLenderLoans,
+          };
+        },
+        { minIntervalMs: 10000 }
       );
-      const transformedBorrowerLoans = await Promise.all(
-        (borrowerLoansData || []).map(loan => transformLoan(loan, profilesMap))
-      );
-      const transformedLenderLoans = await Promise.all(
-        (lenderLoansData || []).map(loan => transformLoan(loan, profilesMap))
-      );
 
-      setOpenLoans(transformedOpenLoans);
-      setMyLoansAsBorrower(transformedBorrowerLoans);
-      setMyLoansAsLender(transformedLenderLoans);
+      setOpenLoans(result.open);
+      setMyLoansAsBorrower(result.borrower);
+      setMyLoansAsLender(result.lender);
       setError(null);
+      didInitialFetchRef.current = true;
     } catch (err) {
       console.error('Failed to fetch loans:', err);
       setError('Failed to load loans');
     } finally {
-      setLoading(false);
+      if (!silent || !didInitialFetchRef.current) setLoading(false);
     }
   }, [user]);
 
@@ -159,29 +182,15 @@ export function useLoans() {
     }
   }, [user, fetchLoans]);
 
-  // Subscribe to realtime changes on p2p_loans
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('loans-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'p2p_loans',
-        },
-        () => {
-          fetchLoans();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchLoans]);
+  // Emergency stability: polling (no websockets)
+  usePollingRefresh(
+    () => fetchLoans({ silent: true }),
+    {
+      interval: POLLING_INTERVAL,
+      enabled: !!user,
+      immediate: false,
+    }
+  );
 
   // Get marketplace statistics
   const getMarketplaceStats = useCallback(() => {
@@ -212,7 +221,7 @@ export function useLoans() {
     myLoansAsLender,
     loading,
     error,
-    refresh: fetchLoans,
+    refresh: () => fetchLoans(),
     getMarketplaceStats,
   };
 }

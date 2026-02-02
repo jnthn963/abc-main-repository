@@ -16,9 +16,15 @@ export function usePollingRefresh(
   callback: () => void | Promise<void>,
   options: UsePollingOptions = {}
 ) {
-  const { interval = 8000, enabled = true, immediate = true } = options;
+  // Emergency stability: enforce minimum 10s polling globally
+  const requestedInterval = options.interval ?? 10000;
+  const interval = Math.max(10000, requestedInterval);
+  const enabled = options.enabled ?? true;
+  const immediate = options.immediate ?? true;
+
   const callbackRef = useRef(callback);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const runningRef = useRef(false);
 
   // Keep callback ref updated
   useEffect(() => {
@@ -40,7 +46,15 @@ export function usePollingRefresh(
     if (!enabled) return;
 
     intervalRef.current = setInterval(() => {
-      callbackRef.current();
+      if (runningRef.current) return;
+      runningRef.current = true;
+      Promise.resolve(callbackRef.current())
+        .catch(() => {
+          // swallow here; callers already handle their own errors
+        })
+        .finally(() => {
+          runningRef.current = false;
+        });
     }, interval);
   }, [interval, enabled, clearPolling]);
 
@@ -52,7 +66,16 @@ export function usePollingRefresh(
   // Initialize polling
   useEffect(() => {
     if (immediate && enabled) {
-      callbackRef.current();
+      if (!runningRef.current) {
+        runningRef.current = true;
+        Promise.resolve(callbackRef.current())
+          .catch(() => {
+            // swallow
+          })
+          .finally(() => {
+            runningRef.current = false;
+          });
+      }
     }
     
     startPolling();
@@ -69,7 +92,17 @@ export function usePollingRefresh(
         clearPolling();
       } else {
         if (enabled) {
-          callbackRef.current(); // Refresh immediately when tab becomes visible
+          // Refresh immediately when tab becomes visible (but never overlap)
+          if (!runningRef.current) {
+            runningRef.current = true;
+            Promise.resolve(callbackRef.current())
+              .catch(() => {
+                // swallow
+              })
+              .finally(() => {
+                runningRef.current = false;
+              });
+          }
           startPolling();
         }
       }

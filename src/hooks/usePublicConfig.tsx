@@ -7,6 +7,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { usePollingRefresh } from '@/hooks/usePollingRefresh';
+import { runDeduped } from '@/lib/requestController';
 
 export interface PublicConfig {
   id: string;
@@ -24,18 +26,27 @@ export function usePublicConfig() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const POLLING_INTERVAL = 15000; // Emergency stability: >= 10s
+
   // Fetch public config
   const fetchConfig = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('public_config')
-        .select('*')
-        .maybeSingle();
+      const data = await runDeduped(
+        'publicConfig:singleton',
+        async () => {
+          const { data, error: fetchError } = await supabase
+            .from('public_config')
+            .select('*')
+            .maybeSingle();
 
-      if (fetchError) throw fetchError;
+          if (fetchError) throw fetchError;
+          return data;
+        },
+        { minIntervalMs: 10000 }
+      );
 
       if (data) {
         setConfig({
@@ -63,31 +74,12 @@ export function usePublicConfig() {
     }
   }, [user, fetchConfig]);
 
-  // Subscribe to realtime changes
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('public-config-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'public_config',
-        },
-        (payload) => {
-          console.log('Public config changed:', payload);
-          // Refetch to get the updated config
-          fetchConfig();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchConfig]);
+  // Emergency stability: polling (no websockets)
+  usePollingRefresh(fetchConfig, {
+    interval: POLLING_INTERVAL,
+    enabled: !!user,
+    immediate: false,
+  });
 
   return {
     config,
