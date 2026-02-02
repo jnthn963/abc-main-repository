@@ -174,7 +174,7 @@ function useToast() {
         listeners.splice(index, 1);
       }
     };
-  }, [state]);
+  }, []); // Fix: Empty dependency array - listener should only be added once on mount
 
   return {
     ...state,
