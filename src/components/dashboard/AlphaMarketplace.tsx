@@ -86,7 +86,7 @@ const AlphaMarketplace = () => {
             </div>
           </div>
         </div>
-        <div className="h-40">
+        <div className="h-40 min-h-[160px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={liquidityData}>
               <defs>
