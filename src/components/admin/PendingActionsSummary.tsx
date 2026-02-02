@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowDownRight,
@@ -12,6 +12,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { usePollingRefresh } from "@/hooks/usePollingRefresh";
 
 interface PendingCounts {
   deposits: number;
@@ -31,7 +32,7 @@ const PendingActionsSummary = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchCounts = async () => {
+  const fetchCounts = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase.rpc('get_pending_action_counts');
@@ -53,22 +54,14 @@ const PendingActionsSummary = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchCounts();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('pending-counts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ledger' }, fetchCounts)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_loans' }, fetchCounts)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
+
+  // Poll every 10s instead of realtime subscriptions
+  usePollingRefresh(fetchCounts, {
+    interval: 10000,
+    enabled: true,
+    immediate: true,
+  });
 
   const items = [
     {

@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, AlertCircle, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePollingRefresh } from "@/hooks/usePollingRefresh";
 
 interface PendingItem {
   id: string;
@@ -20,81 +21,64 @@ const PendingReviewBanner = () => {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
+  const fetchPendingItems = useCallback(async () => {
     if (!user) return;
+    
+    try {
+      // Fetch pending ledger items for current user
+      const { data: ledgerItems } = await supabase
+        .from('ledger')
+        .select('id, type, amount, reference_number, created_at, approval_status')
+        .eq('user_id', user.id)
+        .eq('approval_status', 'pending_review')
+        .order('created_at', { ascending: false });
 
-    const fetchPendingItems = async () => {
-      try {
-        // Fetch pending ledger items for current user
-        const { data: ledgerItems } = await supabase
-          .from('ledger')
-          .select('id, type, amount, reference_number, created_at, approval_status')
-          .eq('user_id', user.id)
-          .eq('approval_status', 'pending_review')
-          .order('created_at', { ascending: false });
+      // Fetch pending loan items for current user
+      const { data: loanItems } = await supabase
+        .from('p2p_loans')
+        .select('id, principal_amount, reference_number, created_at, approval_status, status')
+        .or(`borrower_id.eq.${user.id},lender_id.eq.${user.id}`)
+        .eq('approval_status', 'pending_review')
+        .order('created_at', { ascending: false });
 
-        // Fetch pending loan items for current user
-        const { data: loanItems } = await supabase
-          .from('p2p_loans')
-          .select('id, principal_amount, reference_number, created_at, approval_status, status')
-          .or(`borrower_id.eq.${user.id},lender_id.eq.${user.id}`)
-          .eq('approval_status', 'pending_review')
-          .order('created_at', { ascending: false });
+      const items: PendingItem[] = [];
 
-        const items: PendingItem[] = [];
-
-        (ledgerItems || []).forEach((item) => {
-          items.push({
-            id: item.id,
-            type: item.type,
-            amount: Number(item.amount),
-            reference_number: item.reference_number,
-            created_at: item.created_at,
-            approval_status: item.approval_status,
-          });
+      (ledgerItems || []).forEach((item) => {
+        items.push({
+          id: item.id,
+          type: item.type,
+          amount: Number(item.amount),
+          reference_number: item.reference_number,
+          created_at: item.created_at,
+          approval_status: item.approval_status,
         });
+      });
 
-        (loanItems || []).forEach((item) => {
-          items.push({
-            id: item.id,
-            type: item.status === 'open' ? 'loan_request' : 'loan_funding',
-            amount: Number(item.principal_amount),
-            reference_number: item.reference_number,
-            created_at: item.created_at,
-            approval_status: item.approval_status,
-          });
+      (loanItems || []).forEach((item) => {
+        items.push({
+          id: item.id,
+          type: item.status === 'open' ? 'loan_request' : 'loan_funding',
+          amount: Number(item.principal_amount),
+          reference_number: item.reference_number,
+          created_at: item.created_at,
+          approval_status: item.approval_status,
         });
+      });
 
-        setPendingItems(items);
-      } catch (err) {
-        console.error('Failed to fetch pending items:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPendingItems();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('user-pending')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'ledger',
-        filter: `user_id=eq.${user.id}`
-      }, fetchPendingItems)
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'p2p_loans'
-      }, fetchPendingItems)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      setPendingItems(items);
+    } catch (err) {
+      console.error('Failed to fetch pending items:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  // Poll every 10s instead of realtime subscriptions
+  usePollingRefresh(fetchPendingItems, {
+    interval: 10000,
+    enabled: !!user,
+    immediate: true,
+  });
 
   const getTypeLabel = (type: string) => {
     switch (type) {

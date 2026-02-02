@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemberData } from "@/hooks/useMemberData";
 import { toast } from "@/hooks/use-toast";
+import { usePollingRefresh } from "@/hooks/usePollingRefresh";
 
 export interface LoanListing {
   id: string;
@@ -51,35 +52,27 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
   });
 
   // Fetch gateway settings from public_config (accessible to all users)
-  useEffect(() => {
-    const fetchGateway = async () => {
-      const { data } = await supabase
-        .from('public_config')
-        .select('qr_gateway_url, receiver_name, receiver_phone')
-        .maybeSingle();
-      
-      if (data) {
-        setGateway({
-          qrCodeUrl: data.qr_gateway_url,
-          receiverName: data.receiver_name,
-          receiverNumber: data.receiver_phone,
-        });
-      }
-    };
-    fetchGateway();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('lender-funding-gateway')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'public_config' },
-        () => fetchGateway()
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+  const fetchGateway = useCallback(async () => {
+    const { data } = await supabase
+      .from('public_config')
+      .select('qr_gateway_url, receiver_name, receiver_phone')
+      .maybeSingle();
+    
+    if (data) {
+      setGateway({
+        qrCodeUrl: data.qr_gateway_url,
+        receiverName: data.receiver_name,
+        receiverNumber: data.receiver_phone,
+      });
+    }
   }, []);
+
+  // Poll every 10s instead of realtime subscriptions
+  usePollingRefresh(fetchGateway, {
+    interval: 10000,
+    enabled: isOpen,
+    immediate: true,
+  });
 
   // Calculate earnings
   const interestEarnings = loan ? loan.principalAmount * (loan.interestRate / 100) : 0;
