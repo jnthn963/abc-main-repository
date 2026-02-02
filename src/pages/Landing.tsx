@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Shield, Wallet, TrendingUp, Users, Clock, Lock, ArrowRight, Zap, Award, ChevronDown, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { useSecurityHardening } from '@/hooks/useSecurityHardening';
 
 // Founding Alpha countdown target: March 31, 2026
 const FOUNDING_ALPHA_END = new Date('2026-03-31T23:59:59');
@@ -79,8 +78,6 @@ import { FoundingAlphaCard } from '@/components/cards/FoundingAlphaCard';
 export default function Landing() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-
-  useSecurityHardening();
 
   useEffect(() => {
     if (!loading && user) {

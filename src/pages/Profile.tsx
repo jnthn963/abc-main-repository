@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Crown, Calendar, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useSecurityHardening } from '@/hooks/useSecurityHardening';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,8 +37,6 @@ export default function Profile() {
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [showDepositModal, setShowDepositModal] = useState(false);
-  
-  useSecurityHardening();
 
   useEffect(() => {
     if (user) {

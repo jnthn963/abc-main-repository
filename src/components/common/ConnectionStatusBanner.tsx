@@ -1,11 +1,11 @@
 /**
- * Connection Status Banner
- * Displays bank-grade secure connection messaging
+ * ABC Master Build: Simplified Connection Status
+ * Displays online/offline status without websocket complexity
  */
 
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, WifiOff, RefreshCw, AlertTriangle, Shield } from 'lucide-react';
-import { useRealtimeConnection } from '@/hooks/useRealtimeConnection';
+import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 
 interface ConnectionStatusBannerProps {
   onReconnect?: () => void;
@@ -16,58 +16,67 @@ export function ConnectionStatusBanner({
   onReconnect, 
   variant = 'minimal' 
 }: ConnectionStatusBannerProps) {
-  const { 
-    state, 
-    isConnected, 
-    isReconnecting, 
-    hasError, 
-    statusMessage,
-    forceReconnect,
-    reconnectAttempts 
-  } = useRealtimeConnection({ onReconnect });
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showBanner, setShowBanner] = useState(false);
 
-  // Don't show banner when connected (unless full variant)
-  if (isConnected && variant === 'minimal') {
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Show success briefly then hide
+      setShowBanner(true);
+      setTimeout(() => setShowBanner(false), 2000);
+      onReconnect?.();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowBanner(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [onReconnect]);
+
+  // Don't show banner when online (minimal mode)
+  if (isOnline && !showBanner && variant === 'minimal') {
     return null;
   }
 
-  const getIcon = () => {
-    if (hasError) return <AlertTriangle className="w-4 h-4" />;
-    if (isReconnecting) return <RefreshCw className="w-4 h-4 animate-spin" />;
-    if (isConnected) return <Shield className="w-4 h-4" />;
-    return <WifiOff className="w-4 h-4" />;
-  };
-
-  const getBannerStyles = () => {
-    if (hasError) return 'bg-destructive/20 border-destructive text-destructive';
-    if (isReconnecting) return 'bg-yellow-500/20 border-yellow-500/50 text-yellow-500';
-    if (isConnected) return 'bg-success/20 border-success/50 text-success';
-    return 'bg-muted/50 border-border text-muted-foreground';
-  };
-
   return (
     <AnimatePresence>
-      {(!isConnected || variant === 'full') && (
+      {showBanner && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-3 py-2 px-4 border-b ${getBannerStyles()}`}
+          className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-3 py-2 px-4 border-b ${
+            isOnline 
+              ? 'bg-success/20 border-success/50 text-success' 
+              : 'bg-destructive/20 border-destructive text-destructive'
+          }`}
         >
-          {getIcon()}
-          <span className="text-sm font-medium">{statusMessage}</span>
-          
-          {hasError && (
-            <button
-              onClick={forceReconnect}
-              className="ml-2 px-3 py-1 text-xs font-medium bg-background/50 rounded hover:bg-background/80 transition-colors"
-            >
-              Retry Connection
-            </button>
-          )}
-
-          {isConnected && variant === 'full' && (
-            <Wifi className="w-4 h-4 text-success ml-2" />
+          {isOnline ? (
+            <>
+              <Wifi className="w-4 h-4" />
+              <span className="text-sm font-medium">Connection restored</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="w-4 h-4" />
+              <span className="text-sm font-medium">No internet connection</span>
+              <button
+                onClick={() => window.location.reload()}
+                className="ml-2 px-3 py-1 text-xs font-medium bg-background/50 rounded hover:bg-background/80 transition-colors flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Retry
+              </button>
+            </>
           )}
         </motion.div>
       )}
@@ -79,21 +88,30 @@ export function ConnectionStatusBanner({
  * Inline connection indicator for use in headers/navbars
  */
 export function ConnectionIndicator() {
-  const { isConnected, isReconnecting } = useRealtimeConnection();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
     <div className="flex items-center gap-2">
       <div 
         className={`w-2 h-2 rounded-full ${
-          isConnected 
-            ? 'bg-success animate-pulse' 
-            : isReconnecting 
-              ? 'bg-yellow-500 animate-pulse' 
-              : 'bg-destructive'
+          isOnline ? 'bg-[#00FF41] animate-pulse' : 'bg-destructive'
         }`} 
       />
       <span className="text-xs text-muted-foreground hidden sm:inline">
-        {isConnected ? 'Live' : isReconnecting ? 'Syncing...' : 'Offline'}
+        {isOnline ? 'Live' : 'Offline'}
       </span>
     </div>
   );

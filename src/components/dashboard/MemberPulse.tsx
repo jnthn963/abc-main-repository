@@ -1,5 +1,11 @@
-import { useState, useEffect } from "react";
-import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText } from "lucide-react";
+/**
+ * ABC Master Build: Triple-Balance Member Pulse
+ * E-Wallet (Liquid), Lend Capital (Locked), Loan Collateral (Locked)
+ * Midnight Obsidian (#050505), Gold (#D4AF37), Yield Green (#00FF41)
+ */
+
+import { useState } from "react";
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import PendingTransactions from "./PendingTransactions";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
@@ -22,30 +28,37 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   if (loading || !memberData) {
     return (
       <div className="space-y-4">
-        <Card className="glass-card p-5 border-primary/20 animate-pulse">
+        <Card className="glass-card p-5 border-[#D4AF37]/20 animate-pulse bg-[#050505]">
           <div className="h-20 bg-muted/30 rounded" />
         </Card>
-        <Card className="glass-card p-4 border-destructive/20 animate-pulse">
+        <Card className="glass-card p-4 border-[#00FF41]/20 animate-pulse bg-[#050505]">
+          <div className="h-12 bg-muted/30 rounded" />
+        </Card>
+        <Card className="glass-card p-4 border-destructive/20 animate-pulse bg-[#050505]">
           <div className="h-12 bg-muted/30 rounded" />
         </Card>
       </div>
     );
   }
 
-  const { vaultBalance, frozenBalance } = memberData;
+  const { vaultBalance, frozenBalance, lendingBalance } = memberData;
+  
+  // Calculate total vault for global yield display
+  const totalVaultBalance = vaultBalance + frozenBalance + lendingBalance;
 
   return (
     <div className="space-y-4">
-      {/* Vault Balance Card - Polished Gold Theme */}
-      <Card className="glass-card p-5 border-[#D4AF37]/30 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
+      {/* E-WALLET (Liquid) - Gold Theme */}
+      <Card className="glass-card p-5 border-[#D4AF37]/30 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
               <Wallet className="w-4 h-4 text-[#D4AF37]" />
             </div>
-            <span className="text-sm text-muted-foreground">Vault Balance</span>
+            <span className="text-sm text-muted-foreground">E-Wallet</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37]">LIQUID</span>
           </div>
-          <div className="flex items-center gap-1 text-[#D4AF37] text-xs font-medium">
+          <div className="flex items-center gap-1 text-[#00FF41] text-xs font-medium">
             <ArrowUpRight className="w-3 h-3" />
             +{systemStats?.vaultInterestRate || 0.5}%
           </div>
@@ -58,23 +71,76 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
             WebkitTextFillColor: 'transparent',
           }}
         >
-          ₱{vaultBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+          ₱{vaultBalance.toLocaleString('en-PH')}
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Available for transfers & lending
+        </p>
+      </Card>
+
+      {/* LEND CAPITAL (Locked) - Yield Green Theme */}
+      <Card className="glass-card p-4 border-[#00FF41]/20 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#00FF41]/20 flex items-center justify-center">
+              <TrendingUp className="w-3.5 h-3.5 text-[#00FF41]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">Lend Capital</p>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#00FF41]/10 text-[#00FF41] flex items-center gap-1">
+                  <Lock className="w-2 h-2" />
+                  LOCKED
+                </span>
+              </div>
+              <p className="balance-number text-lg text-[#00FF41]">
+                ₱{lendingBalance.toLocaleString('en-PH')}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground">Yield</p>
+            <p className="text-xs text-[#00FF41] font-semibold">+0.7%/day</p>
+          </div>
         </div>
       </Card>
 
-      {/* Frozen Balance - Obsidian Theme */}
-      <Card className="glass-card p-4 border-destructive/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
+      {/* LOAN COLLATERAL (Locked) - Destructive Theme */}
+      <Card className="glass-card p-4 border-destructive/20 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-destructive/20 flex items-center justify-center">
               <ArrowDownRight className="w-3.5 h-3.5 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Frozen (Collateral + Clearing)</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">Loan Collateral</p>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive flex items-center gap-1">
+                  <Lock className="w-2 h-2" />
+                  LOCKED
+                </span>
+              </div>
               <p className="balance-number text-lg text-destructive">
-                ₱{frozenBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                ₱{frozenBalance.toLocaleString('en-PH')}
               </p>
             </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground">28-Day Lock</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Global Yield Summary */}
+      <Card className="glass-card p-3 border-[#D4AF37]/10 bg-[#050505]/80">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Vault Value</p>
+            <p className="text-sm font-semibold text-[#D4AF37]">₱{totalVaultBalance.toLocaleString('en-PH')}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground">Global Yield</p>
+            <p className="text-sm font-bold text-[#00FF41]">+0.5%/day</p>
           </div>
         </div>
       </Card>
@@ -88,23 +154,23 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
       {/* Quick Actions - Gold Accent Theme */}
       <div className="grid grid-cols-2 gap-3" id="transfer-funds">
         <Card 
-          className="glass-card p-4 border-[#D4AF37]/20 hover:border-[#D4AF37]/50 cursor-pointer transition-all group bg-gradient-to-b from-[#1a1a1a]/50 to-[#0d0d0d]/50"
+          className="glass-card p-4 border-[#D4AF37]/20 hover:border-[#D4AF37]/50 cursor-pointer transition-all group bg-[#050505]"
           onClick={onTransferClick}
         >
           <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center mb-2 group-hover:bg-[#D4AF37]/20 transition-colors">
             <Send className="w-5 h-5 text-[#D4AF37]" />
           </div>
-          <p className="text-sm font-medium">Transfer Funds</p>
+          <p className="text-sm font-medium text-[#050505]" style={{ color: '#fff' }}>Transfer Funds</p>
           <p className="text-xs text-muted-foreground">Banks • E-Wallets</p>
         </Card>
         <Card 
-          className="glass-card p-4 border-success/20 hover:border-success/50 cursor-pointer transition-all group bg-gradient-to-b from-[#1a1a1a]/50 to-[#0d0d0d]/50"
+          className="glass-card p-4 border-[#00FF41]/20 hover:border-[#00FF41]/50 cursor-pointer transition-all group bg-[#050505]"
           onClick={() => setShowLoansPanel(true)}
         >
-          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center mb-2 group-hover:bg-success/20 transition-colors">
-            <FileText className="w-5 h-5 text-success" />
+          <div className="w-10 h-10 rounded-lg bg-[#00FF41]/10 flex items-center justify-center mb-2 group-hover:bg-[#00FF41]/20 transition-colors">
+            <FileText className="w-5 h-5 text-[#00FF41]" />
           </div>
-          <p className="text-sm font-medium">My Loans</p>
+          <p className="text-sm font-medium" style={{ color: '#fff' }}>My Loans</p>
           <p className="text-xs text-muted-foreground">
             Active: {activeLoansCount}
           </p>

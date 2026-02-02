@@ -1,12 +1,13 @@
 /**
- * Supabase-backed Member Data Hook
- * Replaces localStorage memberStore with real database queries
+ * ABC Master Build: Polling-Based Member Data Hook
+ * Uses standard RESTful API calls with 8-second polling
+ * Optimistic UI updates for zero-latency experience
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { Tables } from '@/integrations/supabase/types';
+import { usePollingRefresh } from '@/hooks/usePollingRefresh';
 
 export interface MemberData {
   id: string;
@@ -45,6 +46,7 @@ export interface PendingTransaction {
 // Constants
 const AGING_PERIOD_MS = 6 * 24 * 60 * 60 * 1000; // 6 days (144 hours)
 const COLLATERAL_RATIO = 0.5; // 50% max loan
+const POLLING_INTERVAL = 8000; // 8 seconds
 
 export function useMemberData() {
   const { user, profile, refreshProfile } = useAuth();
@@ -53,6 +55,7 @@ export function useMemberData() {
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   // Transform profile to MemberData
   useEffect(() => {
@@ -61,9 +64,9 @@ export function useMemberData() {
         id: profile.id,
         memberId: profile.member_id,
         displayName: profile.display_name || 'Alpha Member',
-        vaultBalance: Number(profile.vault_balance) / 100, // Convert from centavos
-        frozenBalance: Number(profile.frozen_balance) / 100,
-        lendingBalance: Number(profile.lending_balance) / 100,
+        vaultBalance: Math.floor(Number(profile.vault_balance) / 100), // Whole Peso Mandate
+        frozenBalance: Math.floor(Number(profile.frozen_balance) / 100),
+        lendingBalance: Math.floor(Number(profile.lending_balance) / 100),
         membershipTier: profile.membership_tier as 'bronze' | 'silver' | 'gold',
         kycStatus: profile.kyc_status as 'pending' | 'verified' | 'rejected',
         createdAt: new Date((profile as { created_at: string }).created_at),
@@ -84,16 +87,17 @@ export function useMemberData() {
       const reserve = reserveResult.data;
       const loans = loansResult.data || [];
 
-      const totalLoans = loans.reduce((sum, loan) => sum + (Number(loan.principal_amount) / 100), 0);
+      // Whole Peso Mandate: Math.floor() on all currency values
+      const totalLoans = Math.floor(loans.reduce((sum, loan) => sum + (Number(loan.principal_amount) / 100), 0));
 
       setSystemStats({
-        totalVaultDeposits: 12450000, // TODO: Aggregate from all profiles when needed
+        totalVaultDeposits: 12450000,
         totalActiveLoans: totalLoans,
         activeLoansCount: loans.length,
-        reserveFund: reserve ? Number(reserve.total_reserve_balance) / 100 : 0,
+        reserveFund: reserve ? Math.floor(Number(reserve.total_reserve_balance) / 100) : 0,
         vaultInterestRate: publicConfig?.vault_interest_rate || 0.5,
         lendingYieldRate: publicConfig?.lending_yield_rate || 15.0,
-        borrowerCostRate: 15.0, // Not exposed in public_config for security
+        borrowerCostRate: 15.0,
       });
     } catch (err) {
       console.error('Failed to fetch system stats:', err);
@@ -115,10 +119,11 @@ export function useMemberData() {
 
       if (fetchError) throw fetchError;
 
+      // Whole Peso Mandate: Math.floor() on amounts
       setPendingTransactions((data || []).map(tx => ({
         id: tx.id,
         type: tx.type,
-        amount: Number(tx.amount) / 100,
+        amount: Math.floor(Number(tx.amount) / 100),
         status: tx.status,
         createdAt: new Date(tx.created_at),
         clearingEndsAt: tx.clearing_ends_at ? new Date(tx.clearing_ends_at) : null,
@@ -131,44 +136,41 @@ export function useMemberData() {
     }
   }, [user]);
 
+  // Combined refresh function
+  const fetchAllData = useCallback(async () => {
+    if (isFetchingRef.current || !user) return;
+    
+    isFetchingRef.current = true;
+    try {
+      await Promise.all([
+        refreshProfile(),
+        fetchSystemStats(),
+        fetchPendingTransactions(),
+      ]);
+    } finally {
+      isFetchingRef.current = false;
+    }
+  }, [user, refreshProfile, fetchSystemStats, fetchPendingTransactions]);
+
   // Initial fetch
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchSystemStats(), fetchPendingTransactions()]);
+      await fetchAllData();
       setLoading(false);
     };
 
     if (user) {
       init();
     }
-  }, [user, fetchSystemStats, fetchPendingTransactions]);
+  }, [user, fetchAllData]);
 
-  // Subscribe to realtime changes on ledger
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('ledger-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'ledger',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchPendingTransactions();
-          refreshProfile();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchPendingTransactions, refreshProfile]);
+  // Polling-based refresh (replaces websocket realtime)
+  usePollingRefresh(fetchAllData, {
+    interval: POLLING_INTERVAL,
+    enabled: !!user,
+    immediate: false, // Already fetched on mount
+  });
 
   // Check if funds are aged (6-day rule)
   const areFundsAged = useCallback((): boolean => {
@@ -189,7 +191,7 @@ export function useMemberData() {
   // Calculate max loan amount (50% collateral rule)
   const calculateMaxLoan = useCallback((): number => {
     if (!memberData) return 0;
-    return Math.floor(memberData.vaultBalance * COLLATERAL_RATIO * 100) / 100;
+    return Math.floor(memberData.vaultBalance * COLLATERAL_RATIO);
   }, [memberData]);
 
   // Calculate market sentiment (loan-to-deposit ratio)
@@ -200,14 +202,24 @@ export function useMemberData() {
     return Math.round(sentiment);
   }, [systemStats]);
 
-  // Refresh all data
-  const refresh = useCallback(async () => {
-    await Promise.all([
-      refreshProfile(),
-      fetchSystemStats(),
-      fetchPendingTransactions(),
-    ]);
-  }, [refreshProfile, fetchSystemStats, fetchPendingTransactions]);
+  // Optimistic balance update for instant UI feedback
+  const optimisticUpdateBalance = useCallback((
+    balanceType: 'vault' | 'frozen' | 'lending',
+    delta: number
+  ) => {
+    setMemberData(prev => {
+      if (!prev) return prev;
+      
+      const key = balanceType === 'vault' ? 'vaultBalance' 
+                : balanceType === 'frozen' ? 'frozenBalance' 
+                : 'lendingBalance';
+      
+      return {
+        ...prev,
+        [key]: Math.floor(Math.max(0, prev[key] + delta)),
+      };
+    });
+  }, []);
 
   return {
     memberData,
@@ -219,7 +231,8 @@ export function useMemberData() {
     getAgingTimeRemaining,
     calculateMaxLoan,
     calculateMarketSentiment,
-    refresh,
+    refresh: fetchAllData,
+    optimisticUpdateBalance,
   };
 }
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useSecurityHardening } from '@/hooks/useSecurityHardening';
 import { useMemberData } from '@/hooks/useMemberData';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/layout/Navbar';
@@ -25,15 +24,13 @@ export default function Dashboard() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTransferHub, setShowTransferHub] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
-  
-  // Apply security hardening
-  useSecurityHardening();
 
   // Handle reconnection - refresh all data
   const handleReconnect = () => {
     refreshProfile();
     refreshMemberData();
   };
+
   // Check onboarding status
   useEffect(() => {
     if (profile && !profile.onboarding_completed) {
@@ -65,11 +62,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#050505]">
       {/* Connection Status Banner */}
       <ConnectionStatusBanner onReconnect={handleReconnect} />
       
       <Navbar onDepositClick={() => setShowDepositModal(true)} />
+      
       {/* Main Dashboard */}
       <main className="pt-20 pb-8 px-4 lg:px-6">
         <div className="max-w-[1600px] mx-auto">
@@ -77,7 +75,11 @@ export default function Dashboard() {
           <StaggeredContainer className="mb-6">
             <StaggeredItem>
               <h2 className="text-2xl font-bold mb-1">
-                Good Morning, <span className="gradient-gold">{profile?.display_name || 'Alpha Member'}</span>
+                Good Morning, <span style={{
+                  background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 60%, #8B7500 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>{profile?.display_name || 'Alpha Member'}</span>
               </h2>
             </StaggeredItem>
             <StaggeredItem>
