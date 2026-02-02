@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import QRGatewayManager from "@/components/admin/QRGatewayManager";
 import PendingActionsQueue from "@/components/admin/PendingActionsQueue";
 import PendingActionsSummary from "@/components/admin/PendingActionsSummary";
+import MemberManagement from "@/components/admin/MemberManagement";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { ConnectionStatusBanner, ConnectionIndicator } from "@/components/common/ConnectionStatusBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -363,6 +364,11 @@ const GovernorDashboard = () => {
                 onQRUpdate={handleQRUpdate}
               />
             </div>
+          </div>
+
+          {/* Member Management - Full Width */}
+          <div className="mt-6">
+            <MemberManagement />
           </div>
 
           {/* Additional Sections */}
