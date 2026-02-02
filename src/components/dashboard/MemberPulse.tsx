@@ -5,10 +5,12 @@
  */
 
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import PendingTransactions from "./PendingTransactions";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
+import LendCapitalModal from "@/components/lending/LendCapitalModal";
 import InterestDisplay from "@/components/interest/InterestDisplay";
 import { useMemberData } from "@/hooks/useMemberData";
 import { useLoans } from "@/hooks/useLoans";
@@ -21,6 +23,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   const { memberData, systemStats, loading } = useMemberData();
   const { myLoansAsBorrower } = useLoans();
   const [showLoansPanel, setShowLoansPanel] = useState(false);
+  const [showLendModal, setShowLendModal] = useState(false);
 
   // Count active funded loans
   const activeLoansCount = myLoansAsBorrower.filter(l => l.status === 'funded').length;
@@ -78,7 +81,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
         </p>
       </Card>
 
-      {/* LEND CAPITAL (Locked) - Yield Green Theme */}
+      {/* LEND CAPITAL (Locked) - Yield Green Theme with LEND Button */}
       <Card className="glass-card p-4 border-[#00FF41]/20 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -98,9 +101,19 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Yield</p>
-            <p className="text-xs text-[#00FF41] font-semibold">+0.7%/day</p>
+          <div className="flex items-center gap-2">
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground">Yield</p>
+              <p className="text-xs text-[#00FF41] font-semibold">+0.7%/day</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setShowLendModal(true)}
+              className="h-8 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-[#050505] font-bold text-xs"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              LEND
+            </Button>
           </div>
         </div>
       </Card>
@@ -181,6 +194,12 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
       <MyLoansPanel 
         isOpen={showLoansPanel} 
         onClose={() => setShowLoansPanel(false)} 
+      />
+
+      {/* Lend Capital Modal */}
+      <LendCapitalModal
+        isOpen={showLendModal}
+        onClose={() => setShowLendModal(false)}
       />
     </div>
   );

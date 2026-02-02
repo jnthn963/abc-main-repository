@@ -837,6 +837,10 @@ export type Database = {
         Returns: boolean
       }
       initiate_account_recovery: { Args: { p_email: string }; Returns: Json }
+      lend_capital_atomic: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
       log_profile_access: {
         Args: { p_access_reason?: string; p_accessed_profile_id: string }
         Returns: undefined
