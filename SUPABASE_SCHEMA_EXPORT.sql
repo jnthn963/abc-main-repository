@@ -298,6 +298,38 @@ JOIN public.profiles p ON p.id = pl.borrower_id
 WHERE pl.approval_status = 'pending_review';
 
 -- =====================================================
+-- STEP 5B: SECURE ADMIN VIEWS (CRITICAL)
+-- =====================================================
+-- Admin views must be locked down immediately after creation
+-- Only accessible via SECURITY DEFINER functions or service_role
+
+-- Lock down profiles_admin_view (contains PII + security questions)
+REVOKE ALL ON public.profiles_admin_view FROM public;
+REVOKE ALL ON public.profiles_admin_view FROM authenticated;
+REVOKE ALL ON public.profiles_admin_view FROM anon;
+GRANT SELECT ON public.profiles_admin_view TO service_role;
+
+-- Lock down pending_actions_queue (contains financial data)
+REVOKE ALL ON public.pending_actions_queue FROM public;
+REVOKE ALL ON public.pending_actions_queue FROM authenticated;
+REVOKE ALL ON public.pending_actions_queue FROM anon;
+GRANT SELECT ON public.pending_actions_queue TO service_role;
+
+-- User view: block anon, allow authenticated (via RLS)
+REVOKE ALL ON public.profiles_user_view FROM anon;
+GRANT SELECT ON public.profiles_user_view TO authenticated;
+
+-- Document security requirements
+COMMENT ON VIEW public.profiles_admin_view IS 
+  'Administrative view with customer PII and security questions. Access restricted to service_role only. Use get_pending_actions() RPC for governor access.';
+  
+COMMENT ON VIEW public.pending_actions_queue IS 
+  'Governor action queue with pending deposits/loans. Access restricted to service_role only. Use get_pending_actions() RPC for governor access.';
+
+COMMENT ON VIEW public.profiles_user_view IS 
+  'User-facing profile view excluding sensitive security credentials. Authenticated users only via RLS.';
+
+-- =====================================================
 -- STEP 6: CREATE HELPER FUNCTIONS
 -- =====================================================
 
