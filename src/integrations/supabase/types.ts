@@ -459,13 +459,6 @@ export type Database = {
             foreignKeyName: "profiles_referrer_id_fkey"
             columns: ["referrer_id"]
             isOneToOne: false
-            referencedRelation: "profiles_admin_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
             referencedRelation: "profiles_user_view"
             referencedColumns: ["id"]
           },
@@ -614,57 +607,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles_admin_view: {
-        Row: {
-          address_line1: string | null
-          address_line2: string | null
-          city: string | null
-          created_at: string | null
-          display_name: string | null
-          email: string | null
-          frozen_balance: number | null
-          id: string | null
-          kyc_status: Database["public"]["Enums"]["kyc_status"] | null
-          last_login_at: string | null
-          lending_balance: number | null
-          member_id: string | null
-          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
-          onboarding_completed: boolean | null
-          phone: string | null
-          postal_code: string | null
-          province: string | null
-          referral_code: string | null
-          referrer_id: string | null
-          security_question_1: string | null
-          security_question_2: string | null
-          total_referral_earnings: number | null
-          updated_at: string | null
-          vault_balance: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_admin_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_user_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles_user_view: {
         Row: {
           address_line1: string | null
@@ -754,13 +696,6 @@ export type Database = {
             foreignKeyName: "profiles_referrer_id_fkey"
             columns: ["referrer_id"]
             isOneToOne: false
-            referencedRelation: "profiles_admin_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
             referencedRelation: "profiles_user_view"
             referencedColumns: ["id"]
           },
@@ -810,6 +745,35 @@ export type Database = {
           source_table: string
           user_id: string
           user_name: string
+        }[]
+      }
+      get_profiles_for_admin: {
+        Args: never
+        Returns: {
+          address_line1: string
+          address_line2: string
+          city: string
+          created_at: string
+          display_name: string
+          email: string
+          frozen_balance: number
+          id: string
+          kyc_status: Database["public"]["Enums"]["kyc_status"]
+          last_login_at: string
+          lending_balance: number
+          member_id: string
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed: boolean
+          phone: string
+          postal_code: string
+          province: string
+          referral_code: string
+          referrer_id: string
+          security_question_1: string
+          security_question_2: string
+          total_referral_earnings: number
+          updated_at: string
+          vault_balance: number
         }[]
       }
       get_security_questions: {
