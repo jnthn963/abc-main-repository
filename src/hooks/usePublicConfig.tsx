@@ -2,13 +2,16 @@
  * Hook to fetch and subscribe to public configuration settings
  * This uses the public_config table which has non-sensitive data
  * accessible to all authenticated users (vs global_settings which is admin-only)
+ * 
+ * Features:
+ * - Retry mechanism with exponential backoff (max 3 attempts)
+ * - RESTful polling (no WebSockets)
+ * - Graceful error handling
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { usePollingRefresh } from '@/hooks/usePollingRefresh';
-import { runDeduped } from '@/lib/requestController';
 
 export interface PublicConfig {
   id: string;
@@ -20,36 +23,46 @@ export interface PublicConfig {
   updatedAt: Date;
 }
 
+// Default fallback configuration
+const DEFAULT_CONFIG: PublicConfig = {
+  id: 'fallback',
+  qrGatewayUrl: null,
+  receiverName: 'Alpha Banking Cooperative',
+  receiverPhone: '+63 917 XXX XXXX',
+  vaultInterestRate: 0.5,
+  lendingYieldRate: 15.0,
+  updatedAt: new Date(),
+};
+
+const MAX_RETRY_ATTEMPTS = 3;
+const BASE_RETRY_DELAY = 1000; // 1 second
+const POLLING_INTERVAL = 15000; // 15 seconds (>= 10s for stability)
+
 export function usePublicConfig() {
   const { user } = useAuth();
   const [config, setConfig] = useState<PublicConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);
 
-  const POLLING_INTERVAL = 15000; // Emergency stability: >= 10s
-
-  // Fetch public config
-  const fetchConfig = useCallback(async () => {
+  // Fetch with retry mechanism and exponential backoff
+  const fetchWithRetry = useCallback(async (attempt = 1): Promise<PublicConfig | null> => {
     try {
-      setLoading(true);
-      setError(null);
+      const { data, error: fetchError } = await supabase
+        .from('public_config')
+        .select('*')
+        .maybeSingle();
 
-      const data = await runDeduped(
-        'publicConfig:singleton',
-        async () => {
-          const { data, error: fetchError } = await supabase
-            .from('public_config')
-            .select('*')
-            .maybeSingle();
-
-          if (fetchError) throw fetchError;
-          return data;
-        },
-        { minIntervalMs: 10000 }
-      );
+      if (fetchError) {
+        throw fetchError;
+      }
 
       if (data) {
-        setConfig({
+        return {
           id: data.id,
           qrGatewayUrl: data.qr_gateway_url,
           receiverName: data.receiver_name || 'Alpha Banking Cooperative',
@@ -57,29 +70,119 @@ export function usePublicConfig() {
           vaultInterestRate: Number(data.vault_interest_rate) || 0.5,
           lendingYieldRate: Number(data.lending_yield_rate) || 15.0,
           updatedAt: new Date(data.updated_at),
-        });
+        };
       }
+
+      return null;
     } catch (err) {
-      console.error('Failed to fetch public config:', err);
-      setError('Failed to load configuration');
-    } finally {
-      setLoading(false);
+      // Retry with exponential backoff
+      if (attempt < MAX_RETRY_ATTEMPTS) {
+        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt - 1);
+        console.warn(`PublicConfig fetch attempt ${attempt} failed, retrying in ${delay}ms...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithRetry(attempt + 1);
+      }
+      
+      // All retries exhausted
+      console.error('PublicConfig fetch failed after all retries:', err);
+      throw err;
     }
   }, []);
 
-  // Initial fetch
+  // Main fetch function with deduplication
+  const fetchConfig = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) return;
+    
+    // Throttle: minimum 10s between fetches
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 10000) return;
+    
+    isFetchingRef.current = true;
+    lastFetchTimeRef.current = now;
+
+    try {
+      setError(null);
+      
+      const data = await fetchWithRetry();
+
+      if (!isMountedRef.current) return;
+
+      if (data) {
+        setConfig(data);
+      } else {
+        // Use default config if no data found
+        setConfig(DEFAULT_CONFIG);
+      }
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      
+      console.error('Failed to fetch public config:', err);
+      setError('Failed to load configuration');
+      
+      // Use default config on error
+      if (!config) {
+        setConfig(DEFAULT_CONFIG);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+        isFetchingRef.current = false;
+      }
+    }
+  }, [fetchWithRetry, config]);
+
+  // Clear polling interval
+  const clearPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
+
+  // Start polling with RESTful mechanism (no WebSockets)
+  const startPolling = useCallback(() => {
+    clearPolling();
+    
+    pollingIntervalRef.current = setInterval(() => {
+      if (isMountedRef.current && user) {
+        fetchConfig();
+      }
+    }, POLLING_INTERVAL);
+  }, [clearPolling, fetchConfig, user]);
+
+  // Initial fetch when user is available
   useEffect(() => {
+    isMountedRef.current = true;
+
     if (user) {
       fetchConfig();
+      startPolling();
     }
-  }, [user, fetchConfig]);
 
-  // Emergency stability: polling (no websockets)
-  usePollingRefresh(fetchConfig, {
-    interval: POLLING_INTERVAL,
-    enabled: !!user,
-    immediate: false,
-  });
+    return () => {
+      isMountedRef.current = false;
+      clearPolling();
+    };
+  }, [user, fetchConfig, startPolling, clearPolling]);
+
+  // Handle visibility change - pause when tab is hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearPolling();
+      } else if (user) {
+        fetchConfig();
+        startPolling();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, fetchConfig, startPolling, clearPolling]);
 
   return {
     config,
