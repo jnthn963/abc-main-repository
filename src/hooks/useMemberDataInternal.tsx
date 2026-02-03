@@ -4,9 +4,12 @@
  * NOTE: This file contains the actual data-fetching + polling logic.
  * It is intended to be used via MemberDataProvider (see useMemberData.tsx)
  * so we only run one poller in the app.
+ * 
+ * STABILITY FIX: Loading state only shows on initial fetch, 
+ * polling uses silent refresh to prevent UI flicker.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePollingRefresh } from '@/hooks/usePollingRefresh';
@@ -56,9 +59,12 @@ export function useMemberDataInternal() {
   const [memberData, setMemberData] = useState<MemberData | null>(null);
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // STABILITY FIX: Track initial load vs subsequent polling
   const isFetchingRef = useRef(false);
+  const hasInitialLoadRef = useRef(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Transform profile to MemberData (balances are set once on login, then updated via optimistic UI)
   useEffect(() => {
@@ -74,6 +80,11 @@ export function useMemberDataInternal() {
         kycStatus: profile.kyc_status as 'pending' | 'verified' | 'rejected',
         createdAt: new Date((profile as { created_at: string }).created_at),
       });
+      // Mark initial load complete once we have profile data
+      if (!hasInitialLoadRef.current) {
+        hasInitialLoadRef.current = true;
+        setIsInitialLoading(false);
+      }
     }
   }, [profile]);
 
@@ -173,6 +184,7 @@ export function useMemberDataInternal() {
   }, [user, refreshProfile, fetchSystemStats, fetchPendingTransactions]);
 
   // Poll refresh (NO profile refresh) — prevents balance thrash and request floods
+  // STABILITY FIX: This is always silent, never triggers loading state
   const pollRefresh = useCallback(async () => {
     if (isFetchingRef.current || !user) return;
     isFetchingRef.current = true;
@@ -187,12 +199,13 @@ export function useMemberDataInternal() {
     }
   }, [user, fetchSystemStats, fetchPendingTransactions]);
 
-  // Initial fetch
+  // Initial fetch - only sets loading on first load
   useEffect(() => {
     const init = async () => {
-      setLoading(true);
+      if (!hasInitialLoadRef.current) {
+        setIsInitialLoading(true);
+      }
       await refreshAll();
-      setLoading(false);
     };
 
     if (user) {
@@ -200,7 +213,7 @@ export function useMemberDataInternal() {
     }
   }, [user, refreshAll]);
 
-  // Polling-based refresh (stability mode)
+  // Polling-based refresh (stability mode) - SILENT, no loading state changes
   usePollingRefresh(pollRefresh, {
     interval: POLLING_INTERVAL,
     enabled: !!user,
@@ -259,11 +272,12 @@ export function useMemberDataInternal() {
     []
   );
 
-  return {
+  // STABILITY FIX: Memoize return value to prevent unnecessary re-renders
+  return useMemo(() => ({
     memberData,
     systemStats,
     pendingTransactions,
-    loading,
+    loading: isInitialLoading, // Only true during initial load
     error,
     areFundsAged,
     getAgingTimeRemaining,
@@ -271,7 +285,19 @@ export function useMemberDataInternal() {
     calculateMarketSentiment,
     refresh: refreshAll,
     optimisticUpdateBalance,
-  };
+  }), [
+    memberData,
+    systemStats,
+    pendingTransactions,
+    isInitialLoading,
+    error,
+    areFundsAged,
+    getAgingTimeRemaining,
+    calculateMaxLoan,
+    calculateMarketSentiment,
+    refreshAll,
+    optimisticUpdateBalance,
+  ]);
 }
 
 export default useMemberDataInternal;

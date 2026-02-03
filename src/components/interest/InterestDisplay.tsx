@@ -2,9 +2,12 @@
  * Interest Display Component
  * Shows daily yield information and interest history
  * Now using Supabase database instead of localStorage
+ * 
+ * STABILITY FIX: Countdown timer isolated to separate component
+ * to prevent parent re-renders every second.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   TrendingUp, Clock, Sparkles, History, Zap, Gift
@@ -16,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMemberData } from "@/hooks/useMemberData";
 import { toast } from "sonner";
+import { InterestCountdown } from "./InterestCountdown";
 
 interface InterestRecord {
   id: string;
@@ -40,18 +44,11 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
   const [todaysInterest, setTodaysInterest] = useState<InterestRecord | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  
+  // STABILITY FIX: Track initial load
+  const hasInitialDataRef = useRef(false);
+  const [hasInitialData, setHasInitialData] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Calculate time until next interest (midnight)
-  const getTimeUntilMidnight = useCallback(() => {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow.getTime() - now.getTime();
-  }, []);
-
-  const [timeUntilNext, setTimeUntilNext] = useState(getTimeUntilMidnight());
 
   // Fetch interest history from database
   const fetchInterestHistory = useCallback(async () => {
@@ -88,6 +85,12 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
         r.createdAt.getFullYear() === today.getFullYear()
       );
       setTodaysInterest(todayRecord || null);
+      
+      // STABILITY FIX: Mark initial data loaded
+      if (!hasInitialDataRef.current) {
+        hasInitialDataRef.current = true;
+        setHasInitialData(true);
+      }
     } catch (err) {
       console.error('Failed to fetch interest history:', err);
     } finally {
@@ -101,21 +104,6 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
       fetchInterestHistory();
     }
   }, [user, fetchInterestHistory]);
-
-  // Update countdown timer
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeUntilNext(getTimeUntilMidnight());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [getTimeUntilMidnight]);
-
-  const formatCountdown = (ms: number): string => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
 
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-PH', { 
@@ -156,6 +144,9 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
 
   const vaultInterestRate = systemStats?.vaultInterestRate || 0.5;
 
+  // Show initial loading only
+  const showLoading = !hasInitialData && loading;
+
   if (compact) {
     return (
       <Card className="glass-card p-3 border-success/20">
@@ -171,7 +162,7 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Next in</p>
-            <p className="font-mono text-sm text-foreground">{formatCountdown(timeUntilNext)}</p>
+            <InterestCountdown className="text-sm text-foreground" />
           </div>
         </div>
       </Card>
@@ -227,7 +218,7 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
         </div>
 
         {/* Today's Interest */}
-        {loading ? (
+        {showLoading ? (
           <Card className="p-3 bg-muted/30 border-border mb-3 animate-pulse">
             <div className="h-12 bg-muted/50 rounded" />
           </Card>
@@ -256,9 +247,7 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
                 <Clock className="w-5 h-5 text-primary animate-pulse" />
                 <div>
                   <p className="text-xs text-muted-foreground">Next Interest In</p>
-                  <p className="font-mono font-bold text-primary text-lg">
-                    {formatCountdown(timeUntilNext)}
-                  </p>
+                  <InterestCountdown className="font-bold text-primary text-lg" />
                 </div>
               </div>
               <div className="text-right">

@@ -1,9 +1,12 @@
 /**
  * Supabase-backed Loans Hook
  * Replaces localStorage loanStore with real database queries
+ * 
+ * STABILITY FIX: Loading state only shows on initial fetch,
+ * polling uses silent refresh to prevent UI flicker.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
@@ -77,20 +80,19 @@ export function useLoans() {
   const [openLoans, setOpenLoans] = useState<P2PLoan[]>([]);
   const [myLoansAsBorrower, setMyLoansAsBorrower] = useState<P2PLoan[]>([]);
   const [myLoansAsLender, setMyLoansAsLender] = useState<P2PLoan[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const didInitialFetchRef = useRef(false);
+  
+  // STABILITY FIX: Track initial load vs polling
+  const hasInitialDataRef = useRef(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const POLLING_INTERVAL = 15000; // Emergency stability: >= 10s
 
   // Fetch all loans with member aliases
-  const fetchLoans = useCallback(async (opts: { silent?: boolean } = {}) => {
+  const fetchLoans = useCallback(async () => {
     if (!user) return;
-    const silent = opts.silent === true;
 
     try {
-      if (!silent || !didInitialFetchRef.current) setLoading(true);
-
       const result = await runDeduped(
         `loans:all:${user.id}`,
         async () => {
@@ -166,12 +168,20 @@ export function useLoans() {
       setMyLoansAsBorrower(result.borrower);
       setMyLoansAsLender(result.lender);
       setError(null);
-      didInitialFetchRef.current = true;
+      
+      // STABILITY FIX: Mark initial data loaded
+      if (!hasInitialDataRef.current) {
+        hasInitialDataRef.current = true;
+        setIsInitialLoading(false);
+      }
     } catch (err) {
       console.error('Failed to fetch loans:', err);
       setError('Failed to load loans');
-    } finally {
-      if (!silent || !didInitialFetchRef.current) setLoading(false);
+      // Still mark initial load complete on error to prevent infinite loading
+      if (!hasInitialDataRef.current) {
+        hasInitialDataRef.current = true;
+        setIsInitialLoading(false);
+      }
     }
   }, [user]);
 
@@ -182,9 +192,9 @@ export function useLoans() {
     }
   }, [user, fetchLoans]);
 
-  // Emergency stability: polling (no websockets)
+  // Emergency stability: polling (no websockets) - SILENT, no loading changes
   usePollingRefresh(
-    () => fetchLoans({ silent: true }),
+    fetchLoans,
     {
       interval: POLLING_INTERVAL,
       enabled: !!user,
@@ -215,15 +225,16 @@ export function useLoans() {
     };
   }, [openLoans, myLoansAsBorrower, myLoansAsLender]);
 
-  return {
+  // STABILITY FIX: Memoize return value
+  return useMemo(() => ({
     openLoans,
     myLoansAsBorrower,
     myLoansAsLender,
-    loading,
+    loading: isInitialLoading, // Only true during initial load
     error,
-    refresh: () => fetchLoans(),
+    refresh: fetchLoans,
     getMarketplaceStats,
-  };
+  }), [openLoans, myLoansAsBorrower, myLoansAsLender, isInitialLoading, error, fetchLoans, getMarketplaceStats]);
 }
 
 export default useLoans;

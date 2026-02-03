@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+/**
+ * Alpha Marketplace Component
+ * 
+ * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
+ */
+
+import { useState, useEffect, useRef } from "react";
 import { TrendingUp, TrendingDown, Zap, HandCoins, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,11 +33,23 @@ const AlphaMarketplace = () => {
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<LoanListing | null>(null);
+  
+  // STABILITY FIX: Track if we've ever received loans data
+  const hasInitialDataRef = useRef(false);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
   // Update sentiment when system stats change
   useEffect(() => {
     setSentimentValue(calculateMarketSentiment());
   }, [calculateMarketSentiment]);
+
+  // STABILITY FIX: Once we have data, never show loading again
+  useEffect(() => {
+    if (!loading && !hasInitialDataRef.current) {
+      hasInitialDataRef.current = true;
+      setHasInitialData(true);
+    }
+  }, [loading]);
 
   const handleLendClick = (loan: LoanListing) => {
     setSelectedLoan(loan);
@@ -56,6 +74,9 @@ const AlphaMarketplace = () => {
     createdAt: loan.createdAt,
     collateralAmount: loan.collateralAmount,
   }));
+
+  // Show initial loading state only
+  const showLoading = !hasInitialData && loading;
 
   return (
     <div className="space-y-4">
@@ -193,9 +214,13 @@ const AlphaMarketplace = () => {
       {/* Order Book */}
       <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
         <h3 className="text-sm font-semibold mb-3">Available Loan Requests</h3>
-        {loading ? (
-          <div className="py-8 text-center text-muted-foreground text-sm animate-pulse">
-            Loading loans...
+        {showLoading ? (
+          <div className="py-8 text-center">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted/30 rounded animate-pulse" />
+              <div className="h-8 bg-muted/30 rounded animate-pulse" />
+              <div className="h-8 bg-muted/30 rounded animate-pulse" />
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
