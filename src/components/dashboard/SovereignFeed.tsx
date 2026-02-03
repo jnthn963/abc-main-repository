@@ -1,9 +1,11 @@
 /**
  * ABC Master Build: Sovereign Feed with Polling
- * Live announcements and audit trail using 10s polling
+ * Live announcements and audit trail using 15s polling
+ * 
+ * STABILITY FIX: Uses hasInitialData pattern to prevent flicker
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Megaphone, Clock, ChevronRight, Image, Video, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +39,10 @@ const defaultAnnouncements: Announcement[] = [
 const SovereignFeed = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  
+  // STABILITY FIX: Track initial data load
+  const hasInitialDataRef = useRef(false);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
   // Fetch live data
   const fetchFeedData = useCallback(async () => {
@@ -73,14 +79,25 @@ const SovereignFeed = () => {
           event: formatAuditEvent(tx),
         })));
       }
+      
+      // STABILITY FIX: Mark initial data loaded
+      if (!hasInitialDataRef.current) {
+        hasInitialDataRef.current = true;
+        setHasInitialData(true);
+      }
     } catch (err) {
       console.error('Failed to fetch feed data:', err);
+      // Still mark as loaded on error
+      if (!hasInitialDataRef.current) {
+        hasInitialDataRef.current = true;
+        setHasInitialData(true);
+      }
     }
   }, []);
 
-  // Poll every 10 seconds
+  // STABILITY FIX: Increased poll interval to 15s to match other components
   usePollingRefresh(fetchFeedData, {
-    interval: 10000,
+    interval: 15000,
     enabled: true,
     immediate: true,
   });

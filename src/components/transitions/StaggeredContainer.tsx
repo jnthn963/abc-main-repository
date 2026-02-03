@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, useState, memo } from "react";
 
 interface StaggeredContainerProps {
   children: ReactNode;
@@ -12,17 +12,6 @@ interface StaggeredItemProps {
   className?: string;
   id?: string;
 }
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-};
 
 const itemVariants = {
   hidden: {
@@ -39,11 +28,15 @@ const itemVariants = {
   },
 };
 
-export function StaggeredContainer({ 
+// STABILITY FIX: Only animate once on initial mount
+export const StaggeredContainer = memo(function StaggeredContainer({ 
   children, 
   className = "",
   staggerDelay = 0.1 
 }: StaggeredContainerProps) {
+  // Track if animation has played - only animate once
+  const [hasAnimated, setHasAnimated] = useState(false);
+
   return (
     <motion.div
       className={className}
@@ -57,20 +50,29 @@ export function StaggeredContainer({
           },
         },
       }}
-      initial="hidden"
+      initial={hasAnimated ? false : "hidden"}
       animate="visible"
+      onAnimationComplete={() => {
+        if (!hasAnimated) {
+          setHasAnimated(true);
+        }
+      }}
     >
       {children}
     </motion.div>
   );
-}
+});
 
-export function StaggeredItem({ children, className = "", id }: StaggeredItemProps) {
+export const StaggeredItem = memo(function StaggeredItem({ 
+  children, 
+  className = "", 
+  id 
+}: StaggeredItemProps) {
   return (
     <motion.div className={className} id={id} variants={itemVariants}>
       {children}
     </motion.div>
   );
-}
+});
 
 export default StaggeredContainer;

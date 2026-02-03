@@ -2,9 +2,11 @@
  * ABC Master Build: Triple-Balance Member Pulse
  * E-Wallet (Liquid), Lend Capital (Locked), Loan Collateral (Locked)
  * Midnight Obsidian (#050505), Gold (#D4AF37), Yield Green (#00FF41)
+ * 
+ * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,11 +26,24 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   const { myLoansAsBorrower } = useLoans();
   const [showLoansPanel, setShowLoansPanel] = useState(false);
   const [showLendModal, setShowLendModal] = useState(false);
+  
+  // STABILITY FIX: Track if we've ever received data
+  const hasInitialDataRef = useRef(false);
+  const [hasInitialData, setHasInitialData] = useState(false);
 
   // Count active funded loans
   const activeLoansCount = myLoansAsBorrower.filter(l => l.status === 'funded').length;
 
-  if (loading || !memberData) {
+  // STABILITY FIX: Once we have data, never show skeleton again
+  useEffect(() => {
+    if (memberData && !hasInitialDataRef.current) {
+      hasInitialDataRef.current = true;
+      setHasInitialData(true);
+    }
+  }, [memberData]);
+
+  // Only show skeleton on true initial load
+  if (!hasInitialData && (loading || !memberData)) {
     return (
       <div className="space-y-4">
         <Card className="glass-card p-5 border-[#D4AF37]/20 animate-pulse bg-[#050505]">
@@ -44,7 +59,9 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
     );
   }
 
-  const { vaultBalance, frozenBalance, lendingBalance } = memberData;
+  // Use cached data during refresh (show stale data rather than skeleton)
+  const data = memberData || { vaultBalance: 0, frozenBalance: 0, lendingBalance: 0 };
+  const { vaultBalance, frozenBalance, lendingBalance } = data;
   
   // Calculate total vault for global yield display
   const totalVaultBalance = vaultBalance + frozenBalance + lendingBalance;

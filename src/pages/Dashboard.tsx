@@ -1,4 +1,11 @@
-import { useEffect, useState } from 'react';
+/**
+ * ABC Master Dashboard
+ * 
+ * STABILITY FIX: Uses stable keys and hasInitialData pattern
+ * to prevent re-renders and animation re-triggers.
+ */
+
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemberData } from '@/hooks/useMemberData';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,12 +25,24 @@ import { SovereignMonolith } from '@/components/transitions/SovereignMonolith';
 import { StaggeredContainer, StaggeredItem } from '@/components/transitions/StaggeredContainer';
 
 export default function Dashboard() {
-  const { user, profile, loading, refreshProfile } = useAuth();
-  const { refresh: refreshMemberData } = useMemberData();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { refresh: refreshMemberData, loading: memberLoading } = useMemberData();
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTransferHub, setShowTransferHub] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  
+  // STABILITY FIX: Track if initial load is complete
+  const hasInitialLoadRef = useRef(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // STABILITY FIX: Once we have profile, mark initial load complete
+  useEffect(() => {
+    if (profile && !hasInitialLoadRef.current) {
+      hasInitialLoadRef.current = true;
+      setHasInitialLoad(true);
+    }
+  }, [profile]);
 
   // Handle reconnection - refresh all data
   const handleReconnect = () => {
@@ -57,9 +76,18 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
+  // STABILITY FIX: Only show monolith on true initial load
+  if (!hasInitialLoad && (authLoading || !profile)) {
     return <SovereignMonolith message="LOADING ALPHA TERMINAL..." />;
   }
+
+  // Use greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
   return (
     <div className="min-h-screen bg-[#050505]">
@@ -71,11 +99,11 @@ export default function Dashboard() {
       {/* Main Dashboard */}
       <main className="pt-20 pb-8 px-4 lg:px-6">
         <div className="max-w-[1600px] mx-auto">
-          {/* Header with staggered animation */}
-          <StaggeredContainer className="mb-6">
+          {/* Header with staggered animation - STABLE KEY */}
+          <StaggeredContainer className="mb-6" key="dashboard-header">
             <StaggeredItem>
               <h2 className="text-2xl font-bold mb-1">
-                Good Morning, <span style={{
+                {getGreeting()}, <span style={{
                   background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 60%, #8B7500 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -90,14 +118,14 @@ export default function Dashboard() {
           </StaggeredContainer>
 
           {/* Pending Review Banner - Shows when user has pending transactions */}
-          <StaggeredContainer>
+          <StaggeredContainer key="pending-banner">
             <StaggeredItem>
               <PendingReviewBanner />
             </StaggeredItem>
           </StaggeredContainer>
 
-          {/* Three Column Layout with staggered entry */}
-          <StaggeredContainer className="grid grid-cols-1 lg:grid-cols-12 gap-6" staggerDelay={0.15}>
+          {/* Three Column Layout with staggered entry - STABLE KEY */}
+          <StaggeredContainer className="grid grid-cols-1 lg:grid-cols-12 gap-6" staggerDelay={0.15} key="dashboard-grid">
             {/* Left Column - Member Pulse (30%) */}
             <StaggeredItem className="lg:col-span-3" id="vault-balance">
               <MemberPulse onTransferClick={() => setShowTransferHub(true)} />

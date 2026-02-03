@@ -1,28 +1,30 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'member' | 'admin' | 'governor';
+
+interface ProfileData {
+  id: string;
+  member_id: string;
+  display_name: string | null;
+  email: string | null;
+  vault_balance: number;
+  frozen_balance: number;
+  lending_balance: number;
+  membership_tier: 'bronze' | 'silver' | 'gold';
+  kyc_status: 'pending' | 'verified' | 'rejected';
+  onboarding_completed: boolean;
+  created_at: string;
+  avatar_url: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   roles: AppRole[];
-  profile: {
-    id: string;
-    member_id: string;
-    display_name: string | null;
-    email: string | null;
-    vault_balance: number;
-    frozen_balance: number;
-    lending_balance: number;
-    membership_tier: 'bronze' | 'silver' | 'gold';
-    kyc_status: 'pending' | 'verified' | 'rejected';
-    onboarding_completed: boolean;
-    created_at: string;
-    avatar_url: string | null;
-  } | null;
+  profile: ProfileData | null;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -37,9 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
-  const [profile, setProfile] = useState<AuthContextType['profile']>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     // Fetch from profiles table directly to get avatar_url
     const { data, error } = await supabase
       .from('profiles')
@@ -63,9 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         avatar_url: data.avatar_url,
       });
     }
-  };
+  }, []);
 
-  const fetchRoles = async (userId: string) => {
+  const fetchRoles = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
@@ -74,13 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!error && data) {
       setRoles(data.map(r => r.role as AppRole));
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -90,11 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to avoid blocking the auth state update
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            fetchRoles(session.user.id);
-          }, 0);
+          // STABILITY FIX: Fetch profile/roles immediately without setTimeout
+          // to prevent loading state flicker
+          fetchProfile(session.user.id);
+          fetchRoles(session.user.id);
         } else {
           setProfile(null);
           setRoles([]);
@@ -120,9 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile, fetchRoles]);
 
-  const signUp = async (email: string, password: string, displayName: string) => {
+  const signUp = useCallback(async (email: string, password: string, displayName: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -134,27 +135,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    if (!error && user) {
-      // Update profile with display name
-      await supabase
-        .from('profiles')
-        .update({ display_name: displayName })
-        .eq('id', user.id);
-    }
-
     return { error: error ? new Error(error.message) : null };
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     return { error: error ? new Error(error.message) : null };
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     // Clear all localStorage data on logout
     localStorage.removeItem('abc-member-data');
     localStorage.removeItem('abc-system-stats');
@@ -168,25 +161,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setRoles([]);
-  };
+  }, []);
 
-  const hasRole = (role: AppRole) => roles.includes(role);
+  const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
+
+  // STABILITY FIX: Memoize context value to prevent unnecessary re-renders
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    session,
+    loading,
+    roles,
+    profile,
+    signUp,
+    signIn,
+    signOut,
+    hasRole,
+    refreshProfile,
+  }), [user, session, loading, roles, profile, signUp, signIn, signOut, hasRole, refreshProfile]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        roles,
-        profile,
-        signUp,
-        signIn,
-        signOut,
-        hasRole,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
