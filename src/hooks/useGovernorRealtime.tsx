@@ -26,6 +26,13 @@ export interface GovernorSettings {
   qrUrl: string | null;
   receiverName: string | null;
   receiverPhone: string | null;
+  heroVideoUrl: string | null;
+  heroVideoType: 'none' | 'upload' | 'youtube' | 'vimeo';
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpUser: string | null;
+  smtpFromEmail: string | null;
+  smtpFromName: string | null;
 }
 
 export interface AuditEvent {
@@ -57,6 +64,13 @@ export function useGovernorRealtime() {
     qrUrl: null,
     receiverName: null,
     receiverPhone: null,
+    heroVideoUrl: null,
+    heroVideoType: 'none',
+    smtpHost: null,
+    smtpPort: 587,
+    smtpUser: null,
+    smtpFromEmail: null,
+    smtpFromName: 'Alpha Business Cooperative',
   });
   const [auditFeed, setAuditFeed] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,6 +121,13 @@ export function useGovernorRealtime() {
           qrUrl: settingsResult.data.qr_gateway_url,
           receiverName: settingsResult.data.receiver_name,
           receiverPhone: settingsResult.data.receiver_phone,
+          heroVideoUrl: settingsResult.data.hero_video_url,
+          heroVideoType: (settingsResult.data.hero_video_type as GovernorSettings['heroVideoType']) || 'none',
+          smtpHost: settingsResult.data.smtp_host,
+          smtpPort: settingsResult.data.smtp_port || 587,
+          smtpUser: settingsResult.data.smtp_user,
+          smtpFromEmail: settingsResult.data.smtp_from_email,
+          smtpFromName: settingsResult.data.smtp_from_name || 'Alpha Business Cooperative',
         });
       }
 
@@ -192,6 +213,13 @@ export function useGovernorRealtime() {
       if (updates.qrUrl !== undefined) dbUpdates.qr_gateway_url = updates.qrUrl;
       if (updates.receiverName !== undefined) dbUpdates.receiver_name = updates.receiverName;
       if (updates.receiverPhone !== undefined) dbUpdates.receiver_phone = updates.receiverPhone;
+      if (updates.heroVideoUrl !== undefined) dbUpdates.hero_video_url = updates.heroVideoUrl;
+      if (updates.heroVideoType !== undefined) dbUpdates.hero_video_type = updates.heroVideoType;
+      if (updates.smtpHost !== undefined) dbUpdates.smtp_host = updates.smtpHost;
+      if (updates.smtpPort !== undefined) dbUpdates.smtp_port = updates.smtpPort;
+      if (updates.smtpUser !== undefined) dbUpdates.smtp_user = updates.smtpUser;
+      if (updates.smtpFromEmail !== undefined) dbUpdates.smtp_from_email = updates.smtpFromEmail;
+      if (updates.smtpFromName !== undefined) dbUpdates.smtp_from_name = updates.smtpFromName;
 
       const { error } = await supabase
         .from('global_settings')

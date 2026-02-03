@@ -310,10 +310,11 @@ const QRGatewayManager = ({
         {/* Receiver Details */}
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+            <label htmlFor="qr-receiver-name" className="text-xs font-medium text-muted-foreground mb-1 block">
               Receiver Name
             </label>
             <Input
+              id="qr-receiver-name"
               value={receiverName}
               onChange={handleReceiverNameChange}
               placeholder="Enter receiver name"
@@ -322,10 +323,11 @@ const QRGatewayManager = ({
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+            <label htmlFor="qr-receiver-number" className="text-xs font-medium text-muted-foreground mb-1 block">
               Receiver Number
             </label>
             <Input
+              id="qr-receiver-number"
               value={receiverNumber}
               onChange={handleReceiverNumberChange}
               placeholder="+63 XXX XXX XXXX"
