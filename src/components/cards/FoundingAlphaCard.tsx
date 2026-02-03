@@ -136,7 +136,7 @@ export function FoundingAlphaCard({
             {/* Visa & Mastercard Logos (Etched Metallic Foil) */}
             <div className="flex items-center gap-1 opacity-60">
               {/* Visa-style logo */}
-              <div className="px-2 py-1 rounded text-[8px] font-bold tracking-wider" style={{
+              <div className="text-[8px] font-bold tracking-wider px-[12px] py-[5px] text-[#c3c9df] border-4 border-secondary-foreground rounded-2xl shadow-none opacity-95" style={{
               color: '#D4AF37',
               border: '1px solid rgba(212, 175, 55, 0.3)',
               textShadow: '0 0 4px rgba(212, 175, 55, 0.3)'
@@ -145,8 +145,8 @@ export function FoundingAlphaCard({
               </div>
               {/* Mastercard-style logo */}
               <div className="flex -space-x-1">
-                <div className="w-4 h-4 rounded-full bg-[#D4AF37]/40" />
-                <div className="w-4 h-4 rounded-full bg-[#A0892C]/40" />
+                <div className="w-4 h-4 rounded-full text-primary bg-primary" />
+                <div className="w-4 h-4 rounded-full bg-destructive" />
               </div>
             </div>
           </div>
