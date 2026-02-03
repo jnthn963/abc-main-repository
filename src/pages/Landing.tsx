@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Shield, Wallet, TrendingUp, Users, Clock, Lock, ArrowRight, Zap, Award, ChevronDown, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import HeroVideoPlayer from '@/components/landing/HeroVideoPlayer';
 
 // Founding Alpha countdown target: March 31, 2026
 const FOUNDING_ALPHA_END = new Date('2026-03-31T23:59:59');
@@ -224,14 +225,20 @@ export default function Landing() {
               </div>
             </motion.div>
 
-            {/* Right: 3D Membership Card */}
+            {/* Right: Hero Video or Membership Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex justify-center lg:justify-end"
+              className="flex flex-col gap-6 justify-center lg:justify-end"
             >
-              <FoundingAlphaCard />
+              {/* Hero Video Player */}
+              <HeroVideoPlayer className="w-full max-w-lg mx-auto lg:mx-0" />
+              
+              {/* Membership Card below video */}
+              <div className="flex justify-center lg:justify-end">
+                <FoundingAlphaCard />
+              </div>
             </motion.div>
           </div>
         </div>

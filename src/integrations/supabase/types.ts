@@ -156,6 +156,8 @@ export type Database = {
         Row: {
           borrower_cost_rate: number
           founding_alpha_end_date: string | null
+          hero_video_type: string | null
+          hero_video_url: string | null
           id: string
           lending_yield_rate: number
           maintenance_mode: boolean
@@ -163,6 +165,11 @@ export type Database = {
           receiver_name: string | null
           receiver_phone: string | null
           referral_level1_rate: number
+          smtp_from_email: string | null
+          smtp_from_name: string | null
+          smtp_host: string | null
+          smtp_port: number | null
+          smtp_user: string | null
           system_kill_switch: boolean
           updated_at: string
           updated_by: string | null
@@ -171,6 +178,8 @@ export type Database = {
         Insert: {
           borrower_cost_rate?: number
           founding_alpha_end_date?: string | null
+          hero_video_type?: string | null
+          hero_video_url?: string | null
           id?: string
           lending_yield_rate?: number
           maintenance_mode?: boolean
@@ -178,6 +187,11 @@ export type Database = {
           receiver_name?: string | null
           receiver_phone?: string | null
           referral_level1_rate?: number
+          smtp_from_email?: string | null
+          smtp_from_name?: string | null
+          smtp_host?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
           system_kill_switch?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -186,6 +200,8 @@ export type Database = {
         Update: {
           borrower_cost_rate?: number
           founding_alpha_end_date?: string | null
+          hero_video_type?: string | null
+          hero_video_url?: string | null
           id?: string
           lending_yield_rate?: number
           maintenance_mode?: boolean
@@ -193,6 +209,11 @@ export type Database = {
           receiver_name?: string | null
           receiver_phone?: string | null
           referral_level1_rate?: number
+          smtp_from_email?: string | null
+          smtp_from_name?: string | null
+          smtp_host?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
           system_kill_switch?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -466,6 +487,8 @@ export type Database = {
       }
       public_config: {
         Row: {
+          hero_video_type: string | null
+          hero_video_url: string | null
           id: string
           lending_yield_rate: number
           qr_gateway_url: string | null
@@ -475,6 +498,8 @@ export type Database = {
           vault_interest_rate: number
         }
         Insert: {
+          hero_video_type?: string | null
+          hero_video_url?: string | null
           id?: string
           lending_yield_rate?: number
           qr_gateway_url?: string | null
@@ -484,6 +509,8 @@ export type Database = {
           vault_interest_rate?: number
         }
         Update: {
+          hero_video_type?: string | null
+          hero_video_url?: string | null
           id?: string
           lending_yield_rate?: number
           qr_gateway_url?: string | null

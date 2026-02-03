@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import QRGatewayManager from "@/components/admin/QRGatewayManager";
+import HeroVideoManager from "@/components/admin/HeroVideoManager";
+import SMTPConfigManager from "@/components/admin/SMTPConfigManager";
 import PendingActionsQueue from "@/components/admin/PendingActionsQueue";
 import PendingActionsSummary from "@/components/admin/PendingActionsSummary";
 import MemberManagement from "@/components/admin/MemberManagement";
@@ -112,7 +114,56 @@ const GovernorDashboard = () => {
     }
   };
 
+  // Handle Hero Video update
+  const handleHeroVideoUpdate = async (url: string | null, type: 'none' | 'upload' | 'youtube' | 'vimeo') => {
+    const result = await updateSettings({
+      heroVideoUrl: url,
+      heroVideoType: type,
+    });
 
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: "Hero video updated successfully!",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to update hero video",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle SMTP Config update
+  const handleSMTPUpdate = async (config: Partial<{
+    smtp_host: string | null;
+    smtp_port: number;
+    smtp_user: string | null;
+    smtp_from_email: string | null;
+    smtp_from_name: string | null;
+  }>) => {
+    const result = await updateSettings({
+      smtpHost: config.smtp_host,
+      smtpPort: config.smtp_port,
+      smtpUser: config.smtp_user,
+      smtpFromEmail: config.smtp_from_email,
+      smtpFromName: config.smtp_from_name,
+    });
+
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: "SMTP configuration saved!",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to save SMTP configuration",
+        variant: "destructive",
+      });
+    }
+  };
   // Show loading while checking auth
   if (authLoading) {
     return (
@@ -359,7 +410,7 @@ const GovernorDashboard = () => {
 
             {/* QR Gateway Manager */}
             <div className="col-span-3">
-            <QRGatewayManager 
+              <QRGatewayManager 
                 currentQRUrl={settings.qrUrl || ''}
                 onQRUpdate={handleQRUpdate}
               />
@@ -371,25 +422,43 @@ const GovernorDashboard = () => {
             <MemberManagement />
           </div>
 
-          {/* Additional Sections */}
+          {/* Media & Integration Settings */}
           <div className="grid grid-cols-12 gap-6 mt-6">
-            {/* CMS Manager Placeholder */}
-            <div className="col-span-6">
-              <Card className="p-5 bg-card/50 border-border">
-                <h2 className="font-semibold text-foreground mb-4">Content Management</h2>
-                <p className="text-sm text-muted-foreground">
-                  Manage announcements, news, and platform content here.
-                </p>
-              </Card>
+            {/* Hero Video Manager */}
+            <div className="col-span-4">
+              <HeroVideoManager
+                currentVideoUrl={settings.heroVideoUrl}
+                currentVideoType={settings.heroVideoType}
+                onVideoUpdate={handleHeroVideoUpdate}
+              />
             </div>
 
-            {/* Alpha Concierge Placeholder */}
-            <div className="col-span-6">
-              <Card className="p-5 bg-card/50 border-border">
-                <h2 className="font-semibold text-foreground mb-4">Alpha Concierge Settings</h2>
-                <p className="text-sm text-muted-foreground">
-                  Configure AI assistant behavior and response templates.
+            {/* SMTP Configuration */}
+            <div className="col-span-4">
+              <SMTPConfigManager
+                initialConfig={{
+                  smtp_host: settings.smtpHost,
+                  smtp_port: settings.smtpPort,
+                  smtp_user: settings.smtpUser,
+                  smtp_from_email: settings.smtpFromEmail,
+                  smtp_from_name: settings.smtpFromName,
+                }}
+                onConfigUpdate={handleSMTPUpdate}
+              />
+            </div>
+
+            {/* Content Management Placeholder */}
+            <div className="col-span-4">
+              <Card className="p-5 bg-card/50 border-border h-full">
+                <h2 className="font-semibold text-foreground mb-4">Content Management</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage announcements, news, and platform content here.
                 </p>
+                <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <p className="text-xs text-muted-foreground text-center">
+                    CMS features coming soon
+                  </p>
+                </div>
               </Card>
             </div>
           </div>
