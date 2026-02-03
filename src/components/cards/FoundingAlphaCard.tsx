@@ -9,7 +9,7 @@ interface FoundingAlphaCardProps {
   className?: string;
 }
 export function FoundingAlphaCard({
-  memberName = 'JUAN DELA CRUZ',
+  memberName = 'JONATHAN DELA CRUZ',
   memberId = '0001',
   isActive = true,
   showQR = true,
