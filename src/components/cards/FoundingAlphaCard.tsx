@@ -116,11 +116,11 @@ export function FoundingAlphaCard({
               background: 'linear-gradient(145deg, #D4AF37 0%, #8B7500 50%, #D4AF37 100%)',
               boxShadow: '0 4px 12px rgba(212, 175, 55, 0.4), inset 0 1px 1px rgba(255,255,255,0.3)'
             }}>
-                <span className="text-lg font-bold" style={{
+                <span className="text-lg font-extrabold" style={{
                 color: '#0a0a0a',
                 textShadow: '0 1px 0 rgba(255,255,255,0.3)'
               }}>
-                  ABC
+                  ABC  
                 </span>
               </div>
               <div className="flex items-center gap-1.5 mt-2">
@@ -155,10 +155,8 @@ export function FoundingAlphaCard({
           <div className="space-y-1">
             <p className="text-[10px] uppercase tracking-[0.3em]" style={{
             color: 'rgba(212, 175, 55, 0.5)'
-          }}>
-              Member Name
-            </p>
-            <h3 className="text-2xl md:text-3xl tracking-wide text-primary" style={{
+          }}>CARD HOLDER NAME</p>
+            <h3 className="text-2xl tracking-wide text-primary md:text-2xl" style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 700,
             background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 40%, #8B7500 100%)',
@@ -178,9 +176,7 @@ export function FoundingAlphaCard({
               <div>
                 <p className="text-[9px] uppercase tracking-[0.25em]" style={{
                 color: 'rgba(160, 137, 44, 0.6)'
-              }}>
-                  Member ID
-                </p>
+              }}>COOP MEMBER  ID</p>
                 <p className="text-lg font-mono font-semibold tracking-wider" style={{
                 color: '#B8966E',
                 textShadow: '0 1px 2px rgba(0,0,0,0.6)'
