@@ -704,6 +704,13 @@ export type Database = {
     }
     Functions: {
       apply_daily_interest_atomic: { Args: never; Returns: Json }
+      assign_user_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
+        Returns: Json
+      }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
@@ -773,6 +780,7 @@ export type Database = {
           security_question_2: string
           total_referral_earnings: number
           updated_at: string
+          user_roles: Database["public"]["Enums"]["app_role"][]
           vault_balance: number
         }[]
       }
@@ -826,6 +834,13 @@ export type Database = {
       release_clearing_atomic: { Args: never; Returns: Json }
       request_loan_atomic: {
         Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      revoke_user_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
         Returns: Json
       }
       set_security_credentials: {
