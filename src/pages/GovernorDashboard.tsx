@@ -17,6 +17,7 @@ import PendingActionsQueue from "@/components/admin/PendingActionsQueue";
 import PendingActionsSummary from "@/components/admin/PendingActionsSummary";
 import MemberManagement from "@/components/admin/MemberManagement";
 import LiquidityIndexManager from "@/components/admin/LiquidityIndexManager";
+import CMSManager from "@/components/admin/CMSManager";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { ConnectionStatusBanner, ConnectionIndicator } from "@/components/common/ConnectionStatusBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -452,18 +453,9 @@ const GovernorDashboard = () => {
             </div>
 
             {/* Content Management Placeholder */}
+            {/* Sovereign Broadcast CMS */}
             <div className="col-span-4">
-              <Card className="p-5 bg-card/50 border-border h-full">
-                <h2 className="font-semibold text-foreground mb-4">Content Management</h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Manage announcements, news, and platform content here.
-                </p>
-                <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <p className="text-xs text-muted-foreground text-center">
-                    CMS features coming soon
-                  </p>
-                </div>
-              </Card>
+              <CMSManager />
             </div>
           </div>
 
