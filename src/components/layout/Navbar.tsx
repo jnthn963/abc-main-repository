@@ -17,11 +17,11 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left: Logo */}
-        <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+        <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <img 
             src={abcLogo} 
             alt="Alpha Bankers Cooperative" 
-            className="w-10 h-10 rounded-lg object-cover glow-gold"
+            className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
           />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold gradient-gold">Alpha Bankers</h1>

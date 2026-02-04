@@ -145,11 +145,11 @@ export default function Landing() {
       <nav className="relative z-10 border-b border-[#D4AF37]/10 backdrop-blur-xl bg-[#0a0a0a]/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <img 
                 src={abcLogo} 
                 alt="Alpha Bankers Cooperative" 
-                className="w-10 h-10 rounded-lg object-cover"
+                className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
               />
               <span className="text-xl font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
             </div>
@@ -400,11 +400,11 @@ export default function Landing() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-[#D4AF37]/10 py-12 px-4 bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <img 
               src={abcLogo} 
               alt="Alpha Bankers Cooperative" 
-              className="w-10 h-10 rounded-lg object-cover"
+              className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
             />
             <span className="text-lg font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
           </div>

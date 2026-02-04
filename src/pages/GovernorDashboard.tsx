@@ -215,7 +215,7 @@ const GovernorDashboard = () => {
             <img 
               src={abcLogo} 
               alt="Alpha Bankers Cooperative" 
-              className="w-10 h-10 rounded-lg object-cover"
+              className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,38,38,0.4)]"
             />
             <div className="flex items-center gap-3">
               <div>
