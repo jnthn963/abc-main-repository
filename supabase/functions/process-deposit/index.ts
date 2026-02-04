@@ -177,6 +177,7 @@ Deno.serve(async (req) => {
       .single();
 
     // Notify governors of new pending action (non-blocking)
+    // IMPORTANT: Send amount in centavos to match database storage and notify-governor expectations
     try {
       await fetch(`${supabaseUrl}/functions/v1/notify-governor`, {
         method: 'POST',
@@ -187,7 +188,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           action_type: 'deposit',
           member_id: profile?.member_id || 'Unknown',
-          amount: depositAmount,
+          amount: depositAmountCentavos, // Send centavos, not pesos
           reference_number: finalReference,
         }),
       });
