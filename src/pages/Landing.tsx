@@ -171,9 +171,9 @@ export default function Landing() {
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                <span className="text-white">₳฿C -  Integrity </span>
+                <span className="text-white">₳฿C   </span>
                 <br />
-                <span className="text-[#D4AF37]">Outside the System </span>
+                <span className="text-[#D4AF37]">Integrity Outside the System </span>
               </h1>
 
               <p className="text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 mb-8">
@@ -403,7 +403,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
-            <span className="text-lg font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
+            <span className="text-lg font-bold text-[#D4AF37]">₳฿C</span>
           </div>
           <p className="text-sm text-gray-500 mb-4">
             The Sovereign Ledger for Elite Financial Exchange.
