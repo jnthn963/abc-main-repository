@@ -29,5 +29,15 @@ jobs:
           server: ${{ secrets.FTP_SERVER }} # Uses IP 145.79.25.189
           username: ${{ secrets.FTP_USERNAME }} # Uses u325953503.mainoffice.online
           password: ${{ secrets.FTP_PASSWORD }} # Your encrypted secret
-          local-dir: ./dist/  # Standard output folder for Lovable/Vite
-          server-dir: ./public_html/ # Target folder on Hostinger
+          local-dir: ./dist/  # Vite outputs to dist/ with /ABC/ base path
+          server-dir: ./public_html/ABC/  # Deploy to /ABC/ subfolder on Hostinger
+          
+      - name: 📄 Deploy .htaccess to root
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./public/
+          server-dir: ./public_html/
+          include: '.htaccess'

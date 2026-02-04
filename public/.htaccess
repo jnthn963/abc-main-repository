@@ -1,4 +1,5 @@
 # Alpha Banking Cooperative - Hostinger SPA Deployment
+# Deployed to: mainoffice.online/ABC/
 # This file handles React routing, HTTPS enforcement, and security headers
 
 RewriteEngine On
@@ -7,9 +8,17 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Handle React SPA routing - serve index.html for all non-file requests
+# Handle React SPA routing for /ABC/ subfolder
+# All requests to /ABC/* that don't match a file serve /ABC/index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/ABC/ [NC]
+RewriteRule ^ABC/(.*)$ /ABC/index.html [L]
+
+# Fallback for root-level deployment (if ABC folder is removed in future)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/ABC/ [NC]
 RewriteRule ^ index.html [L]
 
 # Security Headers
@@ -20,6 +29,7 @@ RewriteRule ^ index.html [L]
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
   Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  Header always set Content-Security-Policy "frame-ancestors 'self'"
 </IfModule>
 
 # Prevent directory listing
@@ -27,6 +37,12 @@ Options -Indexes
 
 # Block access to sensitive files
 <FilesMatch "^\.">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# Block access to source maps in production
+<FilesMatch "\.map$">
   Order allow,deny
   Deny from all
 </FilesMatch>
@@ -55,3 +71,7 @@ Options -Indexes
   AddOutputFilterByType DEFLATE application/javascript text/xml application/xml
   AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>
+
+# Error pages
+ErrorDocument 404 /ABC/index.html
+ErrorDocument 403 /ABC/index.html
