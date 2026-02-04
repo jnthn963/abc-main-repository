@@ -208,13 +208,13 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
               <Wallet className="w-5 h-5" />
-              Deposit Funds
+              Initialize Capital
             </DialogTitle>
           </DialogHeader>
           <p className="text-white/80 text-sm mt-1">
-            {step === "amount" && "Enter the amount you wish to deposit"}
-            {step === "qr" && "Scan QR code to complete payment"}
-            {step === "pending" && "Payment is being processed"}
+            {step === "amount" && "Specify capital injection amount"}
+            {step === "qr" && "Complete payment via QR gateway"}
+            {step === "pending" && "Transaction verification in progress"}
           </p>
         </div>
 
@@ -231,7 +231,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
               >
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Deposit Amount
+                    Capital Amount
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-lg">
@@ -293,7 +293,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                   disabled={!amount || !!amountError}
                   className="w-full py-3 bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Continue to Payment
+                  Proceed
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </motion.div>
@@ -440,10 +440,10 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                 <div>
                   <h3 className="text-lg font-semibold text-foreground flex items-center justify-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-primary" />
-                    Pending Governor Review
+                    Awaiting Verification
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Your deposit is awaiting verification by the Sovereign Collective
+                    Transaction submitted to the Sovereign Collective
                   </p>
                 </div>
 

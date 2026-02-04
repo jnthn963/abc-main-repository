@@ -16,7 +16,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
       <div className="flex items-center justify-between h-16 px-6">
-        {/* Left: Logo */}
+        {/* Left: Logo + Tagline */}
         <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <img 
             src={abcLogo} 
@@ -25,7 +25,9 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
           />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold gradient-gold">Alpha Bankers</h1>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cooperative</p>
+            <p className="text-[9px] text-muted-foreground uppercase" style={{ letterSpacing: '0.15em' }}>
+              ₳฿C: Integrity Outside the System
+            </p>
           </div>
         </Link>
 
@@ -75,7 +77,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-primary-foreground font-semibold animate-glow-pulse flex items-center gap-2"
           >
             <Wallet className="w-4 h-4" />
-            DEPOSIT
+            INITIALIZE
           </Button>
           
           <SecureLogout variant="default" />

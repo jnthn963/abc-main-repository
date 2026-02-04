@@ -112,7 +112,7 @@ export default function Dashboard() {
             </StaggeredItem>
             <StaggeredItem>
               <p className="text-sm text-muted-foreground">
-                Your sovereign financial dashboard • Member ID: {profile?.member_id || 'Loading...'}
+                Sovereign Command Center • ID: {profile?.member_id || 'Loading...'}
               </p>
             </StaggeredItem>
           </StaggeredContainer>

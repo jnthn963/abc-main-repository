@@ -197,11 +197,11 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary-foreground">
               <Send className="w-5 h-5" />
-              Transfer Funds
+              Release Funds
             </DialogTitle>
           </DialogHeader>
           <p className="text-primary-foreground/80 text-sm mt-1">
-            Send to banks, e-wallets, crypto, or other Alpha members
+            Dispatch to banks, e-wallets, crypto, or fellow members
           </p>
         </div>
 
@@ -210,7 +210,7 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
           {memberData && (
             <Card className="p-3 bg-muted/30 border-border">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Available Balance</span>
+                <span className="text-sm text-muted-foreground">Liquid Vault Balance</span>
                 <span className="font-bold text-success balance-number">
                   ₱{memberData.vaultBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                 </span>

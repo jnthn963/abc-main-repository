@@ -151,7 +151,7 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
         <DialogHeader className="p-5 pb-0">
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Lock className="w-5 h-5 text-primary" />
-            Request P2P Loan
+            Request Liquidity
           </DialogTitle>
         </DialogHeader>
 
@@ -187,7 +187,7 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
               {/* Vault & Collateral Info */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <Card className="p-3 bg-muted/30 border-border">
-                  <p className="text-xs text-muted-foreground">Vault Balance</p>
+                  <p className="text-xs text-muted-foreground">Vault Holdings</p>
                   <p className="text-lg font-bold text-success balance-number">
                     ₱{memberData.vaultBalance.toLocaleString()}
                   </p>
@@ -299,10 +299,10 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                 {!fundsAged ? (
                   <span className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    Funds must age for 6 days
+                    Aging protocol active (6 days)
                   </span>
                 ) : (
-                  "Request Loan"
+                  "Request Liquidity"
                 )}
               </Button>
             </motion.div>
@@ -397,10 +397,10 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                 <CheckCircle className="w-8 h-8 text-success" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-2">
-                Loan Request Submitted!
+                Liquidity Request Verified
               </h3>
               <p className="text-sm text-muted-foreground mb-2">
-                Your loan request for ₱{loanAmount.toLocaleString()} is now listed in the marketplace.
+                Your request for ₱{loanAmount.toLocaleString()} is now listed in the marketplace.
               </p>
               {referenceNumber && (
                 <p className="text-xs font-mono text-primary mb-6">
@@ -408,7 +408,7 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                 </p>
               )}
               <Button onClick={handleClose} className="bg-primary hover:bg-primary/80">
-                Back to Dashboard
+                Return to Hub
               </Button>
             </motion.div>
           )}

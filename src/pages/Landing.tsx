@@ -91,19 +91,19 @@ export default function Landing() {
     {
       icon: <Wallet className="w-6 h-6" />,
       title: 'Sovereign Vault',
-      description: 'Earn 0.5% daily interest on your vault balance. Automated compounding at midnight.',
+      description: '0.5% Daily Accrual Active. Automated compounding at midnight.',
       color: 'text-[#D4AF37]'
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
       title: 'P2P Marketplace',
-      description: 'Fund loans and earn 15% monthly yield. 50% collateral backing on all loans.',
+      description: 'Deploy capital for 15% Monthly Yield Generation. 50% collateral backing.',
       color: 'text-success'
     },
     {
       icon: <Users className="w-6 h-6" />,
       title: 'Referral Network',
-      description: 'Earn 3% commission on your Level 1 referrals. Build your financial network.',
+      description: '3% Commission on Level 1 referrals. Build your financial network.',
       color: 'text-[#D4AF37]'
     },
     {
@@ -151,7 +151,12 @@ export default function Landing() {
                 alt="Alpha Bankers Cooperative" 
                 className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
               />
-              <span className="text-xl font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
+              <div>
+                <span className="text-xl font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
+                <p className="text-[9px] text-muted-foreground uppercase" style={{ letterSpacing: '0.15em' }}>
+                  ₳฿C: Integrity Outside the System
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login">
