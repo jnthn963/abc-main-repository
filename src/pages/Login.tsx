@@ -92,7 +92,7 @@ export default function Login() {
               transition={{ duration: 0.6 }}
             >
               <div className="flex items-center gap-3 mb-8">
-                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 rounded-lg object-cover" />
+                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]" />
                 <span className="text-3xl font-bold gradient-gold">ALPHA BANKERS</span>
               </div>
               
@@ -134,8 +134,8 @@ export default function Login() {
               className="w-full max-w-md"
             >
               {/* Mobile Header */}
-              <div className="lg:hidden flex items-center gap-3 mb-8">
-                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
+              <div className="lg:hidden flex items-center gap-2 mb-8">
+                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
                 <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
               </div>
 
@@ -165,7 +165,7 @@ export default function Login() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-8">
-              <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 rounded-lg object-cover" />
+              <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]" />
               <span className="text-3xl font-bold gradient-gold">ALPHA BANKERS</span>
             </div>
             
@@ -204,8 +204,8 @@ export default function Login() {
           className="w-full max-w-md"
         >
           {/* Mobile Header */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
+          <div className="lg:hidden flex items-center gap-2 mb-8">
+            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
             <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
           </div>
 

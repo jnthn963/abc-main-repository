@@ -54,18 +54,12 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
             repeat: Infinity,
           }}
         >
-          {/* Outer glow */}
-          <div className="absolute inset-0 blur-xl bg-[#D4AF37]/30 rounded-full" />
-          
           {/* Official Logo */}
-          <div className="relative w-28 h-28 flex items-center justify-center">
+          <div className="relative w-32 h-32 flex items-center justify-center">
             <img 
               src={abcLogo} 
               alt="Alpha Bankers Cooperative" 
-              className="w-24 h-24 rounded-xl object-cover"
-              style={{
-                boxShadow: '0 0 40px rgba(212, 175, 55, 0.4), 0 0 80px rgba(212, 175, 55, 0.2)',
-              }}
+              className="w-32 h-32 object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.5)]"
             />
           </div>
         </motion.div>

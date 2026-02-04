@@ -565,8 +565,8 @@ export default function Register() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
+        <div className="flex items-center gap-2 mb-8">
+          <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
           <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
         </div>
 
