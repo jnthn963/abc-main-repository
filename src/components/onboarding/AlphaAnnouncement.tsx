@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { X, Megaphone, Sparkles, Loader2 } from "lucide-react";
+import { X, Shield, Sparkles, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import abcLogo from "@/assets/abc-logo.png";
 
 interface Announcement {
   id: string;
@@ -40,12 +41,12 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
             mediaUrl: data.content_url || undefined,
           });
         } else {
-          // Default welcome announcement if none in database
+          // Default sovereign welcome announcement
           setAnnouncement({
             id: "default",
             type: "text",
-            title: "Welcome to Alpha Bankers! 🎉",
-            body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
+            title: "Welcome to the Sovereign Ledger",
+            body: "You have been granted access to the Alpha Banking Cooperative. Your vault is now active with 0.5% daily yield generation.",
           });
         }
       } catch (err) {
@@ -54,8 +55,8 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
         setAnnouncement({
           id: "fallback",
           type: "text",
-          title: "Welcome to Alpha Bankers! 🎉",
-          body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
+          title: "Welcome to the Sovereign Ledger",
+          body: "You have been granted access to the Alpha Banking Cooperative. Your vault is now active with 0.5% daily yield generation.",
         });
       } finally {
         setLoading(false);
@@ -72,8 +73,19 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="fixed inset-0 bg-[#050505]/90 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <img 
+            src={abcLogo} 
+            alt="ABC" 
+            className="w-16 h-16 rounded-full"
+            style={{ filter: 'drop-shadow(0 0 20px rgba(212, 175, 55, 0.5))' }}
+          />
+          <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" />
+          <span className="text-[#D4AF37]/60 text-sm uppercase tracking-[0.2em]">
+            Initializing Protocol...
+          </span>
+        </div>
       </div>
     );
   }
@@ -89,7 +101,7 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-[#050505]/90 backdrop-blur-sm z-50"
             onClick={handleClose}
           />
 
@@ -101,20 +113,45 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-sm"
           >
-            <div className="glass-card border-primary/30 overflow-hidden shadow-2xl">
+            <div 
+              className="rounded-xl overflow-hidden shadow-2xl border border-[#D4AF37]/30"
+              style={{ 
+                background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 100%)',
+                boxShadow: '0 0 40px rgba(212, 175, 55, 0.15)'
+              }}
+            >
               {/* Header */}
-              <div className="bg-gradient-to-r from-yellow-500 to-amber-600 p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-                    <Megaphone className="w-4 h-4 text-primary-foreground" />
+              <div 
+                className="p-4 flex items-center justify-between border-b border-[#D4AF37]/20"
+                style={{ background: 'linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #D4AF37 0%, #8B7500 100%)',
+                      boxShadow: '0 0 15px rgba(212, 175, 55, 0.4)'
+                    }}
+                  >
+                    <img src={abcLogo} alt="ABC" className="w-8 h-8 rounded-full" />
                   </div>
-                  <span className="font-semibold text-primary-foreground text-sm">Alpha Announcement</span>
+                  <div>
+                    <span 
+                      className="font-semibold text-sm uppercase tracking-[0.1em]"
+                      style={{ color: '#D4AF37' }}
+                    >
+                      System Protocol
+                    </span>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em]">
+                      Sovereign Broadcast
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="p-1.5 rounded-lg hover:bg-primary-foreground/10 transition-colors"
+                  className="p-2 rounded-lg hover:bg-[#D4AF37]/10 transition-colors"
                 >
-                  <X className="w-4 h-4 text-primary-foreground" />
+                  <X className="w-4 h-4 text-[#D4AF37]/60" />
                 </button>
               </div>
 
@@ -126,25 +163,38 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
                     alt={announcement.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
                 </div>
               )}
 
               {/* Content */}
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h3 className="font-bold text-foreground">{announcement.title}</h3>
+              <div className="p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 
+                    className="font-bold uppercase tracking-[0.05em]"
+                    style={{ 
+                      color: '#D4AF37',
+                      fontFamily: 'Georgia, serif'
+                    }}
+                  >
+                    {announcement.title}
+                  </h3>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-gray-400 leading-relaxed">
                   {announcement.body}
                 </p>
                 
                 <button
                   onClick={handleClose}
-                  className="w-full mt-4 py-2.5 px-4 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-lg font-semibold text-primary-foreground text-sm hover:opacity-90 transition-opacity glow-gold"
+                  className="w-full mt-5 py-3 px-4 rounded-lg font-bold text-sm uppercase tracking-[0.15em] transition-all duration-300 hover:scale-[1.02]"
+                  style={{
+                    background: '#00FF41',
+                    color: '#050505',
+                    boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
+                  }}
                 >
-                  Let's Go! 🚀
+                  Initialize Access
                 </button>
               </div>
             </div>
