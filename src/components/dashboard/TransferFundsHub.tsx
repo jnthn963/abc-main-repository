@@ -164,7 +164,7 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
     { id: "banks", label: "Banks", icon: <Building2 className="w-4 h-4" /> },
     { id: "ewallets", label: "E-Wallets", icon: <Wallet className="w-4 h-4" /> },
     { id: "crypto", label: "Crypto", icon: <Bitcoin className="w-4 h-4" /> },
-    { id: "internal", label: "ABC Member", icon: <User className="w-4 h-4" /> },
+    { id: "internal", label: "Sovereign", icon: <User className="w-4 h-4" /> },
   ];
 
   const renderDestinationIcon = (item: { id: string; name: string; color: string; symbol?: string }) => (
@@ -191,21 +191,21 @@ const TransferFundsHub = ({ isOpen, onClose }: TransferFundsHubProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-card border-border p-0 overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-yellow-500 to-amber-600 p-4">
+      <DialogContent className="max-w-2xl bg-[#050505] border-[#D4AF37]/30 p-0 overflow-hidden">
+        {/* Header - Sovereign Integrity Theme */}
+        <div className="bg-gradient-to-r from-[#D4AF37] to-[#8B7500] p-4">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-primary-foreground">
+            <DialogTitle className="flex items-center gap-2 text-[#050505] font-bold uppercase tracking-[0.1em]">
               <Send className="w-5 h-5" />
-              Release Funds
+              Release Funds Protocol
             </DialogTitle>
           </DialogHeader>
-          <p className="text-primary-foreground/80 text-sm mt-1">
-            Dispatch to banks, e-wallets, crypto, or fellow members
+          <p className="text-[#050505]/80 text-sm mt-1">
+            Dispatch capital to banks, e-wallets, crypto, or fellow sovereigns
           </p>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 bg-[#050505]">
           {/* Balance Display */}
           {memberData && (
             <Card className="p-3 bg-muted/30 border-border">

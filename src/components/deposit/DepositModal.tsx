@@ -203,17 +203,17 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md bg-card border-border p-0 overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-success to-emerald-600 p-4">
+        {/* Header - Sovereign Integrity Theme */}
+        <div className="bg-gradient-to-r from-[#00FF41] to-[#00CC33] p-4">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
+            <DialogTitle className="flex items-center gap-2 text-[#050505] font-bold uppercase tracking-[0.1em]">
               <Wallet className="w-5 h-5" />
               Initialize Capital
             </DialogTitle>
           </DialogHeader>
-          <p className="text-white/80 text-sm mt-1">
-            {step === "amount" && "Specify capital injection amount"}
-            {step === "qr" && "Complete payment via QR gateway"}
+          <p className="text-[#050505]/80 text-sm mt-1">
+            {step === "amount" && "Specify sovereign capital injection amount"}
+            {step === "qr" && "Complete payment via QR PH Gateway"}
             {step === "pending" && "Transaction verification in progress"}
           </p>
         </div>
@@ -272,17 +272,16 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                   ))}
                 </div>
 
-                {/* Info Notice */}
-                <Card className="p-3 bg-success/10 border-success/30">
+                {/* Info Notice - Sovereign Protocol */}
+                <Card className="p-3 bg-[#00FF41]/10 border-[#00FF41]/30">
                   <div className="flex items-start gap-2">
-                    <Clock className="w-4 h-4 text-success mt-0.5" />
+                    <Clock className="w-4 h-4 text-[#00FF41] mt-0.5" />
                     <div>
-                      <p className="text-xs font-medium text-success">
-                        6-Day Maturity Period
+                      <p className="text-xs font-medium text-[#00FF41] uppercase tracking-wider">
+                        144-Hour Aging Protocol
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Deposits must age 144 hours before they can be used as
-                        collateral for loans.
+                        Capital must mature for 6 days before deployment as collateral.
                       </p>
                     </div>
                   </div>

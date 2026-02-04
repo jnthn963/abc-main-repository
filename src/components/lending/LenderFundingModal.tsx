@@ -174,11 +174,11 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] bg-[#050505] border-[#00FF41]/30 p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-5 pb-0">
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <Wallet className="w-5 h-5 text-success" />
-            Fund Loan Request
+          <DialogTitle className="flex items-center gap-2 text-[#00FF41] font-bold uppercase tracking-[0.1em]">
+            <Wallet className="w-5 h-5 text-[#00FF41]" />
+            Deploy Capital Protocol
           </DialogTitle>
         </DialogHeader>
 

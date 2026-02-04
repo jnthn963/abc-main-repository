@@ -93,14 +93,14 @@ export function AccountSettings({ profile, onProfileUpdate }: AccountSettingsPro
   };
 
   return (
-    <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
+    <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#050505]/90 to-[#0a0a0a]/90">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
           <User className="w-5 h-5 text-[#D4AF37]" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Account Settings</h3>
-          <p className="text-xs text-muted-foreground">Manage your personal information</p>
+          <h3 className="text-lg font-semibold text-[#D4AF37] uppercase tracking-wider">Sovereign Credentials</h3>
+          <p className="text-xs text-muted-foreground">Manage your identity protocol</p>
         </div>
       </div>
 

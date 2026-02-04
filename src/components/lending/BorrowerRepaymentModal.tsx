@@ -162,11 +162,11 @@ const BorrowerRepaymentModal = ({ isOpen, onClose, loan, onRepaymentComplete }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] bg-[#050505] border-[#D4AF37]/30 p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-5 pb-0">
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <Wallet className="w-5 h-5 text-primary" />
-            Repay Loan
+          <DialogTitle className="flex items-center gap-2 text-[#D4AF37] font-bold uppercase tracking-[0.1em]">
+            <Wallet className="w-5 h-5 text-[#D4AF37]" />
+            Settlement Protocol
           </DialogTitle>
         </DialogHeader>
 

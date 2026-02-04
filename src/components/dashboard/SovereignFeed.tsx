@@ -112,11 +112,11 @@ const SovereignFeed = () => {
 
   return (
     <div className="space-y-4">
-      {/* Alpha Announcements - Midnight Obsidian Theme */}
+      {/* Sovereign Announcements - Midnight Obsidian Theme */}
       <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#050505]/90 to-[#0a0a0a]/90">
         <div className="flex items-center gap-2 mb-3">
           <Megaphone className="w-4 h-4 text-[#D4AF37]" />
-          <h3 className="text-sm font-semibold text-[#D4AF37]">Alpha Announcements</h3>
+          <h3 className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Sovereign Broadcast</h3>
         </div>
         <div className="space-y-3">
           {announcements.map((post) => (
@@ -147,7 +147,7 @@ const SovereignFeed = () => {
       <Card className="glass-card p-4 border-[#00FF41]/20 bg-gradient-to-b from-[#050505]/80 to-[#0a0a0a]/80">
         <div className="flex items-center gap-2 mb-3">
           <Clock className="w-4 h-4 text-[#00FF41]" />
-          <h3 className="text-sm font-semibold">Live Audit Trail</h3>
+          <h3 className="text-sm font-semibold text-[#00FF41] uppercase tracking-wider">Ledger Verification Trail</h3>
           <div className="w-2 h-2 rounded-full bg-[#00FF41] animate-pulse" />
         </div>
         <div className="space-y-1.5 max-h-48 overflow-y-auto">

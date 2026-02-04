@@ -197,23 +197,23 @@ const AlphaMarketplace = () => {
       <Card className="glass-card p-4 border-[#D4AF37]/40 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
         <Button 
           onClick={() => setShowLoanModal(true)}
-          className="w-full font-semibold text-black"
+          className="w-full font-bold text-[#050505] uppercase tracking-[0.1em]"
           style={{
             background: 'linear-gradient(145deg, #D4AF37, #8B7500)',
             boxShadow: '0 4px 20px rgba(212, 175, 55, 0.3)',
           }}
         >
           <HandCoins className="w-4 h-4 mr-2" />
-          Request Liquidity
+          Request Liquidity Protocol
         </Button>
         <p className="text-[10px] text-center text-muted-foreground mt-2">
-          Max 50% of vault holdings • 6-day aging required
+          Max 50% of vault holdings • 144-hour aging required
         </p>
       </Card>
 
-      {/* Order Book */}
+      {/* Order Book - Capital Deployment Terminal */}
       <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
-        <h3 className="text-sm font-semibold mb-3">Open Liquidity Requests</h3>
+        <h3 className="text-sm font-semibold mb-3 text-[#D4AF37] uppercase tracking-wider">Capital Deployment Terminal</h3>
         {showLoading ? (
           <div className="py-8 text-center">
             <div className="space-y-2">
@@ -234,7 +234,7 @@ const AlphaMarketplace = () => {
             {/* Rows */}
             {loanListings.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground text-sm">
-                No liquidity requests available
+                No liquidity protocols pending deployment
               </div>
             ) : (
               loanListings.map((loan) => (
@@ -249,13 +249,13 @@ const AlphaMarketplace = () => {
                   <span className="text-sm text-right text-success font-medium">
                     {loan.interestRate}%
                   </span>
-                  <div className="text-right">
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleLendClick(loan)}
-                      className="h-7 px-3 bg-success hover:bg-success/80 text-success-foreground text-xs font-semibold glow-green"
-                    >
-                      FUND
+                    <div className="text-right">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleLendClick(loan)}
+                        className="h-7 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-[#050505] text-xs font-bold uppercase tracking-wider"
+                      >
+                        DEPLOY
                     </Button>
                   </div>
                 </div>
