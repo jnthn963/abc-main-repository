@@ -137,13 +137,16 @@ Deno.serve(async (req) => {
     // Calculate clearing time (24 hours from now)
     const clearingEndsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
+    // CRITICAL: Convert to centavos for database storage (Whole Peso Mandate)
+    const depositAmountCentavos = depositAmount * 100;
+
     // Create deposit ledger entry with pending_review status
     const { data: ledgerEntry, error: ledgerError } = await supabase
       .from('ledger')
       .insert({
         user_id: user.id,
         type: 'deposit',
-        amount: depositAmount,
+        amount: depositAmountCentavos, // Store in centavos
         status: 'clearing',
         approval_status: 'pending_review',
         reference_number: finalReference,
@@ -151,6 +154,7 @@ Deno.serve(async (req) => {
         clearing_ends_at: clearingEndsAt,
         metadata: {
           source: 'qr_ph_gateway',
+          amount_pesos: depositAmount, // Store original peso amount for reference
           submitted_at: new Date().toISOString()
         }
       })
