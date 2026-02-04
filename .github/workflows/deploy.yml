@@ -3,7 +3,7 @@ name: Build and Deploy to Hostinger
 on:
   push:
     branches:
-      - main  # Triggers deployment whenever you push to the main branch
+      - main  # This matches the 'main' branch seen in your GitHub setup
 
 jobs:
   deploy:
@@ -26,8 +26,8 @@ jobs:
       - name: 📂 Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/  # The output folder created by Vite build
-          server-dir: ./public_html/ # Deploys directly to your root folder
+          server: ${{ secrets.FTP_SERVER }} # Uses 145.79.25.189
+          username: ${{ secrets.FTP_USERNAME }} # Uses u325953503.mainoffice.online
+          password: ${{ secrets.FTP_PASSWORD }} # Uses your saved secret
+          local-dir: ./dist/  # Vite projects build into this folder
+          server-dir: ./public_html/ # Matches your Hostinger folder
