@@ -211,7 +211,7 @@ export default function GovernorLogin() {
               <img 
                 src={abcLogo} 
                 alt="Alpha Bankers Cooperative" 
-                className="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(220,38,38,0.4)]"
+                className="w-14 h-14 rounded-full object-contain drop-shadow-[0_0_12px_rgba(220,38,38,0.4)]"
               />
               <div>
                 <span className="text-3xl font-bold text-red-400">SUPREME</span>
@@ -265,7 +265,7 @@ export default function GovernorLogin() {
         >
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,38,38,0.4)]" />
+            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(220,38,38,0.4)]" />
             <span className="text-xl font-bold text-red-400">SUPREME GOVERNOR</span>
           </div>
 

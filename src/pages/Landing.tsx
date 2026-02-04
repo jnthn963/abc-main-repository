@@ -149,7 +149,7 @@ export default function Landing() {
               <img 
                 src={abcLogo} 
                 alt="Alpha Bankers Cooperative" 
-                className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+                className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
               />
               <span className="text-xl font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
             </div>
@@ -404,7 +404,7 @@ export default function Landing() {
             <img 
               src={abcLogo} 
               alt="Alpha Bankers Cooperative" 
-              className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+              className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
             />
             <span className="text-lg font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
           </div>

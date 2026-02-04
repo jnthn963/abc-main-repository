@@ -59,7 +59,7 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
             <img 
               src={abcLogo} 
               alt="Alpha Bankers Cooperative" 
-              className="w-32 h-32 object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.5)]"
+              className="w-32 h-32 rounded-full object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.5)]"
             />
           </div>
         </motion.div>

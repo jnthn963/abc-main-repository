@@ -21,7 +21,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
           <img 
             src={abcLogo} 
             alt="Alpha Bankers Cooperative" 
-            className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
+            className="w-9 h-9 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
           />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold gradient-gold">Alpha Bankers</h1>
