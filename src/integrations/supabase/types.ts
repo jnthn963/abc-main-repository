@@ -170,6 +170,7 @@ export type Database = {
           smtp_host: string | null
           smtp_port: number | null
           smtp_user: string | null
+          supreme_governor_emails: string[] | null
           system_kill_switch: boolean
           updated_at: string
           updated_by: string | null
@@ -192,6 +193,7 @@ export type Database = {
           smtp_host?: string | null
           smtp_port?: number | null
           smtp_user?: string | null
+          supreme_governor_emails?: string[] | null
           system_kill_switch?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           smtp_host?: string | null
           smtp_port?: number | null
           smtp_user?: string | null
+          supreme_governor_emails?: string[] | null
           system_kill_switch?: boolean
           updated_at?: string
           updated_by?: string | null
