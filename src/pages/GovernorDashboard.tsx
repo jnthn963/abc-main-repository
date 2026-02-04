@@ -16,6 +16,7 @@ import SMTPConfigManager from "@/components/admin/SMTPConfigManager";
 import PendingActionsQueue from "@/components/admin/PendingActionsQueue";
 import PendingActionsSummary from "@/components/admin/PendingActionsSummary";
 import MemberManagement from "@/components/admin/MemberManagement";
+import LiquidityIndexManager from "@/components/admin/LiquidityIndexManager";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { ConnectionStatusBanner, ConnectionIndicator } from "@/components/common/ConnectionStatusBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -464,6 +465,11 @@ const GovernorDashboard = () => {
                 </div>
               </Card>
             </div>
+          </div>
+
+          {/* Co-op Liquidity Index - Full Width */}
+          <div className="mt-6">
+            <LiquidityIndexManager />
           </div>
         </div>
       </main>

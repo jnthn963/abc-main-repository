@@ -160,6 +160,10 @@ export type Database = {
           hero_video_url: string | null
           id: string
           lending_yield_rate: number
+          liquidity_index_critical_threshold: number | null
+          liquidity_index_enabled: boolean | null
+          liquidity_index_target: number | null
+          liquidity_index_warning_threshold: number | null
           maintenance_mode: boolean
           qr_gateway_url: string | null
           receiver_name: string | null
@@ -183,6 +187,10 @@ export type Database = {
           hero_video_url?: string | null
           id?: string
           lending_yield_rate?: number
+          liquidity_index_critical_threshold?: number | null
+          liquidity_index_enabled?: boolean | null
+          liquidity_index_target?: number | null
+          liquidity_index_warning_threshold?: number | null
           maintenance_mode?: boolean
           qr_gateway_url?: string | null
           receiver_name?: string | null
@@ -206,6 +214,10 @@ export type Database = {
           hero_video_url?: string | null
           id?: string
           lending_yield_rate?: number
+          liquidity_index_critical_threshold?: number | null
+          liquidity_index_enabled?: boolean | null
+          liquidity_index_target?: number | null
+          liquidity_index_warning_threshold?: number | null
           maintenance_mode?: boolean
           qr_gateway_url?: string | null
           receiver_name?: string | null
@@ -320,6 +332,51 @@ export type Database = {
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      liquidity_index_history: {
+        Row: {
+          close_value: number
+          created_at: string
+          high_value: number
+          id: string
+          low_value: number
+          net_flow: number
+          open_value: number
+          period_end: string
+          period_start: string
+          total_deposits: number
+          total_loans: number
+          total_withdrawals: number
+        }
+        Insert: {
+          close_value?: number
+          created_at?: string
+          high_value?: number
+          id?: string
+          low_value?: number
+          net_flow?: number
+          open_value?: number
+          period_end: string
+          period_start: string
+          total_deposits?: number
+          total_loans?: number
+          total_withdrawals?: number
+        }
+        Update: {
+          close_value?: number
+          created_at?: string
+          high_value?: number
+          id?: string
+          low_value?: number
+          net_flow?: number
+          open_value?: number
+          period_end?: string
+          period_start?: string
+          total_deposits?: number
+          total_loans?: number
+          total_withdrawals?: number
         }
         Relationships: []
       }
@@ -741,6 +798,7 @@ export type Database = {
         }
         Returns: Json
       }
+      calculate_liquidity_index: { Args: never; Returns: Json }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
@@ -861,6 +919,7 @@ export type Database = {
         }
         Returns: Json
       }
+      record_liquidity_snapshot: { Args: never; Returns: Json }
       release_clearing_atomic: { Args: never; Returns: Json }
       request_loan_atomic: {
         Args: { p_amount: number; p_user_id: string }
