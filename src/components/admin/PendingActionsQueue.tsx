@@ -66,8 +66,7 @@ const PendingActionsQueue = () => {
           created_at,
           approval_status,
           description,
-          destination,
-          profiles!ledger_user_id_fkey(display_name, member_id)
+          destination
         `)
         .eq('approval_status', 'pending_review')
         .order('created_at', { ascending: false });
@@ -86,24 +85,42 @@ const PendingActionsQueue = () => {
           created_at,
           funded_at,
           approval_status,
-          status,
-          profiles!p2p_loans_borrower_id_fkey(display_name, member_id)
+          status
         `)
         .eq('approval_status', 'pending_review')
         .order('created_at', { ascending: false });
+
+      // Gather unique user IDs for profile lookup
+      const userIds = new Set<string>();
+      (ledgerPending || []).forEach((item: any) => userIds.add(item.user_id));
+      (loansPending || []).forEach((item: any) => userIds.add(item.borrower_id));
+
+      // Fetch profiles for all user IDs
+      let profilesMap: Record<string, { display_name: string; member_id: string }> = {};
+      if (userIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, member_id')
+          .in('id', Array.from(userIds));
+        
+        (profiles || []).forEach((p: any) => {
+          profilesMap[p.id] = { display_name: p.display_name, member_id: p.member_id };
+        });
+      }
 
       const actions: PendingAction[] = [];
 
       // Transform ledger items
       (ledgerPending || []).forEach((item: any) => {
+        const profile = profilesMap[item.user_id];
         const actionType = item.type === 'deposit' ? 'deposit' : 
                           item.type === 'withdrawal' ? 'withdrawal' : 'transfer';
         actions.push({
           action_type: actionType,
           id: item.id,
           user_id: item.user_id,
-          user_name: item.profiles?.display_name || 'Unknown',
-          member_id: item.profiles?.member_id || 'N/A',
+          user_name: profile?.display_name || 'Unknown',
+          member_id: profile?.member_id || 'N/A',
           amount: Number(item.amount),
           reference_number: item.reference_number,
           created_at: item.created_at,
@@ -116,13 +133,14 @@ const PendingActionsQueue = () => {
 
       // Transform loan items
       (loansPending || []).forEach((item: any) => {
+        const profile = profilesMap[item.borrower_id];
         const actionType = item.status === 'open' ? 'loan_request' : 'loan_funding';
         actions.push({
           action_type: actionType,
           id: item.id,
           user_id: item.borrower_id,
-          user_name: item.profiles?.display_name || 'Unknown',
-          member_id: item.profiles?.member_id || 'N/A',
+          user_name: profile?.display_name || 'Unknown',
+          member_id: profile?.member_id || 'N/A',
           amount: Number(item.principal_amount),
           reference_number: item.reference_number,
           created_at: item.created_at || item.funded_at,
