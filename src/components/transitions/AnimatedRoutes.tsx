@@ -9,6 +9,7 @@ import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import GovernorDashboard from "@/pages/GovernorDashboard";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 
 export function AnimatedRoutes() {
@@ -76,6 +77,14 @@ export function AnimatedRoutes() {
               <ProtectedRoute requiredRole="governor">
                 <GovernorDashboard />
               </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <PageTransition>
+              <ResetPassword />
             </PageTransition>
           }
         />

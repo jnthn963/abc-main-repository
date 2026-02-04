@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import AccountRecovery from '@/components/auth/AccountRecovery';
+import ForgotPassword from '@/components/auth/ForgotPassword';
 import { z } from 'zod';
 import abcLogo from '@/assets/abc-logo.png';
 
@@ -16,8 +17,10 @@ const loginSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
+type RecoveryMode = 'none' | 'forgot' | 'security';
+
 export default function Login() {
-  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState<RecoveryMode>('none');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -74,8 +77,8 @@ export default function Login() {
     }
   };
 
-  // Recovery flow with Sovereign Integrity aesthetic
-  if (showRecovery) {
+  // Forgot Password flow (email-based)
+  if (recoveryMode === 'forgot') {
     return (
       <div className="min-h-screen bg-[#050505] flex">
         {/* Left Panel - Branding */}
@@ -111,7 +114,101 @@ export default function Login() {
                 className="text-3xl font-bold mb-4 uppercase tracking-[0.1em]"
                 style={{ color: '#D4AF37' }}
               >
-                Account Recovery
+                Forgot Vault Key
+              </h1>
+              
+              <p className="text-gray-500 mb-8 max-w-md text-sm leading-relaxed">
+                Request a secure password reset link via email to restore ledger access.
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
+                  <span>Secure email verification</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
+                  <span>One-time reset link</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
+                  <span>1 hour expiration</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Right Panel - Forgot Password Form */}
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#050505]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="forgot"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-md"
+            >
+              {/* Mobile Header */}
+              <div className="lg:hidden flex items-center gap-2 mb-8">
+                <img 
+                  src={abcLogo} 
+                  alt="ABC" 
+                  className="w-8 h-8 rounded-full object-contain" 
+                />
+                <span className="text-lg font-bold" style={{ color: '#D4AF37' }}>₳฿C</span>
+              </div>
+
+              <ForgotPassword
+                onBack={() => setRecoveryMode('none')}
+                onRecoverViaQuestions={() => setRecoveryMode('security')}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  }
+
+  // Security Questions Recovery flow
+  if (recoveryMode === 'security') {
+    return (
+      <div className="min-h-screen bg-[#050505] flex">
+        {/* Left Panel - Branding */}
+        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden border-r border-[#D4AF37]/10">
+          <div className="absolute inset-0 bg-[#050505]" />
+          
+          <div className="relative z-10 flex flex-col justify-center px-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="flex items-center gap-3 mb-12">
+                <img 
+                  src={abcLogo} 
+                  alt="ABC" 
+                  className="w-12 h-12 rounded-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)]" 
+                />
+                <span 
+                  className="text-2xl font-bold"
+                  style={{ 
+                    color: '#D4AF37',
+                    fontFamily: 'Georgia, "Times New Roman", serif'
+                  }}
+                >
+                  ₳฿C
+                </span>
+              </div>
+              
+              <div className="w-12 h-[1px] bg-[#D4AF37] mb-6" />
+              
+              <h1 
+                className="text-3xl font-bold mb-4 uppercase tracking-[0.1em]"
+                style={{ color: '#D4AF37' }}
+              >
+                Security Recovery
               </h1>
               
               <p className="text-gray-500 mb-8 max-w-md text-sm leading-relaxed">
@@ -140,7 +237,7 @@ export default function Login() {
         <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#050505]">
           <AnimatePresence mode="wait">
             <motion.div
-              key="recovery"
+              key="security"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -158,8 +255,8 @@ export default function Login() {
               </div>
 
               <AccountRecovery
-                onBack={() => setShowRecovery(false)}
-                onSuccess={() => setShowRecovery(false)}
+                onBack={() => setRecoveryMode('none')}
+                onSuccess={() => setRecoveryMode('none')}
               />
             </motion.div>
           </AnimatePresence>
@@ -303,10 +400,10 @@ export default function Login() {
                   </Label>
                   <button
                     type="button"
-                    onClick={() => setShowRecovery(true)}
+                    onClick={() => setRecoveryMode('forgot')}
                     className="text-[10px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-[0.1em] transition-all duration-300"
                   >
-                    Recover Access
+                    Forgot Vault Key?
                   </button>
                 </div>
                 <div className="relative">
