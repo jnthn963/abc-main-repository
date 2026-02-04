@@ -16,7 +16,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          {/* Add basename here to match your Hostinger subfolder and Vite config */}
+          <BrowserRouter basename="/ABC-TECH">
             <AnimatedRoutes />
           </BrowserRouter>
         </TooltipProvider>
