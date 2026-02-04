@@ -65,7 +65,7 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <SovereignMonolith message="LOADING PROFILE..." />;
+    return <SovereignMonolith message="LOADING SOVEREIGN IDENTITY..." />;
   }
 
   if (!user || !profileData) {
@@ -88,7 +88,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#050505]">
       <Navbar onDepositClick={() => setShowDepositModal(true)} />
       
       <main className="pt-20 pb-8 px-4 lg:px-6">
@@ -102,17 +102,17 @@ export default function Profile() {
             <Button
               variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-gray-600 hover:text-[#D4AF37]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
+              Back to Command Center
             </Button>
           </motion.div>
 
           <StaggeredContainer className="space-y-6">
             {/* Profile Header Card */}
             <StaggeredItem>
-              <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
+              <Card className="p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#0a0a0a]/80 to-[#050505]/80 backdrop-blur-sm">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   {/* Avatar Section */}
                   <AvatarUpload
@@ -131,10 +131,10 @@ export default function Profile() {
                         WebkitTextFillColor: 'transparent',
                       }}
                     >
-                      {profileData.display_name || 'Alpha Member'}
+                      {profileData.display_name || 'Sovereign Member'}
                     </h1>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Member ID: {profileData.member_id}
+                    <p className="text-sm text-gray-600 mb-3">
+                      Member ID: <span className="font-mono text-[#D4AF37]">{profileData.member_id}</span>
                     </p>
                     
                     <div className="flex flex-wrap justify-center md:justify-start gap-2">
@@ -147,8 +147,8 @@ export default function Profile() {
                         variant="outline" 
                         className={`flex items-center gap-1 ${
                           profileData.kyc_status === 'verified' 
-                            ? 'border-success text-success' 
-                            : 'border-yellow-500 text-yellow-500'
+                            ? 'border-[#00FF41] text-[#00FF41]' 
+                            : 'border-[#D4AF37] text-[#D4AF37]'
                         }`}
                       >
                         <Shield className="w-3 h-3" />
@@ -156,9 +156,9 @@ export default function Profile() {
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-center md:justify-start gap-2 mt-4 text-xs text-muted-foreground">
+                    <div className="flex items-center justify-center md:justify-start gap-2 mt-4 text-xs text-gray-600">
                       <Calendar className="w-3 h-3" />
-                      <span>Member since {memberSince}</span>
+                      <span>Sovereign since {memberSince}</span>
                     </div>
                   </div>
                 </div>

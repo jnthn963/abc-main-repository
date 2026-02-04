@@ -14,7 +14,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
   const { profile } = useAuth();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#D4AF37]/10 bg-[#050505]/95 backdrop-blur-sm">
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left: Logo + Tagline */}
         <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
@@ -24,9 +24,17 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             className="w-9 h-9 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
           />
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold gradient-gold">Alpha Bankers</h1>
-            <p className="text-[9px] text-muted-foreground uppercase" style={{ letterSpacing: '0.15em' }}>
-              ₳฿C: Integrity Outside the System
+            <h1 
+              className="text-lg font-bold"
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                color: '#D4AF37',
+              }}
+            >
+              ₳฿C
+            </h1>
+            <p className="text-[9px] text-[#00FF41] uppercase" style={{ letterSpacing: '0.15em' }}>
+              Integrity Outside the System
             </p>
           </div>
         </Link>
@@ -38,33 +46,33 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
 
         {/* Right: User Actions */}
         <div className="flex items-center gap-3">
-          <button className="relative p-2 rounded-lg hover:bg-accent transition-colors">
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+          <button className="relative p-2 rounded-lg hover:bg-[#D4AF37]/10 transition-colors">
+            <Bell className="w-5 h-5 text-[#D4AF37]/60" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[#00FF41] rounded-full" />
           </button>
           
           {/* Profile Link */}
           <Link 
             to="/profile"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/50 border border-border hover:border-[#D4AF37]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors bg-[#0a0a0a]"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center overflow-hidden">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center overflow-hidden">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <User className="w-4 h-4 text-primary-foreground" />
+                <User className="w-4 h-4 text-[#050505]" />
               )}
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-medium">
+              <p className="text-sm font-medium text-[#D4AF37]">
                 {profile?.display_name 
                   ? `${profile.display_name.slice(0, 1)}***${profile.display_name.slice(-1)}`
                   : 'Member'
                 }
               </p>
               <div className="flex items-center gap-1">
-                <Shield className="w-3 h-3 text-success" />
-                <span className="text-[10px] text-success">
+                <Shield className="w-3 h-3 text-[#00FF41]" />
+                <span className="text-[10px] text-[#00FF41]">
                   {profile?.kyc_status === 'verified' ? 'Verified' : 'Pending'}
                 </span>
               </div>
@@ -74,7 +82,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
           <Button 
             id="deposit-button"
             onClick={onDepositClick}
-            className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-primary-foreground font-semibold animate-glow-pulse flex items-center gap-2"
+            className="bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold uppercase text-xs tracking-[0.1em] flex items-center gap-2"
           >
             <Wallet className="w-4 h-4" />
             INITIALIZE

@@ -28,28 +28,28 @@ import abcLogo from '@/assets/abc-logo.png';
 
 // Step 1: Account Information
 const accountSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid ledger address'),
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
+    .min(8, 'Vault key must be at least 8 characters')
+    .regex(/[A-Z]/, 'Vault key must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Vault key must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Vault key must contain at least one number'),
   confirmPassword: z.string(),
-  displayName: z.string().min(2, 'Display name must be at least 2 characters'),
+  displayName: z.string().min(2, 'Identity must be at least 2 characters'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Vault keys don't match",
   path: ["confirmPassword"],
 });
 
 // Step 2: Contact Information
 const contactSchema = z.object({
-  phone: z.string().min(10, 'Please enter a valid phone number'),
+  phone: z.string().min(10, 'Please enter a valid contact number'),
   referralCode: z.string().optional(),
 });
 
 // Step 3: Address Information
 const addressSchema = z.object({
-  addressLine1: z.string().min(5, 'Please enter your street address'),
+  addressLine1: z.string().min(5, 'Please enter your address'),
   addressLine2: z.string().optional(),
   city: z.string().min(2, 'Please enter your city'),
   province: z.string().min(2, 'Please select your province'),
@@ -58,9 +58,9 @@ const addressSchema = z.object({
 
 // Step 4: Security Questions
 const securitySchema = z.object({
-  securityQuestion1: z.string().min(1, 'Please select a security question'),
+  securityQuestion1: z.string().min(1, 'Please select a verification protocol'),
   securityAnswer1: z.string().min(2, 'Please provide an answer'),
-  securityQuestion2: z.string().min(1, 'Please select a security question'),
+  securityQuestion2: z.string().min(1, 'Please select a verification protocol'),
   securityAnswer2: z.string().min(2, 'Please provide an answer'),
 });
 
@@ -80,10 +80,10 @@ const PROVINCES = [
 ];
 
 const STEPS = [
-  { title: 'Account', icon: User },
+  { title: 'Credentials', icon: User },
   { title: 'Contact', icon: Phone },
-  { title: 'Address', icon: MapPin },
-  { title: 'Security', icon: Key },
+  { title: 'Location', icon: MapPin },
+  { title: 'Protocols', icon: Key },
 ];
 
 export default function Register() {
@@ -207,7 +207,7 @@ export default function Register() {
 
       if (signUpError) {
         toast({
-          title: 'Registration Failed',
+          title: 'Initialization Failed',
           description: signUpError.message,
           variant: 'destructive',
         });
@@ -215,7 +215,6 @@ export default function Register() {
       }
 
       // 2. Wait for session and update profile
-      // The profile is auto-created by the trigger, we need to update it
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -245,7 +244,7 @@ export default function Register() {
             province: formData.province,
             postal_code: formData.postalCode,
             referrer_id: referrerId,
-            membership_tier: 'founding', // Founding Alpha status!
+            membership_tier: 'founding',
           })
           .eq('id', user.id);
 
@@ -254,7 +253,6 @@ export default function Register() {
         }
 
         // Store security credentials via secure server-side RPC
-        // This hashes answers server-side, never exposing the algorithm to client
         const { error: credError } = await supabase.rpc('set_security_credentials', {
           p_user_id: user.id,
           p_question_1: formData.securityQuestion1,
@@ -265,23 +263,21 @@ export default function Register() {
 
         if (credError) {
           console.error('Security credentials error:', credError);
-          // Don't block registration for credential storage failure
-          // User can reset them later via account recovery
         }
       }
 
       toast({
-        title: 'Welcome to Alpha Bankers!',
-        description: 'Your Founding Alpha membership has been activated.',
+        title: 'Ledger Initialized',
+        description: 'Your Founding Alpha sovereignty has been activated.',
       });
       
       navigate('/dashboard');
       
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error('Initialization error:', err);
       toast({
         title: 'System Error',
-        description: 'Unable to complete registration. Please try again.',
+        description: 'Unable to complete initialization. Please retry.',
         variant: 'destructive',
       });
     } finally {
@@ -295,73 +291,81 @@ export default function Register() {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="displayName">Full Name</Label>
+              <Label htmlFor="displayName" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Sovereign Identity
+              </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]/40" />
                 <Input
                   id="displayName"
                   placeholder="Juan Dela Cruz"
                   value={formData.displayName}
                   onChange={(e) => updateFormData('displayName', e.target.value)}
-                  className={`pl-10 ${errors.displayName ? 'border-destructive' : ''}`}
+                  className={`pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.displayName ? 'border-destructive' : ''}`}
                 />
               </div>
               {errors.displayName && <p className="text-xs text-destructive">{errors.displayName}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Ledger Address
+              </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]/40" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="juan@email.com"
                   value={formData.email}
                   onChange={(e) => updateFormData('email', e.target.value)}
-                  className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                  className={`pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.email ? 'border-destructive' : ''}`}
                 />
               </div>
               {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Vault Key
+              </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]/40" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••••••"
                   value={formData.password}
                   onChange={(e) => updateFormData('password', e.target.value)}
-                  className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                  className={`pl-10 pr-10 bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.password ? 'border-destructive' : ''}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 hover:text-[#D4AF37]"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
-              <p className="text-xs text-muted-foreground">
-                Must be 8+ characters with uppercase, lowercase, and number
+              <p className="text-[10px] text-gray-600">
+                8+ characters with uppercase, lowercase, and number
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Confirm Vault Key
+              </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]/40" />
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => updateFormData('confirmPassword', e.target.value)}
-                  className={`pl-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                  className={`pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                 />
               </div>
               {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
@@ -373,35 +377,39 @@ export default function Register() {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Mobile Number</Label>
+              <Label htmlFor="phone" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Contact Protocol
+              </Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]/40" />
                 <Input
                   id="phone"
                   type="tel"
                   placeholder="09XX XXX XXXX"
                   value={formData.phone}
                   onChange={(e) => updateFormData('phone', e.target.value)}
-                  className={`pl-10 ${errors.phone ? 'border-destructive' : ''}`}
+                  className={`pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.phone ? 'border-destructive' : ''}`}
                 />
               </div>
               {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+              <Label htmlFor="referralCode" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Sponsor Code (Optional)
+              </Label>
               <div className="relative">
-                <Award className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Award className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#D4AF37]/40" />
                 <Input
                   id="referralCode"
                   placeholder="ALPHA-XXXXXX"
                   value={formData.referralCode}
                   onChange={(e) => updateFormData('referralCode', e.target.value.toUpperCase())}
-                  className="pl-10"
+                  className="pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Enter a referral code to link to your sponsor
+              <p className="text-[10px] text-gray-600">
+                Enter a sponsor code to link to your referrer
               </p>
             </div>
           </div>
@@ -411,63 +419,68 @@ export default function Register() {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="addressLine1">Street Address</Label>
+              <Label htmlFor="addressLine1" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Primary Address
+              </Label>
               <Input
                 id="addressLine1"
                 placeholder="123 Main Street"
                 value={formData.addressLine1}
                 onChange={(e) => updateFormData('addressLine1', e.target.value)}
-                className={errors.addressLine1 ? 'border-destructive' : ''}
+                className={`bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.addressLine1 ? 'border-destructive' : ''}`}
               />
               {errors.addressLine1 && <p className="text-xs text-destructive">{errors.addressLine1}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="addressLine2">Apartment, Suite, etc. (Optional)</Label>
+              <Label htmlFor="addressLine2" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">
+                Unit/Suite (Optional)
+              </Label>
               <Input
                 id="addressLine2"
                 placeholder="Unit 4B"
                 value={formData.addressLine2}
                 onChange={(e) => updateFormData('addressLine2', e.target.value)}
+                className="bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">City</Label>
                 <Input
                   id="city"
                   placeholder="Makati"
                   value={formData.city}
                   onChange={(e) => updateFormData('city', e.target.value)}
-                  className={errors.city ? 'border-destructive' : ''}
+                  className={`bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.city ? 'border-destructive' : ''}`}
                 />
                 {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="postalCode">Postal Code</Label>
+                <Label htmlFor="postalCode" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">Postal Code</Label>
                 <Input
                   id="postalCode"
                   placeholder="1200"
                   value={formData.postalCode}
                   onChange={(e) => updateFormData('postalCode', e.target.value)}
-                  className={errors.postalCode ? 'border-destructive' : ''}
+                  className={`bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.postalCode ? 'border-destructive' : ''}`}
                 />
                 {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="province">Province/Region</Label>
+              <Label htmlFor="province" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">Province/Region</Label>
               <Select
                 value={formData.province}
                 onValueChange={(value) => updateFormData('province', value)}
               >
-                <SelectTrigger className={errors.province ? 'border-destructive' : ''}>
+                <SelectTrigger className={`bg-[#0a0a0a] border-[#D4AF37]/20 ${errors.province ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder="Select province" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0a0a0a] border-[#D4AF37]/20">
                   {PROVINCES.map((province) => (
                     <SelectItem key={province} value={province}>
                       {province}
@@ -483,23 +496,23 @@ export default function Register() {
       case 3:
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 mb-4">
-              <p className="text-sm text-primary flex items-center gap-2">
+            <div className="p-4 border border-[#D4AF37]/20 bg-[#D4AF37]/5 mb-4">
+              <p className="text-sm text-[#D4AF37] flex items-center gap-2">
                 <Key className="w-4 h-4" />
-                Security questions help verify your identity for account recovery.
+                Recovery protocols verify your identity for account access restoration.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Security Question 1</Label>
+              <Label className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">Recovery Protocol 1</Label>
               <Select
                 value={formData.securityQuestion1}
                 onValueChange={(value) => updateFormData('securityQuestion1', value)}
               >
-                <SelectTrigger className={errors.securityQuestion1 ? 'border-destructive' : ''}>
+                <SelectTrigger className={`bg-[#0a0a0a] border-[#D4AF37]/20 ${errors.securityQuestion1 ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder="Select a question" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0a0a0a] border-[#D4AF37]/20">
                   {SECURITY_QUESTIONS.filter(q => q !== formData.securityQuestion2).map((question) => (
                     <SelectItem key={question} value={question}>
                       {question}
@@ -511,27 +524,27 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="securityAnswer1">Answer 1</Label>
+              <Label htmlFor="securityAnswer1" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">Answer 1</Label>
               <Input
                 id="securityAnswer1"
                 placeholder="Your answer"
                 value={formData.securityAnswer1}
                 onChange={(e) => updateFormData('securityAnswer1', e.target.value)}
-                className={errors.securityAnswer1 ? 'border-destructive' : ''}
+                className={`bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.securityAnswer1 ? 'border-destructive' : ''}`}
               />
               {errors.securityAnswer1 && <p className="text-xs text-destructive">{errors.securityAnswer1}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label>Security Question 2</Label>
+              <Label className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">Recovery Protocol 2</Label>
               <Select
                 value={formData.securityQuestion2}
                 onValueChange={(value) => updateFormData('securityQuestion2', value)}
               >
-                <SelectTrigger className={errors.securityQuestion2 ? 'border-destructive' : ''}>
+                <SelectTrigger className={`bg-[#0a0a0a] border-[#D4AF37]/20 ${errors.securityQuestion2 ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder="Select a question" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0a0a0a] border-[#D4AF37]/20">
                   {SECURITY_QUESTIONS.filter(q => q !== formData.securityQuestion1).map((question) => (
                     <SelectItem key={question} value={question}>
                       {question}
@@ -543,13 +556,13 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="securityAnswer2">Answer 2</Label>
+              <Label htmlFor="securityAnswer2" className="text-[#D4AF37]/80 text-xs uppercase tracking-[0.1em]">Answer 2</Label>
               <Input
                 id="securityAnswer2"
                 placeholder="Your answer"
                 value={formData.securityAnswer2}
                 onChange={(e) => updateFormData('securityAnswer2', e.target.value)}
-                className={errors.securityAnswer2 ? 'border-destructive' : ''}
+                className={`bg-[#0a0a0a] border-[#D4AF37]/20 focus:border-[#D4AF37]/50 ${errors.securityAnswer2 ? 'border-destructive' : ''}`}
               />
               {errors.securityAnswer2 && <p className="text-xs text-destructive">{errors.securityAnswer2}</p>}
             </div>
@@ -562,17 +575,36 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen bg-[#050505] py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-8">
-          <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
-          <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
+        <div className="flex items-center gap-3 mb-8">
+          <motion.img 
+            src={abcLogo} 
+            alt="Alpha Bankers Cooperative" 
+            className="w-12 h-12 rounded-full object-contain drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <div>
+            <span 
+              className="text-2xl font-bold"
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                color: '#D4AF37',
+              }}
+            >
+              ₳฿C
+            </span>
+            <p className="text-[10px] text-[#00FF41] uppercase tracking-[0.2em]">
+              Initialize Ledger
+            </p>
+          </div>
         </div>
 
         <Link 
           to="/" 
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[#D4AF37] transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
@@ -582,9 +614,9 @@ export default function Register() {
         <div className="mb-8">
           <div className="flex items-center justify-between relative">
             {/* Progress Line */}
-            <div className="absolute top-5 left-0 right-0 h-0.5 bg-border">
+            <div className="absolute top-5 left-0 right-0 h-[1px] bg-[#D4AF37]/20">
               <div 
-                className="h-full bg-primary transition-all duration-500"
+                className="h-full bg-[#D4AF37] transition-all duration-500"
                 style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
               />
             </div>
@@ -599,10 +631,10 @@ export default function Register() {
                   <div 
                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                       isCompleted 
-                        ? 'bg-primary text-primary-foreground' 
+                        ? 'bg-[#D4AF37] text-[#050505]' 
                         : isCurrent 
-                          ? 'bg-primary/20 border-2 border-primary text-primary'
-                          : 'bg-muted text-muted-foreground'
+                          ? 'bg-[#D4AF37]/20 border-2 border-[#D4AF37] text-[#D4AF37]'
+                          : 'bg-[#1a1a1a] border border-[#D4AF37]/20 text-gray-600'
                     }`}
                   >
                     {isCompleted ? (
@@ -611,7 +643,7 @@ export default function Register() {
                       <Icon className="w-5 h-5" />
                     )}
                   </div>
-                  <span className={`text-xs mt-2 ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <span className={`text-[10px] mt-2 uppercase tracking-[0.1em] ${isCurrent ? 'text-[#D4AF37]' : 'text-gray-600'}`}>
                     {step.title}
                   </span>
                 </div>
@@ -624,20 +656,24 @@ export default function Register() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-8"
+          transition={{ duration: 0.3 }}
+          className="p-8 border border-[#D4AF37]/20 bg-[#050505]/80 backdrop-blur-sm"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground">
-              {currentStep === 0 && 'Create Your Alpha Account'}
-              {currentStep === 1 && 'Contact Information'}
-              {currentStep === 2 && 'Address Details'}
-              {currentStep === 3 && 'Security Questions'}
+            <h2 
+              className="text-xl font-bold uppercase tracking-[0.1em]"
+              style={{ color: '#D4AF37' }}
+            >
+              {currentStep === 0 && 'Sovereign Credentials'}
+              {currentStep === 1 && 'Contact Protocol'}
+              {currentStep === 2 && 'Location Registry'}
+              {currentStep === 3 && 'Recovery Protocols'}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {currentStep === 0 && 'Start your journey to financial sovereignty'}
-              {currentStep === 1 && 'How can we reach you?'}
-              {currentStep === 2 && 'Where should we send important documents?'}
-              {currentStep === 3 && 'Protect your account with security verification'}
+            <p className="text-sm text-gray-600 mt-1">
+              {currentStep === 0 && 'Establish your sovereign identity'}
+              {currentStep === 1 && 'Configure contact channels'}
+              {currentStep === 2 && 'Register your physical location'}
+              {currentStep === 3 && 'Secure your ledger access'}
             </p>
           </div>
 
@@ -654,37 +690,41 @@ export default function Register() {
           </AnimatePresence>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-border">
+          <div className="flex justify-between mt-8 pt-6 border-t border-[#D4AF37]/10">
             <Button
               type="button"
               variant="outline"
               onClick={handleBack}
               disabled={currentStep === 0 || isLoading}
+              className="border-[#D4AF37]/20 text-gray-400 hover:border-[#D4AF37]/50 hover:text-[#D4AF37]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
 
             {currentStep < STEPS.length - 1 ? (
-              <Button onClick={handleNext} className="glow-gold">
+              <Button 
+                onClick={handleNext} 
+                className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] font-bold uppercase tracking-[0.1em]"
+              >
                 Continue
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <Button 
                 onClick={handleSubmit} 
-                className="glow-gold"
+                className="bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold uppercase tracking-[0.1em]"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating Account...
+                    Initializing...
                   </>
                 ) : (
                   <>
                     <Award className="w-4 h-4 mr-2" />
-                    Become Founding Alpha
+                    Initialize Ledger
                   </>
                 )}
               </Button>
@@ -693,10 +733,10 @@ export default function Register() {
 
           {/* Login Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Already an Alpha member?{' '}
-              <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign In
+            <p className="text-sm text-gray-600">
+              Already a sovereign member?{' '}
+              <Link to="/login" className="text-[#D4AF37] hover:underline font-medium">
+                Access Ledger
               </Link>
             </p>
           </div>
@@ -704,9 +744,9 @@ export default function Register() {
 
         {/* Founding Alpha Badge */}
         <div className="mt-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30">
-            <Award className="w-4 h-4 text-primary" />
-            <span className="text-sm text-primary">Founding Alpha Status Included</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 border border-[#D4AF37]/30 bg-[#D4AF37]/5">
+            <Award className="w-4 h-4 text-[#D4AF37]" />
+            <span className="text-sm text-[#D4AF37] uppercase tracking-[0.1em]">Founding Alpha Sovereignty Included</span>
           </div>
         </div>
       </div>
