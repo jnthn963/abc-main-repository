@@ -102,7 +102,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[#00FF41]">
             <TrendingUp className="w-5 h-5" />
-            Lend Capital
+            Deploy Capital
           </DialogTitle>
         </DialogHeader>
 
@@ -112,7 +112,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             <div className="p-3 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20">
               <div className="flex items-center gap-2 mb-1">
                 <Wallet className="w-4 h-4 text-[#D4AF37]" />
-                <span className="text-xs text-muted-foreground">E-Wallet</span>
+                <span className="text-xs text-muted-foreground">Liquid Vault</span>
               </div>
               <p className="text-lg font-bold text-[#D4AF37]">
                 ₱{vaultBalance.toLocaleString()}
@@ -121,7 +121,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             <div className="p-3 rounded-lg bg-[#00FF41]/10 border border-[#00FF41]/20">
               <div className="flex items-center gap-2 mb-1">
                 <Lock className="w-4 h-4 text-[#00FF41]" />
-                <span className="text-xs text-muted-foreground">Max Lend (50%)</span>
+                <span className="text-xs text-muted-foreground">Max Deploy (50%)</span>
               </div>
               <p className="text-lg font-bold text-[#00FF41]">
                 ₱{maxLendAmount.toLocaleString()}
@@ -131,7 +131,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
 
           {/* Amount Input */}
           <div className="space-y-2">
-            <label className="text-sm text-muted-foreground">Amount to Lend (Whole Pesos)</label>
+            <label className="text-sm text-muted-foreground">Deploy Amount (Whole Pesos)</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF37] font-bold">₱</span>
               <Input
@@ -195,12 +195,12 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#00FF41]" />
-                <span className="text-sm text-[#00FF41]">Premium Yield</span>
+                <span className="text-sm text-[#00FF41]">Yield Generation</span>
               </div>
               <span className="text-lg font-bold text-[#00FF41]">+0.7%/day</span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Funds are locked in Lend Capital • Yield compounds daily at midnight
+              Capital locked for deployment • Yield accrual at midnight
             </p>
           </div>
 
@@ -212,7 +212,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
               className="p-3 rounded-lg bg-[#0a0a0a] border border-border/50"
             >
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">You Lend</span>
+                <span className="text-muted-foreground">You Deploy</span>
                 <span className="font-bold text-[#D4AF37]">₱{parsedAmount.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-center my-2">
@@ -243,14 +243,14 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             ) : (
               <>
                 <TrendingUp className="w-5 h-5 mr-2" />
-                Move to Lend Capital
+                Deploy Capital
               </>
             )}
           </Button>
 
           {/* Minimum Notice */}
           <p className="text-[10px] text-center text-muted-foreground">
-            Minimum: ₱100 • Max: 50% of E-Wallet • Whole Pesos Only
+            Minimum: ₱100 • Max: 50% of Liquid Vault • Whole Pesos Only
           </p>
         </div>
       </DialogContent>

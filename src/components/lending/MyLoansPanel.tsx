@@ -98,7 +98,7 @@ const MyLoansPanel = ({ isOpen, onClose }: MyLoansPanelProps) => {
           <DialogHeader className="p-5 pb-0">
             <DialogTitle className="flex items-center gap-2 text-foreground">
               <FileText className="w-5 h-5 text-primary" />
-              My Loans
+              Liquidity Ledger
             </DialogTitle>
           </DialogHeader>
 
@@ -131,7 +131,7 @@ const MyLoansPanel = ({ isOpen, onClose }: MyLoansPanelProps) => {
                   <div>
                     <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-primary" />
-                      Active Loans - Repayment Due
+                      Active Positions - Settlement Due
                     </h3>
                     <div className="space-y-2">
                       {activeFundedLoans.map((loan) => (
@@ -176,7 +176,7 @@ const MyLoansPanel = ({ isOpen, onClose }: MyLoansPanelProps) => {
                               onClick={() => handleRepayClick(loan)}
                               className="bg-primary hover:bg-primary/80 text-xs"
                             >
-                              Repay Now
+                              Settle
                               <ArrowRight className="w-3 h-3 ml-1" />
                             </Button>
                           </div>
@@ -252,9 +252,9 @@ const MyLoansPanel = ({ isOpen, onClose }: MyLoansPanelProps) => {
                 {myLoansAsBorrower.length === 0 && (
                   <div className="py-12 text-center">
                     <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground">No loans yet</p>
+                    <p className="text-muted-foreground">No positions yet</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Request a loan from the marketplace to get started
+                      Request liquidity from the marketplace to get started
                     </p>
                   </div>
                 )}

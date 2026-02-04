@@ -75,12 +75,12 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
             <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
               <Wallet className="w-4 h-4 text-[#D4AF37]" />
             </div>
-            <span className="text-sm text-muted-foreground">E-Wallet</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37]">LIQUID</span>
+            <span className="text-sm text-muted-foreground">Liquid Vault</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37]">ACTIVE</span>
           </div>
           <div className="flex items-center gap-1 text-[#00FF41] text-xs font-medium">
             <ArrowUpRight className="w-3 h-3" />
-            +{systemStats?.vaultInterestRate || 0.5}%
+            <span>0.5% Daily Accrual Active</span>
           </div>
         </div>
         <div 
@@ -94,11 +94,11 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           ₱{vaultBalance.toLocaleString('en-PH')}
         </div>
         <p className="text-[10px] text-muted-foreground">
-          Available for transfers & lending
+          Available for deployment & transfers
         </p>
       </Card>
 
-      {/* LEND CAPITAL (Locked) - Yield Green Theme with LEND Button */}
+      {/* DEPLOYED CAPITAL (Locked) - Yield Green Theme */}
       <Card className="glass-card p-4 border-[#00FF41]/20 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">Lend Capital</p>
+                <p className="text-xs text-muted-foreground">Deployed Capital</p>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#00FF41]/10 text-[#00FF41] flex items-center gap-1">
                   <Lock className="w-2 h-2" />
                   LOCKED
@@ -120,7 +120,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           </div>
           <div className="flex items-center gap-2">
             <div className="text-right">
-              <p className="text-[10px] text-muted-foreground">Yield</p>
+              <p className="text-[10px] text-muted-foreground">Yield Generation</p>
               <p className="text-xs text-[#00FF41] font-semibold">+0.7%/day</p>
             </div>
             <Button
@@ -129,7 +129,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
               className="h-8 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-[#050505] font-bold text-xs"
             >
               <Plus className="w-3 h-3 mr-1" />
-              LEND
+              DEPLOY
             </Button>
           </div>
         </div>
@@ -161,16 +161,16 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
         </div>
       </Card>
 
-      {/* Global Yield Summary */}
+      {/* Consolidated Vault Holdings */}
       <Card className="glass-card p-3 border-[#D4AF37]/10 bg-[#050505]/80">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Vault Value</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Consolidated Vault Holdings</p>
             <p className="text-sm font-semibold text-[#D4AF37]">₱{totalVaultBalance.toLocaleString('en-PH')}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Global Yield</p>
-            <p className="text-sm font-bold text-[#00FF41]">+0.5%/day</p>
+            <p className="text-[10px] text-muted-foreground">Daily Accrual</p>
+            <p className="text-sm font-bold text-[#00FF41]">0.5% Active</p>
           </div>
         </div>
       </Card>
@@ -190,7 +190,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center mb-2 group-hover:bg-[#D4AF37]/20 transition-colors">
             <Send className="w-5 h-5 text-[#D4AF37]" />
           </div>
-          <p className="text-sm font-medium text-[#050505]" style={{ color: '#fff' }}>Transfer Funds</p>
+          <p className="text-sm font-medium text-[#050505]" style={{ color: '#fff' }}>Release Funds</p>
           <p className="text-xs text-muted-foreground">Banks • E-Wallets</p>
         </Card>
         <Card 
@@ -200,7 +200,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           <div className="w-10 h-10 rounded-lg bg-[#00FF41]/10 flex items-center justify-center mb-2 group-hover:bg-[#00FF41]/20 transition-colors">
             <FileText className="w-5 h-5 text-[#00FF41]" />
           </div>
-          <p className="text-sm font-medium" style={{ color: '#fff' }}>My Loans</p>
+          <p className="text-sm font-medium" style={{ color: '#fff' }}>Ledger</p>
           <p className="text-xs text-muted-foreground">
             Active: {activeLoansCount}
           </p>

@@ -193,7 +193,7 @@ const AlphaMarketplace = () => {
         </div>
       </Card>
 
-      {/* Request Loan Button - Premium Gold CTA */}
+      {/* Request Liquidity Button - Premium Gold CTA */}
       <Card className="glass-card p-4 border-[#D4AF37]/40 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
         <Button 
           onClick={() => setShowLoanModal(true)}
@@ -204,16 +204,16 @@ const AlphaMarketplace = () => {
           }}
         >
           <HandCoins className="w-4 h-4 mr-2" />
-          Request a Loan
+          Request Liquidity
         </Button>
         <p className="text-[10px] text-center text-muted-foreground mt-2">
-          Max 50% of vault balance • 6-day aging required
+          Max 50% of vault holdings • 6-day aging required
         </p>
       </Card>
 
       {/* Order Book */}
       <Card className="glass-card p-4 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/60 to-[#0d0d0d]/60">
-        <h3 className="text-sm font-semibold mb-3">Available Loan Requests</h3>
+        <h3 className="text-sm font-semibold mb-3">Open Liquidity Requests</h3>
         {showLoading ? (
           <div className="py-8 text-center">
             <div className="space-y-2">
@@ -234,7 +234,7 @@ const AlphaMarketplace = () => {
             {/* Rows */}
             {loanListings.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground text-sm">
-                No loan requests available
+                No liquidity requests available
               </div>
             ) : (
               loanListings.map((loan) => (
@@ -255,7 +255,7 @@ const AlphaMarketplace = () => {
                       onClick={() => handleLendClick(loan)}
                       className="h-7 px-3 bg-success hover:bg-success/80 text-success-foreground text-xs font-semibold glow-green"
                     >
-                      LEND
+                      FUND
                     </Button>
                   </div>
                 </div>

@@ -200,9 +200,9 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
               <TrendingUp className="w-5 h-5 text-success" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Daily Vault Interest</h3>
+              <h3 className="text-sm font-semibold text-foreground">Vault Yield Accrual</h3>
               <p className="text-xs text-muted-foreground">
-                Compounding at {vaultInterestRate}% daily
+                {vaultInterestRate}% Daily Accrual Active
               </p>
             </div>
           </div>
@@ -213,7 +213,7 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
             className="text-xs text-muted-foreground hover:text-foreground"
           >
             <History className="w-4 h-4 mr-1" />
-            History
+            Ledger
           </Button>
         </div>
 
@@ -283,7 +283,7 @@ const InterestDisplay = ({ compact = false }: InterestDisplayProps) => {
           <DialogHeader className="p-5 pb-0">
             <DialogTitle className="flex items-center gap-2 text-foreground">
               <History className="w-5 h-5 text-success" />
-              Interest History
+              Yield Ledger
             </DialogTitle>
           </DialogHeader>
 
