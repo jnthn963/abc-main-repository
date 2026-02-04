@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
-  Shield, AlertTriangle, Power, Sliders, 
+  AlertTriangle, Power, Sliders, 
   Users, Activity, TrendingUp, Eye,
-  DollarSign, Clock, Loader2
+  DollarSign, Clock, Loader2, Shield
 } from "lucide-react";
+import abcLogo from "@/assets/abc-logo.png";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -211,9 +212,11 @@ const GovernorDashboard = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(222,47%,5%)] border-b border-destructive/30 px-6 py-3">
         <div className="flex items-center justify-between max-w-[1800px] mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-destructive" />
-            </div>
+            <img 
+              src={abcLogo} 
+              alt="Alpha Bankers Cooperative" 
+              className="w-10 h-10 rounded-lg object-cover"
+            />
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="font-bold text-foreground">Governor Dashboard</h1>

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Shield, User, Bell, Wallet } from "lucide-react";
+import { User, Bell, Wallet, Shield } from "lucide-react";
+import abcLogo from "@/assets/abc-logo.png";
 import { Button } from "@/components/ui/button";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,9 +18,11 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left: Logo */}
         <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-amber-700 flex items-center justify-center glow-gold">
-            <span className="text-xl font-bold text-primary-foreground">α</span>
-          </div>
+          <img 
+            src={abcLogo} 
+            alt="Alpha Bankers Cooperative" 
+            className="w-10 h-10 rounded-lg object-cover glow-gold"
+          />
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold gradient-gold">Alpha Bankers</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cooperative</p>

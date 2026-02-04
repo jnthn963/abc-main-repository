@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft, Fingerprint } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import AccountRecovery from '@/components/auth/AccountRecovery';
 import { z } from 'zod';
+import abcLogo from '@/assets/abc-logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -91,7 +92,7 @@ export default function Login() {
               transition={{ duration: 0.6 }}
             >
               <div className="flex items-center gap-3 mb-8">
-                <Shield className="w-12 h-12 text-primary" />
+                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 rounded-lg object-cover" />
                 <span className="text-3xl font-bold gradient-gold">ALPHA BANKERS</span>
               </div>
               
@@ -134,7 +135,7 @@ export default function Login() {
             >
               {/* Mobile Header */}
               <div className="lg:hidden flex items-center gap-3 mb-8">
-                <Shield className="w-8 h-8 text-primary" />
+                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
                 <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
               </div>
 
@@ -164,7 +165,7 @@ export default function Login() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-8">
-              <Shield className="w-12 h-12 text-primary" />
+              <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 rounded-lg object-cover" />
               <span className="text-3xl font-bold gradient-gold">ALPHA BANKERS</span>
             </div>
             
@@ -204,7 +205,7 @@ export default function Login() {
         >
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <Shield className="w-8 h-8 text-primary" />
+            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
             <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
           </div>
 

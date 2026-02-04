@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import abcLogo from "@/assets/abc-logo.png";
 
 interface SovereignMonolithProps {
   message?: string;
@@ -41,7 +42,7 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
 
       {/* Central Monolith */}
       <div className="relative z-10 flex flex-col items-center gap-8">
-        {/* Gold Geometric Logo - Breathing Animation */}
+        {/* Official ABC Logo - Breathing Animation */}
         <motion.div
           className="relative"
           animate={{
@@ -54,39 +55,18 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
           }}
         >
           {/* Outer glow */}
-          <div className="absolute inset-0 blur-xl bg-[#D4AF37]/20 rounded-2xl" />
+          <div className="absolute inset-0 blur-xl bg-[#D4AF37]/30 rounded-full" />
           
-          {/* Main geometric shape */}
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            {/* Diamond shape with gold gradient */}
-            <motion.div
-              className="absolute w-16 h-16 rotate-45"
+          {/* Official Logo */}
+          <div className="relative w-28 h-28 flex items-center justify-center">
+            <img 
+              src={abcLogo} 
+              alt="Alpha Bankers Cooperative" 
+              className="w-24 h-24 rounded-xl object-cover"
               style={{
-                background: 'linear-gradient(135deg, #F5D76E 0%, #D4AF37 50%, #8B7500 100%)',
-                boxShadow: '0 0 40px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 0 40px rgba(212, 175, 55, 0.4), 0 0 80px rgba(212, 175, 55, 0.2)',
               }}
             />
-            
-            {/* Inner geometric accent */}
-            <motion.div
-              className="absolute w-8 h-8 rotate-45 border-2 border-[#0a0a12]"
-              style={{
-                background: 'linear-gradient(135deg, #8B7500 0%, #D4AF37 50%, #F5D76E 100%)',
-              }}
-            />
-            
-            {/* ABC Text */}
-            <div 
-              className="relative z-10 text-lg font-bold tracking-widest"
-              style={{
-                background: 'linear-gradient(180deg, #0a0a12 0%, #1a1a2e 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 1px rgba(0,0,0,0.5)',
-              }}
-            >
-              ABC
-            </div>
           </div>
         </motion.div>
 
