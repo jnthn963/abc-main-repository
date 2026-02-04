@@ -217,7 +217,7 @@ const GovernorDashboard = () => {
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="font-bold text-foreground">Governor Dashboard</h1>
-                <p className="text-xs text-muted-foreground">Alpha Banking Cooperative • Real-Time Sync</p>
+                <p className="text-xs text-muted-foreground">Alpha Bankers Cooperative • Real-Time Sync</p>
               </div>
               <ConnectionIndicator />
             </div>

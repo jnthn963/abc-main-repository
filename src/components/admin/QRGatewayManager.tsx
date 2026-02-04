@@ -27,7 +27,7 @@ const QRGatewayManager = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [receiverName, setReceiverName] = useState("Alpha Banking Cooperative");
+  const [receiverName, setReceiverName] = useState("Alpha Bankers Cooperative");
   const [receiverNumber, setReceiverNumber] = useState("+63 917 XXX XXXX");
   const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +42,7 @@ const QRGatewayManager = ({
           .maybeSingle();
 
         if (data) {
-          setReceiverName(data.receiver_name || "Alpha Banking Cooperative");
+          setReceiverName(data.receiver_name || "Alpha Bankers Cooperative");
           setReceiverNumber(data.receiver_phone || "+63 917 XXX XXXX");
         }
       } catch (err) {

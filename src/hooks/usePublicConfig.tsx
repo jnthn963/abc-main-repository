@@ -27,7 +27,7 @@ export interface PublicConfig {
 const DEFAULT_CONFIG: PublicConfig = {
   id: 'fallback',
   qrGatewayUrl: null,
-  receiverName: 'Alpha Banking Cooperative',
+  receiverName: 'Alpha Bankers Cooperative',
   receiverPhone: '+63 917 XXX XXXX',
   vaultInterestRate: 0.5,
   lendingYieldRate: 15.0,
@@ -65,7 +65,7 @@ export function usePublicConfig() {
         return {
           id: data.id,
           qrGatewayUrl: data.qr_gateway_url,
-          receiverName: data.receiver_name || 'Alpha Banking Cooperative',
+          receiverName: data.receiver_name || 'Alpha Bankers Cooperative',
           receiverPhone: data.receiver_phone || '+63 917 XXX XXXX',
           vaultInterestRate: Number(data.vault_interest_rate) || 0.5,
           lendingYieldRate: Number(data.lending_yield_rate) || 15.0,

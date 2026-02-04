@@ -21,7 +21,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             <span className="text-xl font-bold text-primary-foreground">α</span>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold gradient-gold">Alpha Business</h1>
+            <h1 className="text-lg font-bold gradient-gold">Alpha Bankers</h1>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cooperative</p>
           </div>
         </Link>

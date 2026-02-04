@@ -148,7 +148,7 @@ export default function Landing() {
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center">
                 <span className="text-lg font-bold text-black">α</span>
               </div>
-              <span className="text-xl font-bold text-[#D4AF37]">ALPHA BUSINESS COOPERATIVE</span>
+              <span className="text-xl font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login">
@@ -377,14 +377,14 @@ export default function Landing() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              About Alpha Business Cooperative
+              About Alpha Bankers Cooperative
             </h2>
             <p className="text-xl text-[#D4AF37] mb-8 italic">
               "Hindi na tayo magpapa-alipin sa barya. Tayo ang may-ari ng systema."
             </p>
             <div className="text-gray-400 space-y-4 text-lg leading-relaxed">
               <p>
-                Alpha Business Cooperative is more than a platform—it is the <span className="text-[#D4AF37]">Republic of Capital</span>. We are a sovereign digital cooperative engineered by High-IQ Filipino architects to return the 48% interest "spread" that traditional banks keep for themselves back to the people.
+                Alpha Bankers Cooperative is more than a platform—it is the <span className="text-[#D4AF37]">Republic of Capital</span>. We are a sovereign digital cooperative engineered by High-IQ Filipino architects to return the 48% interest "spread" that traditional banks keep for themselves back to the people.
               </p>
               <p>
                 Built with the <span className="text-white font-semibold">Anti-Bankruptcy Protocol</span> (over-collateralization + reserve fund surplus), we combat inflation, corruption, and the systemic exploitation of Filipino savers. This is your financial fortress.
@@ -401,13 +401,13 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center">
               <span className="text-sm font-bold text-black">α</span>
             </div>
-            <span className="text-lg font-bold text-[#D4AF37]">ALPHA BUSINESS COOPERATIVE</span>
+            <span className="text-lg font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
           </div>
           <p className="text-sm text-gray-500 mb-4">
             The Sovereign Ledger for Elite Financial Exchange.
           </p>
           <p className="text-xs text-gray-600">
-            © 2026 Alpha Business Cooperative. All rights reserved.
+            © 2026 Alpha Bankers Cooperative. All rights reserved.
           </p>
         </div>
       </footer>

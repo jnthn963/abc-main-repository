@@ -10,7 +10,7 @@ const AlphaConcierge = () => {
   const messages = [
     {
       type: "bot",
-      text: "Welcome to Alpha Banking! 👋 I'm your personal concierge. How can I assist you today?",
+      text: "Welcome to Alpha Bankers! 👋 I'm your personal concierge. How can I assist you today?",
       time: "09:45 AM"
     },
     {
