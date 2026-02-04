@@ -211,29 +211,32 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
         return (
           <form onSubmit={handleEmailSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="recovery-email" className="text-sm font-medium">
+              <Label 
+                htmlFor="recovery-email" 
+                className="text-[10px] font-medium uppercase tracking-[0.15em] text-gray-500"
+              >
                 Registered Email Address
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                 <Input
                   id="recovery-email"
                   type="email"
                   placeholder="alpha@member.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                  className={`pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 text-white placeholder:text-gray-700 focus:border-[#D4AF37]/50 ${errors.email ? 'border-red-500' : ''}`}
                   disabled={isLoading}
                 />
               </div>
               {errors.email && (
-                <p className="text-xs text-destructive">{errors.email}</p>
+                <p className="text-xs text-red-500">{errors.email}</p>
               )}
             </div>
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold text-xs uppercase tracking-[0.15em] transition-all duration-300"
               size="lg"
               disabled={isLoading}
             >
@@ -255,16 +258,16 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
       case 'questions':
         return (
           <form onSubmit={handleAnswersSubmit} className="space-y-6">
-            <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 mb-4">
-              <p className="text-sm text-primary flex items-center gap-2">
+            <div className="p-4 bg-[#0a0a0a] border border-[#D4AF37]/20 mb-4">
+              <p className="text-sm text-[#D4AF37] flex items-center gap-2">
                 <Shield className="w-4 h-4" />
-                Account: {state.maskedMemberId}
+                <span className="uppercase tracking-[0.1em] text-xs">Account: {state.maskedMemberId}</span>
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">
+                <Label className="text-[10px] font-medium uppercase tracking-[0.15em] text-gray-500">
                   {state.questions?.question_1}
                 </Label>
                 <Input
@@ -272,13 +275,14 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
                   placeholder="Your answer"
                   value={answer1}
                   onChange={(e) => setAnswer1(e.target.value)}
+                  className="bg-[#0a0a0a] border-[#D4AF37]/20 text-white placeholder:text-gray-700 focus:border-[#D4AF37]/50"
                   disabled={isLoading}
                   autoComplete="off"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm font-medium">
+                <Label className="text-[10px] font-medium uppercase tracking-[0.15em] text-gray-500">
                   {state.questions?.question_2}
                 </Label>
                 <Input
@@ -286,6 +290,7 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
                   placeholder="Your answer"
                   value={answer2}
                   onChange={(e) => setAnswer2(e.target.value)}
+                  className="bg-[#0a0a0a] border-[#D4AF37]/20 text-white placeholder:text-gray-700 focus:border-[#D4AF37]/50"
                   disabled={isLoading}
                   autoComplete="off"
                 />
@@ -294,7 +299,7 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold text-xs uppercase tracking-[0.15em] transition-all duration-300"
               size="lg"
               disabled={isLoading}
             >
@@ -315,20 +320,27 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
 
       case 'success':
         return (
-          <div className="text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mx-auto">
-              <CheckCircle className="w-8 h-8 text-success" />
+          <div className="text-center space-y-6 py-8">
+            <div className="w-16 h-16 rounded-full bg-[#00FF41]/10 flex items-center justify-center mx-auto">
+              <CheckCircle className="w-8 h-8 text-[#00FF41]" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
+              <h3 
+                className="text-lg font-bold uppercase tracking-[0.1em] mb-3"
+                style={{ color: '#D4AF37' }}
+              >
                 Verification Successful
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 A password reset link has been sent to your email address.
                 Please check your inbox and follow the instructions.
               </p>
             </div>
-            <Button onClick={onSuccess} className="w-full" size="lg">
+            <Button 
+              onClick={onSuccess} 
+              className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] font-bold text-xs uppercase tracking-[0.15em]" 
+              size="lg"
+            >
               Return to Login
             </Button>
           </div>
@@ -336,19 +348,27 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
 
       case 'error':
         return (
-          <div className="text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-8 h-8 text-destructive" />
+          <div className="text-center space-y-6 py-8">
+            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
+              <h3 
+                className="text-lg font-bold uppercase tracking-[0.1em] mb-3"
+                style={{ color: '#D4AF37' }}
+              >
                 Recovery Not Available
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 {state.error}
               </p>
             </div>
-            <Button onClick={onBack} variant="outline" className="w-full" size="lg">
+            <Button 
+              onClick={onBack} 
+              variant="outline" 
+              className="w-full border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10 text-xs uppercase tracking-[0.1em]" 
+              size="lg"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Login
             </Button>
@@ -358,26 +378,29 @@ export default function AccountRecovery({ onBack, onSuccess }: AccountRecoveryPr
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md">
       {state.step === 'email' || state.step === 'questions' ? (
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-[#D4AF37] transition-all duration-300 mb-8 uppercase tracking-[0.1em]"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Login
+          <ArrowLeft className="w-3 h-3" />
+          Return to Login
         </button>
       ) : null}
 
-      <div className="glass-card p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 glow-gold">
-            <Key className="w-8 h-8 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground">Account Recovery</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {state.step === 'email' && 'Enter your email to start the recovery process'}
-            {state.step === 'questions' && 'Answer your security questions to verify your identity'}
+      <div className="border border-[#D4AF37]/10 bg-[#050505] p-8">
+        <div className="mb-8">
+          <div className="w-8 h-[2px] bg-[#D4AF37] mb-6" />
+          <h2 
+            className="text-xl font-bold uppercase tracking-[0.15em] mb-2"
+            style={{ color: '#D4AF37' }}
+          >
+            Security Recovery
+          </h2>
+          <p className="text-xs text-gray-600 uppercase tracking-[0.1em]">
+            {state.step === 'email' && 'Enter email to start the recovery process'}
+            {state.step === 'questions' && 'Answer your security questions to verify identity'}
           </p>
         </div>
 
