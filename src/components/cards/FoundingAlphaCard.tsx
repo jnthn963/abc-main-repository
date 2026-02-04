@@ -120,7 +120,7 @@ export function FoundingAlphaCard({
                 color: '#0a0a0a',
                 textShadow: '0 1px 0 rgba(255,255,255,0.3)'
               }}>
-                  ABC  
+                  ₳฿C  
                 </span>
               </div>
               <div className="flex items-center gap-1.5 mt-2">
