@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import abcLogo from '@/assets/abc-logo.png';
 
 // Governor access is controlled server-side via user_roles table
 // No client-side email whitelist - prevents enumeration attacks
@@ -207,9 +208,11 @@ export default function GovernorLogin() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-900/50">
-                <Crown className="w-8 h-8 text-white" />
-              </div>
+              <img 
+                src={abcLogo} 
+                alt="Alpha Bankers Cooperative" 
+                className="w-14 h-14 rounded-xl object-cover shadow-lg shadow-red-900/30"
+              />
               <div>
                 <span className="text-3xl font-bold text-red-400">SUPREME</span>
                 <p className="text-xs text-red-400/60 uppercase tracking-widest">Governor Portal</p>
@@ -262,7 +265,7 @@ export default function GovernorLogin() {
         >
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <Crown className="w-8 h-8 text-red-500" />
+            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
             <span className="text-xl font-bold text-red-400">SUPREME GOVERNOR</span>
           </div>
 

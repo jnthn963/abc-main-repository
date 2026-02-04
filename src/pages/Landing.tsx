@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Wallet, TrendingUp, Users, Clock, Lock, ArrowRight, Zap, Award, ChevronDown, Crown } from 'lucide-react';
+import { Wallet, TrendingUp, Users, Clock, Lock, ArrowRight, Zap, Award, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import abcLogo from '@/assets/abc-logo.png';
 
 
 // Founding Alpha countdown target: March 31, 2026
@@ -145,9 +146,11 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center">
-                <span className="text-lg font-bold text-black">α</span>
-              </div>
+              <img 
+                src={abcLogo} 
+                alt="Alpha Bankers Cooperative" 
+                className="w-10 h-10 rounded-lg object-cover"
+              />
               <span className="text-xl font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
             </div>
             <div className="flex items-center gap-4">
@@ -398,9 +401,11 @@ export default function Landing() {
       <footer className="relative z-10 border-t border-[#D4AF37]/10 py-12 px-4 bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center">
-              <span className="text-sm font-bold text-black">α</span>
-            </div>
+            <img 
+              src={abcLogo} 
+              alt="Alpha Bankers Cooperative" 
+              className="w-10 h-10 rounded-lg object-cover"
+            />
             <span className="text-lg font-bold text-[#D4AF37]">ALPHA BANKERS COOPERATIVE</span>
           </div>
           <p className="text-sm text-gray-500 mb-4">

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shield, 
   Lock, 
   Mail, 
   User, 
@@ -25,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import abcLogo from '@/assets/abc-logo.png';
 
 // Step 1: Account Information
 const accountSchema = z.object({
@@ -566,7 +566,7 @@ export default function Register() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <Shield className="w-8 h-8 text-primary" />
+          <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-lg object-cover" />
           <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
         </div>
 
