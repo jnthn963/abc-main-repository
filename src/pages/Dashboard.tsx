@@ -3,6 +3,8 @@
  * 
  * STABILITY FIX: Uses stable keys and hasInitialData pattern
  * to prevent re-renders and animation re-triggers.
+ * 
+ * SOVEREIGN INTEGRITY AESTHETIC: Midnight Obsidian, Gold, Yield Green
  */
 
 import { useEffect, useState, useRef } from 'react';
@@ -78,7 +80,7 @@ export default function Dashboard() {
 
   // STABILITY FIX: Only show monolith on true initial load
   if (!hasInitialLoad && (authLoading || !profile)) {
-    return <SovereignMonolith message="LOADING ALPHA TERMINAL..." />;
+    return <SovereignMonolith message="INITIALIZING SOVEREIGN TERMINAL..." />;
   }
 
   // Use greeting based on time
@@ -107,12 +109,12 @@ export default function Dashboard() {
                   background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 60%, #8B7500 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                }}>{profile?.display_name || 'Alpha Member'}</span>
+                }}>{profile?.display_name || 'Sovereign Member'}</span>
               </h2>
             </StaggeredItem>
             <StaggeredItem>
-              <p className="text-sm text-muted-foreground">
-                Sovereign Command Center • ID: {profile?.member_id || 'Loading...'}
+              <p className="text-sm text-gray-600">
+                <span className="text-[#D4AF37]/60">Sovereign Command Center</span> • ID: <span className="font-mono text-[#D4AF37]">{profile?.member_id || 'Loading...'}</span>
               </p>
             </StaggeredItem>
           </StaggeredContainer>
@@ -150,7 +152,7 @@ export default function Dashboard() {
       {/* Floating 3D Membership Card */}
       {profile && (
         <FloatingMemberCard 
-          memberName={profile.display_name || 'Alpha Member'}
+          memberName={profile.display_name || 'Sovereign Member'}
           memberId={profile.member_id || '0000'}
           isActive={profile.kyc_status === 'verified'}
         />
