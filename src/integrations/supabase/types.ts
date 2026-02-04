@@ -676,6 +676,33 @@ export type Database = {
       }
     }
     Views: {
+      marketplace_loans: {
+        Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          auto_repay_triggered: boolean | null
+          borrower_alias: string | null
+          borrower_id: string | null
+          capital_lock_days: number | null
+          capital_unlock_date: string | null
+          collateral_amount: number | null
+          created_at: string | null
+          due_date: string | null
+          duration_days: number | null
+          funded_at: string | null
+          id: string | null
+          interest_rate: number | null
+          lender_id: string | null
+          principal_amount: number | null
+          reference_number: string | null
+          rejection_reason: string | null
+          repaid_at: string | null
+          status: Database["public"]["Enums"]["loan_status"] | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       pending_actions_queue: {
         Row: {
           action_type: string | null

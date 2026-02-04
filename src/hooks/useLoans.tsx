@@ -89,6 +89,7 @@ export function useLoans() {
   const POLLING_INTERVAL = 15000; // Emergency stability: >= 10s
 
   // Fetch all loans with member aliases
+  // SECURITY: Uses marketplace_loans view for open loans to anonymize borrower identity
   const fetchLoans = useCallback(async () => {
     if (!user) return;
 
@@ -96,16 +97,18 @@ export function useLoans() {
       const result = await runDeduped(
         `loans:all:${user.id}`,
         async () => {
-          // Fetch open loans (available for funding)
+          // Fetch open loans from SECURE VIEW (anonymized borrower identity)
+          // The view returns borrower_alias pre-computed, borrower_id is NULL for non-involved users
           const { data: openLoansData, error: openError } = await supabase
-            .from('p2p_loans')
+            .from('marketplace_loans')
             .select('*')
             .eq('status', 'open')
+            .eq('approval_status', 'approved')
             .order('created_at', { ascending: false });
 
           if (openError) throw openError;
 
-          // Fetch my loans as borrower
+          // Fetch my loans as borrower (from p2p_loans - I can see my own data)
           const { data: borrowerLoansData, error: borrowerError } = await supabase
             .from('p2p_loans')
             .select('*')
@@ -114,7 +117,7 @@ export function useLoans() {
 
           if (borrowerError) throw borrowerError;
 
-          // Fetch my loans as lender
+          // Fetch my loans as lender (from p2p_loans - I can see loans I funded)
           const { data: lenderLoansData, error: lenderError } = await supabase
             .from('p2p_loans')
             .select('*')
@@ -123,31 +126,50 @@ export function useLoans() {
 
           if (lenderError) throw lenderError;
 
-          // Collect all unique user IDs
-          const allLoans = [
-            ...(openLoansData || []),
+          // For borrower/lender loans, we need profiles for aliases
+          const userLoans = [
             ...(borrowerLoansData || []),
             ...(lenderLoansData || []),
           ];
           const userIds = new Set<string>();
-          allLoans.forEach((loan) => {
+          userLoans.forEach((loan) => {
             userIds.add(loan.borrower_id);
             if (loan.lender_id) userIds.add(loan.lender_id);
           });
 
-          // Fetch all relevant profiles
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, member_id')
-            .in('id', Array.from(userIds));
+          // Fetch profiles only for user's own loans (no privacy leak)
+          let profilesMap = new Map<string, { member_id: string }>();
+          if (userIds.size > 0) {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, member_id')
+              .in('id', Array.from(userIds));
 
-          const profilesMap = new Map<string, { member_id: string }>();
-          (profiles || []).forEach((p) => profilesMap.set(p.id, { member_id: p.member_id }));
+            (profiles || []).forEach((p) => profilesMap.set(p.id, { member_id: p.member_id }));
+          }
 
-          // Transform loans
-          const transformedOpenLoans = await Promise.all(
-            (openLoansData || []).map((loan) => transformLoan(loan, profilesMap))
-          );
+          // Transform open loans from secure view (already has borrower_alias)
+          const transformedOpenLoans: P2PLoan[] = (openLoansData || []).map((loan: any) => ({
+            id: loan.id,
+            borrowerId: loan.borrower_id || '', // May be null for non-involved users
+            borrowerAlias: loan.borrower_alias || 'A***?', // Pre-computed in view
+            lenderId: loan.lender_id,
+            lenderAlias: null, // Open loans don't have lenders yet
+            principalAmount: Number(loan.principal_amount) / 100,
+            interestRate: Number(loan.interest_rate),
+            interestAmount: (Number(loan.principal_amount) / 100) * (Number(loan.interest_rate) / 100),
+            duration: loan.duration_days,
+            status: loan.status as P2PLoan['status'],
+            collateralAmount: Number(loan.collateral_amount) / 100,
+            createdAt: new Date(loan.created_at),
+            fundedAt: loan.funded_at ? new Date(loan.funded_at) : null,
+            dueAt: loan.due_date ? new Date(loan.due_date) : null,
+            repaidAt: loan.repaid_at ? new Date(loan.repaid_at) : null,
+            autoRepayTriggered: loan.auto_repay_triggered,
+            referenceNumber: loan.reference_number,
+          }));
+
+          // Transform borrower/lender loans (full access)
           const transformedBorrowerLoans = await Promise.all(
             (borrowerLoansData || []).map((loan) => transformLoan(loan, profilesMap))
           );
