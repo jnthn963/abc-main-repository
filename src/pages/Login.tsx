@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft, Fingerprint } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,7 +34,6 @@ export default function Login() {
     e.preventDefault();
     setErrors({});
     
-    // Validate input
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const fieldErrors: { email?: string; password?: string } = {};
@@ -53,21 +52,21 @@ export default function Login() {
       
       if (error) {
         toast({
-          title: 'Authentication Failed',
+          title: 'Access Denied',
           description: error.message,
           variant: 'destructive',
         });
       } else {
         toast({
-          title: 'Welcome Back, Alpha',
-          description: 'Secure session established.',
+          title: 'Ledger Access Granted',
+          description: 'Secure session initialized.',
         });
         navigate(from, { replace: true });
       }
     } catch (err) {
       toast({
         title: 'System Error',
-        description: 'Unable to establish secure connection. Please try again.',
+        description: 'Unable to establish secure connection.',
         variant: 'destructive',
       });
     } finally {
@@ -75,46 +74,61 @@ export default function Login() {
     }
   };
 
-  // Show recovery flow
+  // Recovery flow with Sovereign Integrity aesthetic
   if (showRecovery) {
     return (
-      <div className="min-h-screen bg-background flex">
+      <div className="min-h-screen bg-[#050505] flex">
         {/* Left Panel - Branding */}
-        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
-          <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-success/10 rounded-full blur-3xl" />
+        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden border-r border-[#D4AF37]/10">
+          <div className="absolute inset-0 bg-[#050505]" />
           
           <div className="relative z-10 flex flex-col justify-center px-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.4 }}
             >
-              <div className="flex items-center gap-3 mb-8">
-                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 rounded-full object-contain drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]" />
-                <span className="text-3xl font-bold gradient-gold">ALPHA BANKERS</span>
+              <div className="flex items-center gap-3 mb-12">
+                <img 
+                  src={abcLogo} 
+                  alt="ABC" 
+                  className="w-12 h-12 rounded-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)]" 
+                />
+                <span 
+                  className="text-2xl font-bold"
+                  style={{ 
+                    color: '#D4AF37',
+                    fontFamily: 'Georgia, "Times New Roman", serif'
+                  }}
+                >
+                  ₳฿C
+                </span>
               </div>
               
-              <h1 className="text-4xl font-bold text-foreground mb-4">
+              <div className="w-12 h-[1px] bg-[#D4AF37] mb-6" />
+              
+              <h1 
+                className="text-3xl font-bold mb-4 uppercase tracking-[0.1em]"
+                style={{ color: '#D4AF37' }}
+              >
                 Account Recovery
               </h1>
               
-              <p className="text-muted-foreground mb-8 max-w-md">
-                Verify your identity using your security questions to recover access to your account.
+              <p className="text-gray-500 mb-8 max-w-md text-sm leading-relaxed">
+                Verify your identity using your security questions to restore ledger access.
               </p>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
                   <span>Secure verification process</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
                   <span>Rate-limited for protection</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
                   <span>Answers never exposed</span>
                 </div>
               </div>
@@ -123,7 +137,7 @@ export default function Login() {
         </div>
 
         {/* Right Panel - Recovery Form */}
-        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#050505]">
           <AnimatePresence mode="wait">
             <motion.div
               key="recovery"
@@ -135,8 +149,12 @@ export default function Login() {
             >
               {/* Mobile Header */}
               <div className="lg:hidden flex items-center gap-2 mb-8">
-                <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
-                <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
+                <img 
+                  src={abcLogo} 
+                  alt="ABC" 
+                  className="w-8 h-8 rounded-full object-contain" 
+                />
+                <span className="text-lg font-bold" style={{ color: '#D4AF37' }}>₳฿C</span>
               </div>
 
               <AccountRecovery
@@ -151,43 +169,58 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-[#050505] flex">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-success/10 rounded-full blur-3xl" />
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden border-r border-[#D4AF37]/10">
+        <div className="absolute inset-0 bg-[#050505]" />
         
         <div className="relative z-10 flex flex-col justify-center px-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
           >
-            <div className="flex items-center gap-3 mb-8">
-              <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-14 h-14 rounded-full object-contain drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]" />
-              <span className="text-3xl font-bold gradient-gold">ALPHA BANKERS</span>
+            <div className="flex items-center gap-3 mb-12">
+              <img 
+                src={abcLogo} 
+                alt="ABC" 
+                className="w-12 h-12 rounded-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)]" 
+              />
+              <span 
+                className="text-2xl font-bold"
+                style={{ 
+                  color: '#D4AF37',
+                  fontFamily: 'Georgia, "Times New Roman", serif'
+                }}
+              >
+                ₳฿C
+              </span>
             </div>
             
-            <h1 className="text-4xl font-bold text-foreground mb-4">
-              Secure Access Portal
+            <div className="w-12 h-[1px] bg-[#D4AF37] mb-6" />
+            
+            <h1 
+              className="text-3xl font-bold mb-4 uppercase tracking-[0.1em]"
+              style={{ color: '#D4AF37' }}
+            >
+              Ledger Access
             </h1>
             
-            <p className="text-muted-foreground mb-8 max-w-md">
-              Your financial sanctuary awaits. Enter your credentials to access the Alpha Terminal.
+            <p className="text-gray-500 mb-8 max-w-md text-sm leading-relaxed">
+              Your sovereign vault awaits. Enter your credentials to access the Alpha Terminal.
             </p>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
                 <span>256-bit encryption active</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
                 <span>Server-side session validation</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF41]" />
                 <span>Multi-factor authentication ready</span>
               </div>
             </div>
@@ -196,131 +229,144 @@ export default function Login() {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#050505]">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <img src={abcLogo} alt="Alpha Bankers Cooperative" className="w-10 h-10 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
-            <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
+            <img 
+              src={abcLogo} 
+              alt="ABC" 
+              className="w-8 h-8 rounded-full object-contain" 
+            />
+            <span className="text-lg font-bold" style={{ color: '#D4AF37' }}>₳฿C</span>
           </div>
 
           <Link 
             to="/" 
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
+            className="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-[#D4AF37] transition-all duration-300 mb-8 uppercase tracking-[0.1em]"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            <ArrowLeft className="w-3 h-3" />
+            Return to Portal
           </Link>
 
-          <div className="glass-card p-8">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 glow-gold">
-                <Fingerprint className="w-8 h-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Welcome Back</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Enter your credentials to access your Alpha account
+          <div className="border border-[#D4AF37]/10 bg-[#050505] p-8">
+            <div className="mb-8">
+              <div className="w-8 h-[2px] bg-[#D4AF37] mb-6" />
+              <h2 
+                className="text-xl font-bold uppercase tracking-[0.15em] mb-2"
+                style={{ color: '#D4AF37' }}
+              >
+                Ledger Access
+              </h2>
+              <p className="text-xs text-gray-600 uppercase tracking-[0.1em]">
+                Enter credentials to initialize session
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label 
+                  htmlFor="email" 
+                  className="text-[10px] font-medium uppercase tracking-[0.15em] text-gray-500"
+                >
                   Email Address
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="alpha@member.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                    className={`pl-10 bg-[#0a0a0a] border-[#D4AF37]/20 text-white placeholder:text-gray-700 focus:border-[#D4AF37]/50 ${errors.email ? 'border-red-500' : ''}`}
                     disabled={isLoading}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email}</p>
+                  <p className="text-xs text-red-500">{errors.email}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password
+                  <Label 
+                    htmlFor="password" 
+                    className="text-[10px] font-medium uppercase tracking-[0.15em] text-gray-500"
+                  >
+                    Vault Key
                   </Label>
                   <button
                     type="button"
                     onClick={() => setShowRecovery(true)}
-                    className="text-xs text-primary hover:underline"
+                    className="text-[10px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-[0.1em] transition-all duration-300"
                   >
-                    Forgot password?
+                    Recover Access
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                    className={`pl-10 pr-10 bg-[#0a0a0a] border-[#D4AF37]/20 text-white placeholder:text-gray-700 focus:border-[#D4AF37]/50 ${errors.password ? 'border-red-500' : ''}`}
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-destructive">{errors.password}</p>
+                  <p className="text-xs text-red-500">{errors.password}</p>
                 )}
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full glow-gold" 
+                className="w-full bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold text-xs uppercase tracking-[0.15em] transition-all duration-300" 
                 size="lg"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Authenticating...
+                    Initializing...
                   </>
                 ) : (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Secure Login
-                  </>
+                  'Initialize Session'
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Not yet an Alpha member?{' '}
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  Join the Cooperative
+            <div className="mt-6 pt-6 border-t border-[#D4AF37]/10 text-center">
+              <p className="text-xs text-gray-600">
+                Not yet registered?{' '}
+                <Link 
+                  to="/register" 
+                  className="text-[#D4AF37] hover:text-[#D4AF37]/80 font-medium uppercase tracking-[0.05em] transition-all duration-300"
+                >
+                  Initialize Ledger
                 </Link>
               </p>
             </div>
           </div>
 
           {/* Security Indicator */}
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-gray-700 uppercase tracking-[0.1em]">
             <Lock className="w-3 h-3" />
-            <span>Protected by 256-bit SSL encryption</span>
+            <span>Protected by 256-bit SSL</span>
           </div>
         </motion.div>
       </div>
