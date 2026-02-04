@@ -18,6 +18,19 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
+    // CRITICAL: Verify service role authorization for internal function security
+    // This function should only be called by other edge functions or cron jobs
+    const authHeader = req.headers.get('Authorization');
+    const expectedAuth = `Bearer ${supabaseServiceKey}`;
+    
+    if (authHeader !== expectedAuth) {
+      console.error('Unauthorized referral commission attempt - missing or invalid service role key');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized - service role required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body with error handling
