@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: '/ABC-TECH/', // This tells the app its new home is /ABC-TECH/
   server: {
     host: "::",
     port: 8080,
