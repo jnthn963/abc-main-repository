@@ -17,6 +17,7 @@ interface Announcement {
   title: string;
   body: string;
   timestamp: string;
+  contentUrl?: string | null;
 }
 
 interface AuditEvent {
@@ -62,6 +63,7 @@ const SovereignFeed = () => {
           title: post.title,
           body: post.body_text,
           timestamp: getRelativeTime(new Date(post.created_at)),
+          contentUrl: post.content_url,
         })));
       }
 
@@ -135,6 +137,32 @@ const SovereignFeed = () => {
                   </div>
                   <h4 className="text-sm font-medium truncate">{post.title}</h4>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{post.body}</p>
+                  
+                  {/* Render media content */}
+                  {post.type === 'image' && post.contentUrl && (
+                    <div className="mt-2 rounded-lg overflow-hidden border border-[#D4AF37]/20">
+                      <img 
+                        src={post.contentUrl} 
+                        alt={post.title}
+                        className="w-full h-32 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  {post.type === 'video' && post.contentUrl && (
+                    <div className="mt-2 rounded-lg overflow-hidden border border-[#D4AF37]/20">
+                      <video 
+                        src={post.contentUrl}
+                        controls
+                        className="w-full h-32 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-[#D4AF37] transition-colors shrink-0" />
               </div>
