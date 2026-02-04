@@ -16,8 +16,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          {/* Confirmed: basename matches your new /ABC/ folder structure */}
-          <BrowserRouter basename="/ABC">
+          <BrowserRouter>
             <AnimatedRoutes />
           </BrowserRouter>
         </TooltipProvider>

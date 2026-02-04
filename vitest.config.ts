@@ -3,8 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig({
-  // Updated base to match your new subfolder path
-  base: '/ABC/', 
   plugins: [react()],
   test: {
     environment: "jsdom",
