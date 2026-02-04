@@ -147,11 +147,11 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] bg-[#050505] border-[#D4AF37]/30 p-0 overflow-hidden">
         <DialogHeader className="p-5 pb-0">
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            <Lock className="w-5 h-5 text-primary" />
-            Request Liquidity
+          <DialogTitle className="flex items-center gap-2 text-[#D4AF37] font-bold uppercase tracking-[0.1em]">
+            <Lock className="w-5 h-5 text-[#D4AF37]" />
+            Request Liquidity Protocol
           </DialogTitle>
         </DialogHeader>
 
@@ -164,19 +164,19 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
               exit={{ opacity: 0, x: 20 }}
               className="p-5 pt-4"
             >
-              {/* 6-Day Aging Rule Warning */}
+              {/* 144-Hour Aging Protocol Warning */}
               {!fundsAged && (
-                <Card className="p-4 mb-4 bg-yellow-500/10 border-yellow-500/30">
+                <Card className="p-4 mb-4 bg-[#D4AF37]/10 border-[#D4AF37]/30">
                   <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                    <Clock className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="font-medium text-yellow-500 text-sm">
-                        6-Day Aging Rule Active
+                      <p className="font-medium text-[#D4AF37] text-sm uppercase tracking-wider">
+                        144-Hour Aging Protocol Active
                       </p>
-                      <p className="text-xs text-yellow-500/70 mt-1">
-                        Funds must age for 144 hours before requesting a loan.
+                      <p className="text-xs text-[#D4AF37]/70 mt-1">
+                        Capital must mature for 6 days before liquidity request eligibility.
                       </p>
-                      <div className="mt-2 text-lg font-bold text-yellow-500 font-mono">
+                      <div className="mt-2 text-lg font-bold text-[#D4AF37] font-mono">
                         {formatAgingTime} remaining
                       </div>
                     </div>

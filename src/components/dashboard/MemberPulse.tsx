@@ -190,19 +190,19 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center mb-2 group-hover:bg-[#D4AF37]/20 transition-colors">
             <Send className="w-5 h-5 text-[#D4AF37]" />
           </div>
-          <p className="text-sm font-medium text-[#050505]" style={{ color: '#fff' }}>Release Funds</p>
-          <p className="text-xs text-muted-foreground">Banks • E-Wallets</p>
+          <p className="text-sm font-medium text-[#D4AF37]">Release Funds</p>
+          <p className="text-xs text-muted-foreground">Banks • E-Wallets • Crypto</p>
         </Card>
-        <Card 
+        <Card
           className="glass-card p-4 border-[#00FF41]/20 hover:border-[#00FF41]/50 cursor-pointer transition-all group bg-[#050505]"
           onClick={() => setShowLoansPanel(true)}
         >
           <div className="w-10 h-10 rounded-lg bg-[#00FF41]/10 flex items-center justify-center mb-2 group-hover:bg-[#00FF41]/20 transition-colors">
             <FileText className="w-5 h-5 text-[#00FF41]" />
           </div>
-          <p className="text-sm font-medium" style={{ color: '#fff' }}>Ledger</p>
+          <p className="text-sm font-medium text-[#00FF41]">Sovereign Ledger</p>
           <p className="text-xs text-muted-foreground">
-            Active: {activeLoansCount}
+            Active Positions: {activeLoansCount}
           </p>
         </Card>
       </div>

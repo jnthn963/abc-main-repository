@@ -94,11 +94,11 @@ const MyLoansPanel = ({ isOpen, onClose }: MyLoansPanelProps) => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[550px] bg-card border-border p-0 overflow-hidden max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[550px] bg-[#050505] border-[#D4AF37]/30 p-0 overflow-hidden max-h-[85vh] overflow-y-auto">
           <DialogHeader className="p-5 pb-0">
-            <DialogTitle className="flex items-center gap-2 text-foreground">
-              <FileText className="w-5 h-5 text-primary" />
-              Liquidity Ledger
+            <DialogTitle className="flex items-center gap-2 text-[#D4AF37] font-bold uppercase tracking-[0.1em]">
+              <FileText className="w-5 h-5 text-[#D4AF37]" />
+              Sovereign Liquidity Ledger
             </DialogTitle>
           </DialogHeader>
 
@@ -129,9 +129,9 @@ const MyLoansPanel = ({ isOpen, onClose }: MyLoansPanelProps) => {
                 {/* Active Loans (need repayment) */}
                 {activeFundedLoans.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-primary" />
-                      Active Positions - Settlement Due
+                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2 text-[#D4AF37] uppercase tracking-wider">
+                      <Clock className="w-4 h-4 text-[#D4AF37]" />
+                      Active Positions - Settlement Protocol
                     </h3>
                     <div className="space-y-2">
                       {activeFundedLoans.map((loan) => (

@@ -100,9 +100,9 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md bg-[#050505] border-[#00FF41]/30">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[#00FF41]">
+          <DialogTitle className="flex items-center gap-2 text-[#00FF41] font-bold uppercase tracking-[0.1em]">
             <TrendingUp className="w-5 h-5" />
-            Deploy Capital
+            Deploy Capital Protocol
           </DialogTitle>
         </DialogHeader>
 
@@ -190,17 +190,17 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             )}
           </AnimatePresence>
 
-          {/* Yield Info */}
+          {/* Yield Info - Sovereign Protocol */}
           <div className="p-3 rounded-lg bg-[#00FF41]/5 border border-[#00FF41]/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#00FF41]" />
-                <span className="text-sm text-[#00FF41]">Yield Generation</span>
+                <span className="text-sm text-[#00FF41] uppercase tracking-wider">Yield Protocol</span>
               </div>
               <span className="text-lg font-bold text-[#00FF41]">+0.7%/day</span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Capital locked for deployment • Yield accrual at midnight
+              Capital locked for deployment • Midnight UTC yield accrual
             </p>
           </div>
 
@@ -231,7 +231,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
           <Button
             onClick={handleLend}
             disabled={!isValidAmount || isProcessing}
-            className="w-full h-12 text-lg font-bold bg-gradient-to-r from-[#00FF41] to-[#00CC33] hover:from-[#00CC33] hover:to-[#009922] text-[#050505] disabled:opacity-50"
+            className="w-full h-12 text-lg font-bold bg-gradient-to-r from-[#00FF41] to-[#00CC33] hover:from-[#00CC33] hover:to-[#009922] text-[#050505] uppercase tracking-[0.1em] disabled:opacity-50"
           >
             {isProcessing ? (
               <motion.div
@@ -243,7 +243,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             ) : (
               <>
                 <TrendingUp className="w-5 h-5 mr-2" />
-                Deploy Capital
+                Execute Protocol
               </>
             )}
           </Button>

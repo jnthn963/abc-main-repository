@@ -60,12 +60,12 @@ const PendingTransactions = () => {
   }
 
   return (
-    <Card className="glass-card p-4 border-yellow-500/30">
+    <Card className="glass-card p-4 border-[#D4AF37]/30 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
       <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-4 h-4 text-yellow-500" />
-        <h3 className="text-sm font-semibold text-foreground">Pending Transactions</h3>
-        <span className="ml-auto px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-500 text-xs font-medium">
-          {pendingTransactions.length} clearing
+        <Clock className="w-4 h-4 text-[#D4AF37]" />
+        <h3 className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Clearing Queue</h3>
+        <span className="ml-auto px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-medium">
+          {pendingTransactions.length} pending
         </span>
       </div>
 
@@ -122,7 +122,7 @@ const PendingTransactions = () => {
       </div>
 
       <p className="text-[10px] text-muted-foreground mt-3 text-center">
-        All transactions require 24 hours to clear for security
+        24-Hour Security Clearing Protocol Active
       </p>
     </Card>
   );

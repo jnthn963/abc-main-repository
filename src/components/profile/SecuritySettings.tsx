@@ -167,7 +167,7 @@ export function SecuritySettings({ userId }: SecuritySettingsProps) {
 
   if (isLoading) {
     return (
-      <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
+      <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#050505]/90 to-[#0a0a0a]/90">
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
         </div>
@@ -176,15 +176,15 @@ export function SecuritySettings({ userId }: SecuritySettingsProps) {
   }
 
   return (
-    <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#1a1a1a]/80 to-[#0d0d0d]/80">
+    <Card className="glass-card p-6 border-[#D4AF37]/20 bg-gradient-to-b from-[#050505]/90 to-[#0a0a0a]/90">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
             <Shield className="w-5 h-5 text-[#D4AF37]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Security Questions</h3>
-            <p className="text-xs text-muted-foreground">Used for account recovery</p>
+            <h3 className="text-lg font-semibold text-[#D4AF37] uppercase tracking-wider">Security Protocol</h3>
+            <p className="text-xs text-muted-foreground">Vault recovery authentication</p>
           </div>
         </div>
         
@@ -210,9 +210,9 @@ export function SecuritySettings({ userId }: SecuritySettingsProps) {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-4"
           >
-            <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 border border-success/20">
-              <CheckCircle className="w-5 h-5 text-success" />
-              <span className="text-sm text-success">Security questions are configured</span>
+            <div className="flex items-center gap-2 p-4 rounded-lg bg-[#00FF41]/10 border border-[#00FF41]/20">
+              <CheckCircle className="w-5 h-5 text-[#00FF41]" />
+              <span className="text-sm text-[#00FF41]">Security protocol configured</span>
             </div>
             
             <div className="space-y-3 p-4 rounded-lg bg-[#1a1a2e]/50">
