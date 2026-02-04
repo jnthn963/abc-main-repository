@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthContentProvider as AuthProvider } from "@/hooks/useAuth"; // Preserving original naming
 import { MemberDataProvider } from "@/hooks/useMemberData";
 import { AnimatedRoutes } from "@/components/transitions/AnimatedRoutes";
 
@@ -16,8 +16,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          {/* Add basename here to match your Hostinger subfolder and Vite config */}
-          <BrowserRouter basename="/ABC-TECH">
+          {/* Updated basename to 'ABC' as requested */}
+          <BrowserRouter basename="/ABC">
             <AnimatedRoutes />
           </BrowserRouter>
         </TooltipProvider>
