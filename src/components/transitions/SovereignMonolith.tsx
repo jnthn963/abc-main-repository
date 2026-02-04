@@ -14,7 +14,7 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
       {/* Animated glow rings */}
       <div className="absolute inset-0 flex items-center justify-center">
         <motion.div
-          className="absolute w-64 h-64 rounded-full border border-[#D4AF37]/10"
+          className="absolute w-96 h-96 rounded-full border border-[#D4AF37]/10"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.1, 0.3],
@@ -26,7 +26,7 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
           }}
         />
         <motion.div
-          className="absolute w-48 h-48 rounded-full border border-[#D4AF37]/20"
+          className="absolute w-80 h-80 rounded-full border border-[#D4AF37]/20"
           animate={{
             scale: [1, 1.15, 1],
             opacity: [0.4, 0.2, 0.4],
@@ -42,7 +42,7 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
 
       {/* Central Monolith */}
       <div className="relative z-10 flex flex-col items-center gap-8">
-        {/* Official ABC Logo - Breathing Animation */}
+        {/* Official ABC Logo - Maximized Breathing Animation */}
         <motion.div
           className="relative"
           animate={{
@@ -54,12 +54,12 @@ export function SovereignMonolith({ message = "INITIALIZING SOVEREIGN TERMINAL..
             repeat: Infinity,
           }}
         >
-          {/* Official Logo */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
+          {/* Official Logo - Maximized */}
+          <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 flex items-center justify-center">
             <img 
               src={abcLogo} 
               alt="Alpha Bankers Cooperative" 
-              className="w-32 h-32 rounded-full object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.5)]"
+              className="w-full h-full rounded-full object-contain drop-shadow-[0_0_60px_rgba(212,175,55,0.6)]"
             />
           </div>
         </motion.div>
