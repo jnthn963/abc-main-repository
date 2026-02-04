@@ -271,7 +271,7 @@ export default function Register() {
       }
 
       toast({
-        title: 'Welcome to Alpha Business!',
+        title: 'Welcome to Alpha Bankers!',
         description: 'Your Founding Alpha membership has been activated.',
       });
       
@@ -567,7 +567,7 @@ export default function Register() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Shield className="w-8 h-8 text-primary" />
-          <span className="text-xl font-bold gradient-gold">ALPHA BANKING</span>
+          <span className="text-xl font-bold gradient-gold">ALPHA BANKERS</span>
         </div>
 
         <Link 

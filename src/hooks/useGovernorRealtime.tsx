@@ -70,7 +70,7 @@ export function useGovernorRealtime() {
     smtpPort: 587,
     smtpUser: null,
     smtpFromEmail: null,
-    smtpFromName: 'Alpha Business Cooperative',
+    smtpFromName: 'Alpha Bankers Cooperative',
   });
   const [auditFeed, setAuditFeed] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +127,7 @@ export function useGovernorRealtime() {
           smtpPort: settingsResult.data.smtp_port || 587,
           smtpUser: settingsResult.data.smtp_user,
           smtpFromEmail: settingsResult.data.smtp_from_email,
-          smtpFromName: settingsResult.data.smtp_from_name || 'Alpha Business Cooperative',
+          smtpFromName: settingsResult.data.smtp_from_name || 'Alpha Bankers Cooperative',
         });
       }
 

@@ -44,7 +44,7 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
           setAnnouncement({
             id: "default",
             type: "text",
-            title: "Welcome to Alpha Banking! 🎉",
+            title: "Welcome to Alpha Bankers! 🎉",
             body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
           });
         }
@@ -54,7 +54,7 @@ const AlphaAnnouncement = ({ onClose }: { onClose: () => void }) => {
         setAnnouncement({
           id: "fallback",
           type: "text",
-          title: "Welcome to Alpha Banking! 🎉",
+          title: "Welcome to Alpha Bankers! 🎉",
           body: "Experience the future of cooperative finance. Earn up to 0.5% daily interest on your vault deposits.",
         });
       } finally {

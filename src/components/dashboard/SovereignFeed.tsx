@@ -31,7 +31,7 @@ const defaultAnnouncements: Announcement[] = [
     id: '1',
     type: 'text',
     title: 'System Status: Operational',
-    body: 'All Alpha Banking systems are running at optimal performance.',
+    body: 'All Alpha Bankers systems are running at optimal performance.',
     timestamp: 'Just now',
   },
 ];

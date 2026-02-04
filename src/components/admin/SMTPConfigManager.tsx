@@ -39,7 +39,7 @@ const SMTPConfigManager = ({
     smtp_port: initialConfig?.smtp_port || 587,
     smtp_user: initialConfig?.smtp_user || "",
     smtp_from_email: initialConfig?.smtp_from_email || "",
-    smtp_from_name: initialConfig?.smtp_from_name || "Alpha Business Cooperative",
+    smtp_from_name: initialConfig?.smtp_from_name || "Alpha Bankers Cooperative",
   });
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +54,7 @@ const SMTPConfigManager = ({
         smtp_port: initialConfig.smtp_port || 587,
         smtp_user: initialConfig.smtp_user || "",
         smtp_from_email: initialConfig.smtp_from_email || "",
-        smtp_from_name: initialConfig.smtp_from_name || "Alpha Business Cooperative",
+        smtp_from_name: initialConfig.smtp_from_name || "Alpha Bankers Cooperative",
       });
     }
   }, [initialConfig]);
@@ -231,7 +231,7 @@ const SMTPConfigManager = ({
             id="smtp-from-name"
             value={config.smtp_from_name || ""}
             onChange={(e) => handleChange("smtp_from_name", e.target.value)}
-            placeholder="Alpha Business Cooperative"
+            placeholder="Alpha Bankers Cooperative"
             className="bg-muted/30 border-border text-sm"
           />
         </div>
