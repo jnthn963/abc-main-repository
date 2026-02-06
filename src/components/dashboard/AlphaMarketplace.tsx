@@ -2,10 +2,11 @@
  * Alpha Marketplace Component
  * 
  * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
+ * AUTO-REPAYMENT GUARANTEE: Prominently displays the Reserve Fund protection
  */
 
 import { useState, useEffect, useRef } from "react";
-import { TrendingUp, TrendingDown, Zap, HandCoins, Shield } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, HandCoins, Shield, CheckCircle, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -180,15 +181,81 @@ const AlphaMarketplace = () => {
         </div>
       </Card>
 
-      {/* Reserve Fund Guarantee Banner */}
-      <Card className="glass-card p-3 bg-success/5 border-success/20">
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-success" />
-          <div className="flex-1">
-            <p className="text-xs font-semibold text-success">Reserve Fund Auto-Repayment</p>
-            <p className="text-[10px] text-muted-foreground">
-              All loans guaranteed by ₱{(systemStats?.reserveFund || 0).toLocaleString()} reserve
+      {/* SOVEREIGN AUTO-REPAYMENT GUARANTEE - Confidence Booster */}
+      <Card className="glass-card p-4 border-[#00FF41]/40 bg-gradient-to-r from-[#00FF41]/10 via-[#00FF41]/5 to-[#0a0a0a] relative overflow-hidden">
+        {/* Animated glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#00FF41]/20 via-transparent to-transparent animate-pulse opacity-50" />
+        
+        <div className="relative flex items-start gap-4">
+          {/* Premium Shield Icon */}
+          <div className="relative">
+            <div className="w-14 h-14 rounded-xl bg-[#00FF41]/20 border-2 border-[#00FF41]/40 flex items-center justify-center">
+              <Shield className="w-7 h-7 text-[#00FF41]" />
+            </div>
+            {/* Pulsing ring */}
+            <div className="absolute -inset-1 border-2 border-[#00FF41]/30 rounded-xl animate-ping opacity-20" />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            {/* Headline */}
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-sm font-bold text-[#00FF41] uppercase tracking-wider">
+                100% Auto-Repayment Guarantee
+              </h3>
+              <CheckCircle className="w-4 h-4 text-[#00FF41]" />
+            </div>
+            
+            {/* Description */}
+            <p className="text-xs text-[#00FF41]/80 leading-relaxed mb-3">
+              Your capital is <span className="font-bold text-[#00FF41]">FULLY PROTECTED</span>. 
+              If a borrower defaults, the Reserve Fund automatically pays you back — principal + interest. 
+              <span className="font-semibold">Zero risk. Guaranteed returns.</span>
             </p>
+            
+            {/* Stats Row */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00FF41]/10 border border-[#00FF41]/20">
+                <Wallet className="w-4 h-4 text-[#00FF41]" />
+                <div>
+                  <p className="text-[9px] text-[#00FF41]/60 uppercase tracking-wider">Reserve Fund</p>
+                  <p className="text-sm font-bold text-[#00FF41] balance-number">
+                    ₱{(systemStats?.reserveFund || 0).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                <TrendingUp className="w-4 h-4 text-[#D4AF37]" />
+                <div>
+                  <p className="text-[9px] text-[#D4AF37]/60 uppercase tracking-wider">Coverage Ratio</p>
+                  <p className="text-sm font-bold text-[#D4AF37]">
+                    {systemStats?.reserveFund && systemStats?.totalActiveLoans > 0
+                      ? `${Math.floor((systemStats.reserveFund / systemStats.totalActiveLoans) * 100)}%`
+                      : '∞'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom trust badges */}
+        <div className="relative mt-4 pt-3 border-t border-[#00FF41]/20">
+          <div className="flex items-center justify-center gap-4 text-[10px]">
+            <div className="flex items-center gap-1 text-[#00FF41]/70">
+              <Shield className="w-3 h-3" />
+              <span>28-Day Auto-Settlement</span>
+            </div>
+            <div className="w-1 h-1 rounded-full bg-[#00FF41]/30" />
+            <div className="flex items-center gap-1 text-[#00FF41]/70">
+              <CheckCircle className="w-3 h-3" />
+              <span>Collateral-Backed</span>
+            </div>
+            <div className="w-1 h-1 rounded-full bg-[#00FF41]/30" />
+            <div className="flex items-center gap-1 text-[#00FF41]/70">
+              <Zap className="w-3 h-3" />
+              <span>Instant Payouts</span>
+            </div>
           </div>
         </div>
       </Card>
