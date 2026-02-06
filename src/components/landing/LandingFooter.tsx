@@ -6,9 +6,9 @@ const footerLinks = {
   governance: {
     title: 'Governance',
     links: [
-      { label: 'Articles of Cooperation', href: '#' },
-      { label: 'Board of Directors', href: '#' },
-      { label: 'General Assembly', href: '#' },
+      { label: 'Articles of Cooperation', href: '/governance/articles' },
+      { label: 'Board of Directors', href: '/governance/board' },
+      { label: 'General Assembly', href: '/governance/assembly' },
       { label: 'Cooperative Principles', href: '#' },
       { label: 'Membership PRS', href: '#' }
     ]
