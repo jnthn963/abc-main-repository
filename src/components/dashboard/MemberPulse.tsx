@@ -8,6 +8,12 @@
  * - 50% Liquidity Rule enforced
  * - Frozen assets continue earning 0.5% base yield
  * - Alpha Network: 5% Patronage Reward for Founding Members
+ * 
+ * MOBILE OPTIMIZATION:
+ * - Vertical stack layout on mobile
+ * - Collapsible accordion sections for secondary content
+ * - Touch-friendly 48px minimum button heights
+ * - Larger centered balance display
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -15,6 +21,7 @@ import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, Lock, Radio, Info
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 import PendingTransactions from "./PendingTransactions";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
 import LendCapitalModal from "@/components/lending/LendCapitalModal";
@@ -22,6 +29,7 @@ import InterestDisplay from "@/components/interest/InterestDisplay";
 import CoopHeatmap from "./CoopHeatmap";
 import CompoundToggle from "./CompoundToggle";
 import AlphaNetworkCard from "./AlphaNetworkCard";
+import MobileCollapsibleSection from "./MobileCollapsibleSection";
 import { useMemberData } from "@/hooks/useMemberData";
 import { useLoans } from "@/hooks/useLoans";
 
@@ -32,6 +40,7 @@ interface MemberPulseProps {
 const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   const { memberData, systemStats, loading } = useMemberData();
   const { myLoansAsBorrower } = useLoans();
+  const isMobile = useIsMobile();
   const [showLoansPanel, setShowLoansPanel] = useState(false);
   const [showLendModal, setShowLendModal] = useState(false);
   
@@ -74,6 +83,148 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
   // Calculate total vault for global yield display
   const totalVaultBalance = vaultBalance + frozenBalance + lendingBalance;
 
+  // MOBILE VIEW: Optimized layout
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {/* HERO: Consolidated Balance - Larger, centered for mobile */}
+        <Card className="glass-card p-6 border-[#D4AF37]/40 bg-gradient-to-b from-[#0a0a0a] via-[#050505] to-[#050505] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none" />
+          
+          <div className="relative text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                Consolidated Vault Holdings
+              </p>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#00FF41]/10 border border-[#00FF41]/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FF41] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FF41]"></span>
+                </span>
+                <span className="text-[9px] text-[#00FF41] font-bold uppercase tracking-wider">LIVE</span>
+              </div>
+            </div>
+            
+            <div 
+              className="font-mono text-4xl font-bold tracking-tight mb-3"
+              style={{
+                background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 40%, #B8960C 70%, #8B7500 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 0 40px rgba(212, 175, 55, 0.3)',
+              }}
+            >
+              ₱{totalVaultBalance.toLocaleString('en-PH')}
+            </div>
+            
+            <div className="flex items-center justify-center gap-2">
+              <Radio className="w-3.5 h-3.5 text-[#00FF41] animate-pulse" />
+              <span className="text-xs font-semibold text-[#00FF41]">0.5% Daily Accrual Active</span>
+            </div>
+
+            {/* Quick Actions - Side by side for mobile */}
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <Button
+                onClick={onTransferClick}
+                className="min-h-[52px] bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 text-[#D4AF37]"
+                variant="outline"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Withdraw
+              </Button>
+              <Button
+                onClick={() => setShowLoansPanel(true)}
+                className="min-h-[52px] bg-[#00FF41]/10 hover:bg-[#00FF41]/20 border border-[#00FF41]/30 text-[#00FF41]"
+                variant="outline"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Ledger
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Balance Breakdown - Collapsible */}
+        <MobileCollapsibleSection
+          title="Balance Details"
+          subtitle="Liquid, Frozen & Deployed"
+          icon={<Wallet className="w-4 h-4 text-[#D4AF37]" />}
+          headerValue={`₱${vaultBalance.toLocaleString()}`}
+          headerSubtext="Liquid"
+          accentColor="#D4AF37"
+          defaultOpen={false}
+        >
+          <div className="space-y-3">
+            {/* Liquid Vault */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-sm text-muted-foreground">Liquid Vault</span>
+              </div>
+              <span className="font-mono text-lg font-bold text-[#D4AF37]">
+                ₱{vaultBalance.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Frozen Collateral */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-red-400" />
+                <span className="text-sm text-muted-foreground">Loan Collateral</span>
+              </div>
+              <span className="font-mono text-lg font-bold text-red-400">
+                ₱{frozenBalance.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Lending Balance */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-[#00FF41]/10 border border-[#00FF41]/20">
+              <div className="flex items-center gap-2">
+                <ArrowUpRight className="w-4 h-4 text-[#00FF41]" />
+                <span className="text-sm text-muted-foreground">Deployed Capital</span>
+              </div>
+              <span className="font-mono text-lg font-bold text-[#00FF41]">
+                ₱{lendingBalance.toLocaleString()}
+              </span>
+            </div>
+
+            <p className="text-[10px] text-center text-muted-foreground pt-2 border-t border-white/5">
+              All funds earn 0.5% daily base yield
+            </p>
+          </div>
+        </MobileCollapsibleSection>
+
+        {/* Alpha Network - Collapsible */}
+        <AlphaNetworkCard />
+
+        {/* Co-op Heatmap - Collapsible */}
+        <CoopHeatmap />
+
+        {/* Compound Toggle */}
+        <CompoundToggle />
+
+        {/* Pending Transactions */}
+        <PendingTransactions />
+
+        {/* Interest Display */}
+        <InterestDisplay />
+
+        {/* My Loans Panel */}
+        <MyLoansPanel 
+          isOpen={showLoansPanel} 
+          onClose={() => setShowLoansPanel(false)} 
+        />
+
+        {/* Lend Capital Modal */}
+        <LendCapitalModal
+          isOpen={showLendModal}
+          onClose={() => setShowLendModal(false)}
+        />
+      </div>
+    );
+  }
+
+  // DESKTOP VIEW: Original layout
   return (
     <div className="space-y-4">
       {/* HERO STAT: Consolidated Vault Holdings - Enhanced Gold Gradient */}

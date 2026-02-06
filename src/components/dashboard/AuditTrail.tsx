@@ -4,15 +4,19 @@
  * Displays real-time ledger entries for complete transparency.
  * Shows: VAULT_INTEREST, LENDING_PROFIT, PATRONAGE_REWARD, etc.
  * "Trust through Transparency" - every peso movement is verified.
+ * 
+ * MOBILE: Uses card-based layout with tap-to-expand
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import MobileAuditCard from './MobileAuditCard';
 import { 
   FileText, 
   TrendingUp, 
@@ -112,6 +116,7 @@ const TRANSACTION_CONFIG: Record<string, {
 
 export default function AuditTrail() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -156,7 +161,6 @@ export default function AuditTrail() {
   };
 
   const formatAmount = (amount: number, type: string) => {
-    // Convert from centavos to pesos
     const pesos = Math.floor(amount / 100);
     const isCredit = ['deposit', 'vault_interest', 'lending_profit', 'transfer_in', 'referral_commission', 'loan_repayment', 'collateral_release'].includes(type);
     const prefix = isCredit ? '+' : '-';
@@ -180,6 +184,65 @@ export default function AuditTrail() {
     );
   }
 
+  // Mobile View - Card-based with tap-to-expand
+  if (isMobile) {
+    return (
+      <Card className="bg-gradient-to-br from-[#0a0a0a] to-[#111] border-[#D4AF37]/20 shadow-xl">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between sticky top-0 bg-[#0a0a0a] z-10">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#D4AF37]" />
+            <CardTitle className="text-base font-bold text-white">
+              Ledger
+            </CardTitle>
+            <Badge variant="outline" className="text-[8px] border-[#00FF41]/30 text-[#00FF41]">
+              {entries.length}
+            </Badge>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-2 rounded-lg hover:bg-white/5 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50"
+          >
+            <RefreshCw className={`w-5 h-5 text-[#D4AF37] ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          {entries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-center">
+              <FileText className="w-10 h-10 text-gray-600 mb-2" />
+              <p className="text-sm text-gray-500">No transactions yet</p>
+              <p className="text-xs text-gray-600">Your financial movements will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {entries.slice(0, 10).map((entry) => (
+                <MobileAuditCard key={entry.id} entry={entry} />
+              ))}
+              
+              {entries.length > 10 && (
+                <p className="text-center text-xs text-muted-foreground py-2">
+                  +{entries.length - 10} more entries
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Footer - Trust Badge */}
+          <div className="mt-4 pt-3 border-t border-white/5">
+            <div className="flex items-center justify-center gap-2">
+              <Shield className="w-3 h-3 text-[#D4AF37]/60" />
+              <span className="text-[9px] text-gray-500">
+                Verified by ABC Protocol
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Desktop View - Original layout
   return (
     <Card className="bg-gradient-to-br from-[#0a0a0a] to-[#111] border-[#D4AF37]/20 shadow-xl">
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
