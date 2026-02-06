@@ -61,20 +61,7 @@ export default function LandingManifesto() {
       }} className="max-w-3xl mx-auto mb-16">
           <div className="relative p-8 md:p-12 rounded-2xl border border-[#D4AF37]/20 bg-[#0a0a0a]/50 backdrop-blur-sm">
             {/* Decorative Quote Mark */}
-            <motion.div initial={{
-            opacity: 0,
-            scale: 0.5
-          }} whileInView={{
-            opacity: 0.1,
-            scale: 1
-          }} viewport={{
-            once: true
-          }} transition={{
-            duration: 0.5,
-            delay: 0.3
-          }} className="absolute -top-4 -left-2 text-8xl text-[#D4AF37] font-serif">
-              "
-            </motion.div>
+            
             
             <motion.blockquote initial={{
             opacity: 0,
