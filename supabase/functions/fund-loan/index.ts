@@ -44,26 +44,32 @@ Deno.serve(async (req) => {
     
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ success: false, error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create client with user's auth
+    // Create client with user's auth for JWT verification
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Get authenticated user
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-    if (userError || !user) {
+    // Verify JWT using getClaims (works with ES256 signing keys)
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error('JWT verification failed:', claimsError);
       return new Response(
         JSON.stringify({ success: false, error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Extract user ID from claims
+    const user = { id: claimsData.claims.sub };
 
     // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
