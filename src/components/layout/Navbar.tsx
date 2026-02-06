@@ -5,43 +5,31 @@ import { Button } from "@/components/ui/button";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { useAuth } from "@/hooks/useAuth";
 import LiveTicker from "./LiveTicker";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 interface NavbarProps {
   onDepositClick?: () => void;
 }
-
-const Navbar = ({ onDepositClick }: NavbarProps) => {
-  const { profile } = useAuth();
-
-  return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#D4AF37]/10 bg-[#050505]/95 backdrop-blur-sm">
+const Navbar = ({
+  onDepositClick
+}: NavbarProps) => {
+  const {
+    profile
+  } = useAuth();
+  return <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#D4AF37]/10 bg-[#050505]/95 backdrop-blur-sm">
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left: Logo + Tagline */}
         <Link to="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <img 
-            src={abcLogo} 
-            alt="Alpha Bankers Cooperative" 
-            className="w-9 h-9 rounded-full object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]"
-          />
+          <img alt="Alpha Bankers Cooperative" className="w-9 h-9 rounded-full drop-shadow-[0_0_8px_rgba(212,175,55,0.4)] object-fill" src="/lovable-uploads/9d70b725-aecc-4211-9394-d4faafaab49f.png" />
           <div className="hidden sm:block">
-            <h1 
-              className="text-lg font-bold"
-              style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                color: '#D4AF37',
-              }}
-            >
+            <h1 className="text-lg font-bold" style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            color: '#D4AF37'
+          }}>
               ₳฿C
             </h1>
-            <p className="text-[9px] text-[#00FF41] uppercase" style={{ letterSpacing: '0.15em' }}>
+            <p className="text-[9px] text-[#00FF41] uppercase" style={{
+            letterSpacing: '0.15em'
+          }}>
               Integrity Outside the System
             </p>
           </div>
@@ -62,36 +50,23 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
           {/* Settings Dropdown with Gear Icon */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button 
-                id="settings-gear-icon"
-                className="p-2 rounded-lg hover:bg-[#D4AF37]/10 transition-colors"
-                aria-label="Settings"
-              >
+              <button id="settings-gear-icon" className="p-2 rounded-lg hover:bg-[#D4AF37]/10 transition-colors" aria-label="Settings">
                 <Settings className="w-5 h-5 text-[#D4AF37]/60 hover:text-[#D4AF37]" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
-              className="w-56 bg-[#0a0a0a] border-[#D4AF37]/20 z-[100]"
-            >
+            <DropdownMenuContent align="end" className="w-56 bg-[#0a0a0a] border-[#D4AF37]/20 z-[100]">
               <DropdownMenuLabel className="text-[#D4AF37]">
                 Quick Settings
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-[#D4AF37]/20" />
               <DropdownMenuItem asChild>
-                <Link 
-                  to="/profile" 
-                  className="flex items-center gap-2 cursor-pointer hover:bg-[#D4AF37]/10 text-foreground"
-                >
+                <Link to="/profile" className="flex items-center gap-2 cursor-pointer hover:bg-[#D4AF37]/10 text-foreground">
                   <User className="w-4 h-4 text-[#D4AF37]" />
                   Account Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link 
-                  to="/profile#security" 
-                  className="flex items-center gap-2 cursor-pointer hover:bg-[#D4AF37]/10 text-foreground"
-                >
+                <Link to="/profile#security" className="flex items-center gap-2 cursor-pointer hover:bg-[#D4AF37]/10 text-foreground">
                   <Shield className="w-4 h-4 text-[#00FF41]" />
                   Security Settings
                 </Link>
@@ -100,23 +75,13 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
           </DropdownMenu>
           
           {/* Profile Link */}
-          <Link 
-            to="/profile"
-            className="flex items-center gap-2 px-3 py-1.5 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors bg-[#0a0a0a]"
-          >
+          <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 border border-[#D4AF37]/20 hover:border-[#D4AF37]/40 transition-colors bg-[#0a0a0a]">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center overflow-hidden">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-4 h-4 text-[#050505]" />
-              )}
+              {profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User className="w-4 h-4 text-[#050505]" />}
             </div>
             <div className="hidden sm:block">
               <p className="text-sm font-medium text-[#D4AF37]">
-                {profile?.display_name 
-                  ? `${profile.display_name.slice(0, 1)}***${profile.display_name.slice(-1)}`
-                  : 'Member'
-                }
+                {profile?.display_name ? `${profile.display_name.slice(0, 1)}***${profile.display_name.slice(-1)}` : 'Member'}
               </p>
               <div className="flex items-center gap-1">
                 <Shield className="w-3 h-3 text-[#00FF41]" />
@@ -127,11 +92,7 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             </div>
           </Link>
 
-          <Button 
-            id="deposit-button"
-            onClick={onDepositClick}
-            className="bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold uppercase text-xs tracking-[0.1em] flex items-center gap-2"
-          >
+          <Button id="deposit-button" onClick={onDepositClick} className="bg-[#00FF41] hover:bg-[#00FF41]/90 text-[#050505] font-bold uppercase text-xs tracking-[0.1em] flex items-center gap-2">
             <Wallet className="w-4 h-4" />
             INITIALIZE
           </Button>
@@ -139,8 +100,6 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
           <SecureLogout variant="default" />
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
