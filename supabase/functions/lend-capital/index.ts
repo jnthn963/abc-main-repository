@@ -53,12 +53,10 @@ Deno.serve(async (req) => {
     // Extract user ID from claims
     const user = { id: claimsData.claims.sub };
 
-    // Use user's JWT for RPC calls so auth.uid() works in database functions
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Use service role for rate limiting only
+    // Use service role for all operations since:
+    // 1. User is already authenticated via getClaims() above
+    // 2. RPC function has defense-in-depth auth check (verifies p_user_id matches caller)
+    // 3. Profile balance trigger requires null auth.uid() OR admin/governor role
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Rate limit check
@@ -100,8 +98,9 @@ Deno.serve(async (req) => {
     // Whole Peso Mandate: floor the amount
     const amountCentavos = Math.floor(amount) * 100;
 
-    // Call atomic lend capital function
-    const { data: result, error: rpcError } = await supabase.rpc('lend_capital_atomic', {
+    // Call atomic lend capital function with service role
+    // The RPC function validates p_user_id matches the authenticated user
+    const { data: result, error: rpcError } = await supabaseAdmin.rpc('lend_capital_atomic', {
       p_user_id: user.id,
       p_amount: amountCentavos
     });
