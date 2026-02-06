@@ -24,6 +24,7 @@ import PendingReviewBanner from '@/components/dashboard/PendingReviewBanner';
 import { ConnectionStatusBanner } from '@/components/common/ConnectionStatusBanner';
 import FloatingMemberCard from '@/components/dashboard/FloatingMemberCard';
 import ComplianceShield from '@/components/dashboard/ComplianceShield';
+import AuditTrail from '@/components/dashboard/AuditTrail';
 import { SovereignMonolith } from '@/components/transitions/SovereignMonolith';
 import { StaggeredContainer, StaggeredItem } from '@/components/transitions/StaggeredContainer';
 
@@ -129,18 +130,22 @@ export default function Dashboard() {
 
           {/* Three Column Layout with staggered entry - STABLE KEY */}
           <StaggeredContainer className="grid grid-cols-1 lg:grid-cols-12 gap-6" staggerDelay={0.15} key="dashboard-grid">
-            {/* Left Column - Member Pulse (30%) */}
+            {/* Left Column - Member Pulse (25%) */}
             <StaggeredItem className="lg:col-span-3" id="vault-balance">
               <MemberPulse onTransferClick={() => setShowTransferHub(true)} />
             </StaggeredItem>
 
-            {/* Center Column - Alpha Marketplace (40%) */}
-            <StaggeredItem className="lg:col-span-5" id="marketplace">
+            {/* Center Column - Alpha Marketplace (35%) */}
+            <StaggeredItem className="lg:col-span-4" id="marketplace">
               <AlphaMarketplace />
             </StaggeredItem>
 
-            {/* Right Column - Sovereign Feed (30%) */}
-            <StaggeredItem className="lg:col-span-4" id="news-feed">
+            {/* Right Column - Audit Trail + Sovereign Feed (40%) */}
+            <StaggeredItem className="lg:col-span-5 space-y-6" id="news-feed">
+              {/* Audit Trail - Ledger Verification */}
+              <AuditTrail />
+              
+              {/* Sovereign Feed */}
               <SovereignFeed />
             </StaggeredItem>
           </StaggeredContainer>
