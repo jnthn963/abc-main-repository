@@ -436,7 +436,7 @@ export default function Register() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <motion.img alt="Alpha Bankers Cooperative" className="w-12 h-12 rounded-full drop-shadow-[0_0_12px_rgba(212,175,55,0.4)] object-fill" animate={{
+          <motion.img alt="Alpha Bankers Cooperative" className="w-12 h-12 rounded-full drop-shadow-[0_0_12px_rgba(212,175,55,0.4)] object-fill shadow-xl" animate={{
           y: [0, -4, 0]
         }} transition={{
           duration: 3,
