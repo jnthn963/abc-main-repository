@@ -53,12 +53,17 @@ Deno.serve(async (req) => {
     // Extract user ID from claims
     const user = { id: claimsData.claims.sub };
 
-    // Service role for DB operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Use user's JWT for RPC calls so auth.uid() works in database functions
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Use service role for rate limiting only
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Rate limit check
     const rateLimitKey = `lend_capital:${user.id}`;
-    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+    const { data: allowed } = await supabaseAdmin.rpc('check_rate_limit', {
       p_key: rateLimitKey,
       p_limit: RATE_LIMIT,
       p_window_seconds: RATE_WINDOW_SECONDS
