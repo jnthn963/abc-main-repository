@@ -826,12 +826,14 @@ export type Database = {
         Returns: Json
       }
       calculate_liquidity_index: { Args: never; Returns: Json }
+      check_loan_defaults: { Args: never; Returns: Json }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
       cleanup_cdc_events: { Args: { p_days_old?: number }; Returns: number }
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      cleanup_system_logs: { Args: never; Returns: Json }
       disable_cdc_on_table: { Args: { p_table_name: string }; Returns: Json }
       enable_cdc_on_table: {
         Args: {
