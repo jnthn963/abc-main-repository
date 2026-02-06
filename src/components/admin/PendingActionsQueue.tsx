@@ -11,6 +11,7 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
+  ImageIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { usePollingRefresh } from "@/hooks/usePollingRefresh";
+import DepositReceiptViewer from "./DepositReceiptViewer";
 
 interface PendingAction {
   action_type: string;
@@ -40,6 +42,7 @@ interface PendingAction {
   description: string | null;
   interest_rate: number | null;
   collateral_amount: number | null;
+  proof_of_payment_url: string | null;
 }
 
 const PendingActionsQueue = () => {
@@ -54,7 +57,7 @@ const PendingActionsQueue = () => {
     try {
       setLoading(true);
       
-      // Query ledger for pending items
+      // Query ledger for pending items (including proof_of_payment_url)
       const { data: ledgerPending } = await supabase
         .from('ledger')
         .select(`
@@ -66,7 +69,8 @@ const PendingActionsQueue = () => {
           created_at,
           approval_status,
           description,
-          destination
+          destination,
+          proof_of_payment_url
         `)
         .eq('approval_status', 'pending_review')
         .order('created_at', { ascending: false });
@@ -128,6 +132,7 @@ const PendingActionsQueue = () => {
           description: item.destination || item.description,
           interest_rate: null,
           collateral_amount: null,
+          proof_of_payment_url: item.proof_of_payment_url || null,
         });
       });
 
@@ -148,6 +153,7 @@ const PendingActionsQueue = () => {
           description: null,
           interest_rate: Number(item.interest_rate),
           collateral_amount: Number(item.collateral_amount),
+          proof_of_payment_url: null,
         });
       });
 
@@ -354,7 +360,23 @@ const PendingActionsQueue = () => {
                       </p>
                     )}
 
-                    <p className="text-xs text-muted-foreground mt-1">
+                    {/* Proof of Payment for Deposits */}
+                    {action.action_type === 'deposit' && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <div className="flex items-center gap-2 mb-2">
+                          <ImageIcon className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-xs font-medium text-foreground">Proof of Payment</span>
+                        </div>
+                        <DepositReceiptViewer
+                          receiptPath={action.proof_of_payment_url}
+                          referenceNumber={action.reference_number}
+                          memberName={action.user_name || 'Member'}
+                          compact
+                        />
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground mt-2">
                       Submitted: {new Date(action.created_at).toLocaleString('en-PH')}
                     </p>
                   </div>

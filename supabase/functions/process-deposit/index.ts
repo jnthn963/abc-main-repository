@@ -16,6 +16,7 @@ function sanitizeErrorMessage(error: string): string {
     'maximum': 'Deposit amount exceeds the maximum limit of ₱10,000,000',
     'not found': 'Profile not found. Please complete your registration.',
     'maintenance': 'Deposit service is temporarily unavailable',
+    'proof': 'Proof of payment is required for deposit verification',
   };
 
   for (const [pattern, message] of Object.entries(safeErrors)) {
@@ -29,7 +30,7 @@ function sanitizeErrorMessage(error: string): string {
 
 // Process Deposit Edge Function
 // Records deposits with pending_review status for Governor approval
-// Enforces: Integer Rule, min/max limits, 24-hour clearing, rate limiting
+// Enforces: Integer Rule, min/max limits, 24-hour clearing, rate limiting, POP requirement
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -110,7 +111,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { amount, reference_number } = body;
+    const { amount, reference_number, proof_of_payment_path } = body;
+
+    // CRITICAL: Require proof of payment for all deposits
+    if (!proof_of_payment_path || typeof proof_of_payment_path !== 'string') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Proof of payment is required for deposit verification' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Validate amount (Integer Rule: whole pesos only)
     const depositAmount = Math.floor(Number(amount));
@@ -146,7 +155,7 @@ Deno.serve(async (req) => {
     // CRITICAL: Convert to centavos for database storage (Whole Peso Mandate)
     const depositAmountCentavos = depositAmount * 100;
 
-    // Create deposit ledger entry with pending_review status
+    // Create deposit ledger entry with pending_review status and POP attachment
     const { data: ledgerEntry, error: ledgerError } = await supabase
       .from('ledger')
       .insert({
@@ -158,10 +167,12 @@ Deno.serve(async (req) => {
         reference_number: finalReference,
         description: 'Deposit via QR PH Gateway',
         clearing_ends_at: clearingEndsAt,
+        proof_of_payment_url: proof_of_payment_path, // Store the POP path
         metadata: {
           source: 'qr_ph_gateway',
           amount_pesos: depositAmount, // Store original peso amount for reference
-          submitted_at: new Date().toISOString()
+          submitted_at: new Date().toISOString(),
+          has_proof_of_payment: true,
         }
       })
       .select()
@@ -196,6 +207,7 @@ Deno.serve(async (req) => {
           member_id: profile?.member_id || 'Unknown',
           amount: depositAmountCentavos, // Send centavos, not pesos
           reference_number: finalReference,
+          has_receipt: true,
         }),
       });
     } catch (notifyErr) {
@@ -213,6 +225,7 @@ Deno.serve(async (req) => {
           amount: depositAmount,
           status: 'pending_review',
           clearing_ends_at: clearingEndsAt,
+          has_proof_of_payment: true,
           message: 'Your deposit is pending Governor verification. Funds will be credited after approval.'
         }
       }),
