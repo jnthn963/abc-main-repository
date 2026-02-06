@@ -114,11 +114,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { loan_id } = body;
+    const { loan_id, proof_of_payment_path } = body;
 
     if (!loan_id) {
       return new Response(
         JSON.stringify({ success: false, error: 'Please select a loan to fund' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate proof of payment is provided
+    if (!proof_of_payment_path || typeof proof_of_payment_path !== 'string') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Proof of transfer is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -129,6 +137,19 @@ Deno.serve(async (req) => {
       p_lender_id: user.id,
       p_loan_id: loan_id
     });
+
+    // If successful, store the proof of payment path in the ledger metadata
+    if (!rpcError && result) {
+      // Update the loan_funding ledger entry with proof of payment
+      await supabaseAdmin
+        .from('ledger')
+        .update({ 
+          proof_of_payment_url: proof_of_payment_path,
+          metadata: { proof_of_payment_path, reference_number: result.reference_number }
+        })
+        .eq('reference_number', result.reference_number)
+        .eq('type', 'loan_funding');
+    }
 
     if (rpcError) {
       // Log full error details server-side only

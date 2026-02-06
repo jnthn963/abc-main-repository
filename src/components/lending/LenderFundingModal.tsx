@@ -1,6 +1,7 @@
 /**
  * Lender Funding Modal
  * Allows lenders to fund loan requests via QR PH payment gateway
+ * ENHANCED: Mandatory proof of transfer upload before funding
  * Includes Reserve Fund auto-repayment guarantee display
  */
 
@@ -8,15 +9,19 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, Copy, CheckCircle, Clock, Loader2, AlertTriangle,
-  Wallet, TrendingUp, User, ArrowRight
+  Wallet, TrendingUp, User, ArrowRight, Upload, Info, ShieldCheck
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemberData } from "@/hooks/useMemberData";
 import { toast } from "@/hooks/use-toast";
 import { usePollingRefresh } from "@/hooks/usePollingRefresh";
+import LenderProofUpload from "./LenderProofUpload";
+import LoanStatusBadge from "./LoanStatusBadge";
+import { maskDisplayName } from "@/lib/maskName";
 
 export interface LoanListing {
   id: string;
@@ -40,11 +45,13 @@ interface LenderFundingModalProps {
 const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: LenderFundingModalProps) => {
   const { systemStats, refresh } = useMemberData();
   
-  const [step, setStep] = useState<'details' | 'qr' | 'pending' | 'success'>('details');
+  const [step, setStep] = useState<'details' | 'upload' | 'qr' | 'pending' | 'success'>('details');
   const [referenceNumber, setReferenceNumber] = useState("");
   const [copied, setCopied] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [proofUploadPath, setProofUploadPath] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [gateway, setGateway] = useState<{ qrCodeUrl: string | null; receiverName: string | null; receiverNumber: string | null }>({
     qrCodeUrl: null,
     receiverName: null,
@@ -91,6 +98,8 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
       setReferenceNumber(generateReferenceNumber());
       setCopied(false);
       setIsProcessing(false);
+      setProofUploadPath(null);
+      setUploadError(null);
     }
   }, [isOpen]);
 
@@ -116,19 +125,40 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
     setTimeout(() => setCopied(false), 2000);
   }, [referenceNumber]);
 
+  const handleProceedToUpload = () => {
+    setStep('upload');
+  };
+
+  const handleUploadComplete = (path: string) => {
+    setProofUploadPath(path);
+    setUploadError(null);
+  };
+
+  const handleUploadError = (error: string) => {
+    setUploadError(error);
+    setProofUploadPath(null);
+  };
+
   const handleProceedToPayment = () => {
+    if (!proofUploadPath) {
+      setUploadError('Please upload proof of transfer first');
+      return;
+    }
     setStep('qr');
   };
 
   const handleConfirmPayment = async () => {
-    if (!loan) return;
+    if (!loan || !proofUploadPath) return;
 
     try {
       setIsProcessing(true);
 
-      // Call the fund-loan edge function to perform the actual database operations
+      // Call the fund-loan edge function with proof of payment
       const { data, error } = await supabase.functions.invoke('fund-loan', {
-        body: { loan_id: loan.id },
+        body: { 
+          loan_id: loan.id,
+          proof_of_payment_path: proofUploadPath 
+        },
       });
 
       if (error) throw error;
@@ -300,16 +330,111 @@ const LenderFundingModal = ({ isOpen, onClose, loan, onFundingComplete }: Lender
                 </div>
               </div>
 
-              {/* Action Button */}
+              {/* Action Button - Now goes to Upload step */}
               <Button
-                onClick={handleProceedToPayment}
-                className="w-full bg-success hover:bg-success/80 text-success-foreground font-semibold py-5 glow-green"
+                onClick={handleProceedToUpload}
+                className="w-full bg-[#00FF41] hover:bg-[#00FF41]/80 text-[#050505] font-semibold py-5"
               >
                 <span className="flex items-center gap-2">
-                  Fund This Loan
+                  <Upload className="w-4 h-4" />
+                  Proceed to Upload Proof
                   <ArrowRight className="w-4 h-4" />
                 </span>
               </Button>
+            </motion.div>
+
+          )}
+
+          {/* Step 2: Upload Proof of Transfer (NEW) */}
+          {step === 'upload' && (
+            <motion.div
+              key="upload"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="p-5 pt-4 space-y-4"
+            >
+              {/* Amount Reminder */}
+              <Card className="p-4 bg-[#D4AF37]/10 border-[#D4AF37]/30 text-center">
+                <p className="text-sm text-muted-foreground">Funding Amount</p>
+                <p className="text-3xl font-bold text-[#D4AF37] balance-number">
+                  ₱{loan.principalAmount.toLocaleString()}
+                </p>
+              </Card>
+
+              {/* Upload Instructions */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold flex items-center gap-2 text-[#D4AF37] uppercase tracking-wider">
+                  <Upload className="w-4 h-4" />
+                  Proof of Transfer Required
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Upload a screenshot of your payment transaction as proof before confirming. 
+                  This ensures transparency and protects both parties.
+                </p>
+              </div>
+
+              {/* Upload Component */}
+              <LenderProofUpload
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+                disabled={isProcessing}
+              />
+
+              {/* Collateral Info Tooltip */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs text-muted-foreground">
+                    Protected by 50% Collateral Lock
+                  </span>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-4 h-4 text-muted-foreground hover:text-[#D4AF37] transition-colors" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs bg-[#0a0a0a] border-[#D4AF37]/30">
+                      <div className="space-y-2">
+                        <p className="font-bold text-[#D4AF37] text-xs">Collateral-Backed Sovereignty</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          The borrower's 50% collateral is locked and continues earning 0.5% daily base yield. 
+                          If they default, your capital is automatically recovered from this lock.
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep('details')}
+                  className="flex-1"
+                  disabled={isProcessing}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleProceedToPayment}
+                  className="flex-1 bg-[#00FF41] hover:bg-[#00FF41]/80 text-[#050505] font-semibold"
+                  disabled={!proofUploadPath || isProcessing}
+                >
+                  {proofUploadPath ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Continue
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload First
+                    </>
+                  )}
+                </Button>
+              </div>
             </motion.div>
           )}
 
