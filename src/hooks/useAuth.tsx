@@ -12,11 +12,13 @@ interface ProfileData {
   vault_balance: number;
   frozen_balance: number;
   lending_balance: number;
-  membership_tier: 'bronze' | 'silver' | 'gold';
+  membership_tier: 'bronze' | 'silver' | 'gold' | 'founding';
   kyc_status: 'pending' | 'verified' | 'rejected';
   onboarding_completed: boolean;
   created_at: string;
   avatar_url: string | null;
+  referral_code: string | null;
+  total_referral_earnings: number;
 }
 
 interface AuthContextType {
@@ -42,10 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    // Fetch from profiles table directly to get avatar_url
+    // Fetch from profiles table directly to get avatar_url and referral data
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, member_id, display_name, email, vault_balance, frozen_balance, lending_balance, membership_tier, kyc_status, onboarding_completed, created_at, avatar_url')
+      .select('id, member_id, display_name, email, vault_balance, frozen_balance, lending_balance, membership_tier, kyc_status, onboarding_completed, created_at, avatar_url, referral_code, total_referral_earnings')
       .eq('id', userId)
       .single();
 
@@ -58,11 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         vault_balance: data.vault_balance,
         frozen_balance: data.frozen_balance,
         lending_balance: data.lending_balance,
-        membership_tier: data.membership_tier as 'bronze' | 'silver' | 'gold',
+        membership_tier: data.membership_tier as 'bronze' | 'silver' | 'gold' | 'founding',
         kyc_status: data.kyc_status as 'pending' | 'verified' | 'rejected',
         onboarding_completed: data.onboarding_completed,
         created_at: data.created_at,
         avatar_url: data.avatar_url,
+        referral_code: data.referral_code,
+        total_referral_earnings: data.total_referral_earnings,
       });
     }
   }, []);

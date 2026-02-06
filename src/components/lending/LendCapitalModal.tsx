@@ -1,6 +1,7 @@
 /**
  * ABC Master Build: Lend Capital Modal
- * Move funds from E-Wallet to Lend Capital for +0.7% daily premium yield
+ * Move funds from E-Wallet to Lend Capital for +0.5% daily synergy yield
+ * Total Daily Synergy: 0.5% Base + 0.5% Lending = 1.0%
  * Enforces 50% vault limit, whole peso amounts
  * Includes confidence-boosting Auto-Repayment messaging
  * LIQUIDITY PROTOCOL: 50% Collateral-Backed Sovereignty Rules
@@ -82,7 +83,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
           <Sparkles className="w-4 h-4 text-[#00FF41]" />
           <span>₱{parsedAmount.toLocaleString()} moved to Lend Capital!</span>
         </div>,
-        { description: 'Earning +0.7% daily premium yield' }
+        { description: 'Earning +0.5% daily synergy yield (1.0% total)' }
       );
 
       // Refresh data and close
@@ -221,12 +222,15 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#00FF41]" />
-                <span className="text-sm text-[#00FF41] uppercase tracking-wider">Yield Protocol</span>
+                <span className="text-sm text-[#00FF41] uppercase tracking-wider">Synergy Protocol</span>
               </div>
-              <span className="text-lg font-bold text-[#00FF41]">+0.7%/day</span>
+              <div className="text-right">
+                <span className="text-lg font-bold text-[#00FF41]">+0.5%/day</span>
+                <p className="text-[9px] text-[#00FF41]/60">+1.0% total</p>
+              </div>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Capital locked for deployment • Midnight UTC yield accrual
+              0.5% Base Yield + 0.5% Lending Synergy = 1.0% Daily Total
             </p>
           </div>
 
@@ -276,10 +280,13 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
                 <ArrowRight className="w-4 h-4 text-[#00FF41]" />
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Daily Yield</span>
+                <span className="text-muted-foreground">Daily Synergy Yield</span>
                 <span className="font-bold text-[#00FF41]">
-                  +₱{Math.floor(parsedAmount * 0.007).toLocaleString()}
+                  +₱{Math.floor(parsedAmount * 0.005).toLocaleString()}
                 </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground/70 mt-1">
+                <span>(Total: +₱{Math.floor(parsedAmount * 0.01).toLocaleString()}/day with base yield)</span>
               </div>
             </motion.div>
           )}

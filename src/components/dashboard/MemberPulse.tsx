@@ -1,15 +1,17 @@
 /**
  * ABC Master Build: Triple-Balance Member Pulse
- * E-Wallet (Liquid), Lend Capital (Locked), Loan Collateral (Locked)
+ * E-Wallet (Liquid), Alpha Network (Referrals), Loan Collateral (Locked)
  * Midnight Obsidian (#050505), Gold (#D4AF37), Yield Green (#00FF41)
  * 
- * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
- * ELITE TERMINAL: Enhanced Hero Stat with LIVE pulse indicator
- * LIQUIDITY PROTOCOL: 50% Collateral-Backed Sovereignty Rules
+ * 2026 INSTITUTIONAL PROTOCOL:
+ * - 0.5% Base Vault Yield + 0.5% Lending Synergy = 1.0% Total Daily
+ * - 50% Liquidity Rule enforced
+ * - Frozen assets continue earning 0.5% base yield
+ * - Alpha Network: 5% Patronage Reward for Founding Members
  */
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus, Radio, Info, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, Lock, Radio, Info, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,6 +21,7 @@ import LendCapitalModal from "@/components/lending/LendCapitalModal";
 import InterestDisplay from "@/components/interest/InterestDisplay";
 import CoopHeatmap from "./CoopHeatmap";
 import CompoundToggle from "./CompoundToggle";
+import AlphaNetworkCard from "./AlphaNetworkCard";
 import { useMemberData } from "@/hooks/useMemberData";
 import { useLoans } from "@/hooks/useLoans";
 
@@ -155,11 +158,11 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
                           <span className="font-bold text-[#D4AF37] text-xs">Collateral-Backed Sovereignty</span>
                         </div>
                         <div className="space-y-1 text-[10px] text-muted-foreground">
-                          <p>• <span className="text-[#00FF41]">₱{lendingBalance.toLocaleString()}</span> in Deployed Capital (+0.7%/day)</p>
+                          <p>• <span className="text-[#00FF41]">₱{lendingBalance.toLocaleString()}</span> in Deployed Capital (+0.5%/day synergy)</p>
                           <p>• <span className="text-destructive">₱{frozenBalance.toLocaleString()}</span> as Loan Collateral</p>
                           <p className="pt-1 border-t border-border/30 text-[9px]">
                             These funds are non-withdrawable but continue earning 0.5% daily base yield. 
-                            The 50% Liquidity Rule ensures full system coverage.
+                            Total Daily Synergy: 1.0% (0.5% Base + 0.5% Lending).
                           </p>
                         </div>
                       </div>
@@ -206,42 +209,8 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
         </p>
       </Card>
 
-      {/* DEPLOYED CAPITAL (Locked) - Yield Green Theme */}
-      <Card className="glass-card p-4 border-[#00FF41]/20 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#00FF41]/20 flex items-center justify-center">
-              <TrendingUp className="w-3.5 h-3.5 text-[#00FF41]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">Deployed Capital</p>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#00FF41]/10 text-[#00FF41] flex items-center gap-1">
-                  <Lock className="w-2 h-2" />
-                  LOCKED
-                </span>
-              </div>
-              <p className="balance-number text-lg text-[#00FF41]">
-                ₱{lendingBalance.toLocaleString('en-PH')}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-[10px] text-muted-foreground">Yield Generation</p>
-              <p className="text-xs text-[#00FF41] font-semibold">+0.7%/day</p>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => setShowLendModal(true)}
-              className="h-8 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-[#050505] font-bold text-xs"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              DEPLOY
-            </Button>
-          </div>
-        </div>
-      </Card>
+      {/* ALPHA NETWORK CARD - Replaces Deployed Capital */}
+      <AlphaNetworkCard />
 
       {/* LOAN COLLATERAL (Locked) - Destructive Theme */}
       <Card className="glass-card p-4 border-destructive/20 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
