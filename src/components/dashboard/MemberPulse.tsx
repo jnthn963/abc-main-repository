@@ -4,16 +4,19 @@
  * Midnight Obsidian (#050505), Gold (#D4AF37), Yield Green (#00FF41)
  * 
  * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
+ * ELITE TERMINAL: Enhanced Hero Stat with LIVE pulse indicator
  */
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus, Radio } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PendingTransactions from "./PendingTransactions";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
 import LendCapitalModal from "@/components/lending/LendCapitalModal";
 import InterestDisplay from "@/components/interest/InterestDisplay";
+import CoopHeatmap from "./CoopHeatmap";
+import CompoundToggle from "./CompoundToggle";
 import { useMemberData } from "@/hooks/useMemberData";
 import { useLoans } from "@/hooks/useLoans";
 
@@ -68,6 +71,47 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
 
   return (
     <div className="space-y-4">
+      {/* HERO STAT: Consolidated Vault Holdings - Enhanced Gold Gradient */}
+      <Card className="glass-card p-5 border-[#D4AF37]/40 bg-gradient-to-b from-[#0a0a0a] via-[#050505] to-[#050505] relative overflow-hidden">
+        {/* Subtle gold glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none" />
+        
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Consolidated Vault Holdings</p>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#00FF41]/10 border border-[#00FF41]/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FF41] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00FF41]"></span>
+              </span>
+              <span className="text-[9px] text-[#00FF41] font-bold uppercase tracking-wider">LIVE</span>
+            </div>
+          </div>
+          
+          <div 
+            className="font-mono text-4xl font-bold tracking-tight mb-2"
+            style={{
+              background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 40%, #B8960C 70%, #8B7500 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 0 40px rgba(212, 175, 55, 0.3)',
+            }}
+          >
+            ₱{totalVaultBalance.toLocaleString('en-PH')}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div className="relative">
+                <Radio className="w-3.5 h-3.5 text-[#00FF41] animate-pulse" />
+              </div>
+              <span className="text-xs font-semibold text-[#00FF41]">0.5% Daily Accrual</span>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-medium">ACTIVE</span>
+          </div>
+        </div>
+      </Card>
+
       {/* E-WALLET (Liquid) - Gold Theme */}
       <Card className="glass-card p-5 border-[#D4AF37]/30 bg-gradient-to-b from-[#050505] to-[#0a0a0a]">
         <div className="flex items-center justify-between mb-3">
@@ -84,7 +128,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
           </div>
         </div>
         <div 
-          className="balance-number text-3xl mb-1"
+          className="font-mono text-3xl font-semibold tracking-tight mb-1"
           style={{
             background: 'linear-gradient(180deg, #F5D76E 0%, #D4AF37 60%, #8B7500 100%)',
             WebkitBackgroundClip: 'text',
@@ -161,19 +205,11 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
         </div>
       </Card>
 
-      {/* Consolidated Vault Holdings */}
-      <Card className="glass-card p-3 border-[#D4AF37]/10 bg-[#050505]/80">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Consolidated Vault Holdings</p>
-            <p className="text-sm font-semibold text-[#D4AF37]">₱{totalVaultBalance.toLocaleString('en-PH')}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Daily Accrual</p>
-            <p className="text-sm font-bold text-[#00FF41]">0.5% Active</p>
-          </div>
-        </div>
-      </Card>
+      {/* Co-op Heatmap - Capital Allocation Chart */}
+      <CoopHeatmap />
+
+      {/* Auto-Compound Toggle */}
+      <CompoundToggle />
 
       {/* Pending Transactions with Clearing Timers */}
       <PendingTransactions />
