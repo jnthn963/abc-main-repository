@@ -149,25 +149,28 @@ export function useLoans() {
           }
 
           // Transform open loans from secure view (already has borrower_alias)
-          const transformedOpenLoans: P2PLoan[] = (openLoansData || []).map((loan: any) => ({
-            id: loan.id,
-            borrowerId: loan.borrower_id || '', // May be null for non-involved users
-            borrowerAlias: loan.borrower_alias || 'A***?', // Pre-computed in view
-            lenderId: loan.lender_id,
-            lenderAlias: null, // Open loans don't have lenders yet
-            principalAmount: Number(loan.principal_amount) / 100,
-            interestRate: Number(loan.interest_rate),
-            interestAmount: (Number(loan.principal_amount) / 100) * (Number(loan.interest_rate) / 100),
-            duration: loan.duration_days,
-            status: loan.status as P2PLoan['status'],
-            collateralAmount: Number(loan.collateral_amount) / 100,
-            createdAt: new Date(loan.created_at),
-            fundedAt: loan.funded_at ? new Date(loan.funded_at) : null,
-            dueAt: loan.due_date ? new Date(loan.due_date) : null,
-            repaidAt: loan.repaid_at ? new Date(loan.repaid_at) : null,
-            autoRepayTriggered: loan.auto_repay_triggered,
-            referenceNumber: loan.reference_number,
-          }));
+          // CRITICAL: Filter out user's own loans - they cannot fund their own requests
+          const transformedOpenLoans: P2PLoan[] = (openLoansData || [])
+            .filter((loan: any) => loan.borrower_id !== user.id)
+            .map((loan: any) => ({
+              id: loan.id,
+              borrowerId: loan.borrower_id || '', // May be null for non-involved users
+              borrowerAlias: loan.borrower_alias || 'A***?', // Pre-computed in view
+              lenderId: loan.lender_id,
+              lenderAlias: null, // Open loans don't have lenders yet
+              principalAmount: Number(loan.principal_amount) / 100,
+              interestRate: Number(loan.interest_rate),
+              interestAmount: (Number(loan.principal_amount) / 100) * (Number(loan.interest_rate) / 100),
+              duration: loan.duration_days,
+              status: loan.status as P2PLoan['status'],
+              collateralAmount: Number(loan.collateral_amount) / 100,
+              createdAt: new Date(loan.created_at),
+              fundedAt: loan.funded_at ? new Date(loan.funded_at) : null,
+              dueAt: loan.due_date ? new Date(loan.due_date) : null,
+              repaidAt: loan.repaid_at ? new Date(loan.repaid_at) : null,
+              autoRepayTriggered: loan.auto_repay_triggered,
+              referenceNumber: loan.reference_number,
+            }));
 
           // Transform borrower/lender loans (full access)
           const transformedBorrowerLoans = await Promise.all(
