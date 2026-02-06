@@ -5,12 +5,14 @@
  * 
  * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
  * ELITE TERMINAL: Enhanced Hero Stat with LIVE pulse indicator
+ * LIQUIDITY PROTOCOL: 50% Collateral-Backed Sovereignty Rules
  */
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus, Radio } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Wallet, Send, FileText, TrendingUp, Lock, Plus, Radio, Info, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import PendingTransactions from "./PendingTransactions";
 import MyLoansPanel from "@/components/lending/MyLoansPanel";
 import LendCapitalModal from "@/components/lending/LendCapitalModal";
@@ -78,7 +80,28 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
         
         <div className="relative">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Consolidated Vault Holdings</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Consolidated Vault Holdings</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="w-3 h-3 text-muted-foreground/50 hover:text-[#D4AF37] transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs bg-[#0a0a0a] border-[#D4AF37]/30">
+                    <div className="flex items-start gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#D4AF37] mt-0.5" />
+                      <div>
+                        <p className="font-bold text-[#D4AF37] text-xs mb-1">Collateral-Backed Sovereignty</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Your total holdings earn 0.5% daily—including Deployed Capital and Loan Collateral. 
+                          The 50% Liquidity Rule ensures system stability while maximizing your yield.
+                        </p>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#00FF41]/10 border border-[#00FF41]/20">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FF41] opacity-75"></span>
@@ -100,7 +123,7 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
             ₱{totalVaultBalance.toLocaleString('en-PH')}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-1.5">
               <div className="relative">
                 <Radio className="w-3.5 h-3.5 text-[#00FF41] animate-pulse" />
@@ -109,6 +132,47 @@ const MemberPulse = ({ onTransferClick }: MemberPulseProps) => {
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-medium">ACTIVE</span>
           </div>
+          
+          {/* Frozen/Collateralized Status - 50% Liquidity Rule */}
+          {(frozenBalance > 0 || lendingBalance > 0) && (
+            <div className="mt-3 pt-3 border-t border-[#D4AF37]/10">
+              <div className="flex items-center justify-between text-[10px]">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Lock className="w-3 h-3" />
+                  <span>Collateralized/Deployed</span>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <span className="font-mono text-[#D4AF37]/80 hover:text-[#D4AF37] transition-colors cursor-help">
+                        ₱{(frozenBalance + lendingBalance).toLocaleString('en-PH')} locked
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs bg-[#0a0a0a] border-[#D4AF37]/30">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
+                          <span className="font-bold text-[#D4AF37] text-xs">Collateral-Backed Sovereignty</span>
+                        </div>
+                        <div className="space-y-1 text-[10px] text-muted-foreground">
+                          <p>• <span className="text-[#00FF41]">₱{lendingBalance.toLocaleString()}</span> in Deployed Capital (+0.7%/day)</p>
+                          <p>• <span className="text-destructive">₱{frozenBalance.toLocaleString()}</span> as Loan Collateral</p>
+                          <p className="pt-1 border-t border-border/30 text-[9px]">
+                            These funds are non-withdrawable but continue earning 0.5% daily base yield. 
+                            The 50% Liquidity Rule ensures full system coverage.
+                          </p>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1.5 text-[9px] text-muted-foreground/60">
+                <ShieldCheck className="w-3 h-3" />
+                <span>50% Liquidity Reserve maintained</span>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
