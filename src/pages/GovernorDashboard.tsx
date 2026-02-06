@@ -24,6 +24,7 @@ import KYCVerificationQueue from "@/components/admin/KYCVerificationQueue";
 import SafetyGuardrails from "@/components/admin/SafetyGuardrails";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { ConnectionStatusBanner, ConnectionIndicator } from "@/components/common/ConnectionStatusBanner";
+import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -210,7 +211,7 @@ const GovernorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(222,47%,4%)]">
+    <AppLayout isGovernor>
       {/* Connection Status Banner */}
       <ConnectionStatusBanner onReconnect={refresh} />
 
@@ -489,7 +490,7 @@ const GovernorDashboard = () => {
           </div>
         </div>
       </main>
-    </div>
+    </AppLayout>
   );
 };
 
