@@ -24,6 +24,7 @@ const QRGatewayManager = ({
   onQRUpdate,
 }: QRGatewayManagerProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [signedQrUrl, setSignedQrUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -32,18 +33,37 @@ const QRGatewayManager = ({
   const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch current config on mount
+  // Fetch current config on mount and create signed URL for private bucket
   useEffect(() => {
     const fetchConfig = async () => {
       try {
         const { data } = await supabase
           .from('public_config')
-          .select('receiver_name, receiver_phone')
+          .select('receiver_name, receiver_phone, qr_gateway_url')
           .maybeSingle();
 
         if (data) {
           setReceiverName(data.receiver_name || "Alpha Bankers Cooperative");
           setReceiverNumber(data.receiver_phone || "+63 917 XXX XXXX");
+          
+          // Create signed URL for the private qr-codes bucket
+          if (data.qr_gateway_url && data.qr_gateway_url.includes('qr-codes')) {
+            try {
+              const urlParts = data.qr_gateway_url.split('qr-codes/');
+              if (urlParts[1]) {
+                const filePath = urlParts[1].split('?')[0];
+                const { data: signedData, error: signError } = await supabase.storage
+                  .from('qr-codes')
+                  .createSignedUrl(filePath, 3600); // 1 hour expiry
+                
+                if (!signError && signedData?.signedUrl) {
+                  setSignedQrUrl(signedData.signedUrl);
+                }
+              }
+            } catch (err) {
+              console.warn('Failed to create signed URL for QR code:', err);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to fetch config:', err);
@@ -51,7 +71,7 @@ const QRGatewayManager = ({
     };
 
     fetchConfig();
-  }, []);
+  }, [currentQRUrl]);
 
   // Validate file type
   const isValidFileType = (file: File): boolean => {
@@ -256,7 +276,7 @@ const QRGatewayManager = ({
           />
 
           <AnimatePresence mode="wait">
-            {previewUrl || currentQRUrl ? (
+            {previewUrl || signedQrUrl || currentQRUrl ? (
               <motion.div
                 key="preview"
                 initial={{ opacity: 0 }}
@@ -265,7 +285,7 @@ const QRGatewayManager = ({
                 className="absolute inset-0 flex items-center justify-center p-4"
               >
                 <img
-                  src={previewUrl || currentQRUrl}
+                  src={previewUrl || signedQrUrl || currentQRUrl}
                   alt="QR Code Preview"
                   className="max-w-full max-h-full object-contain rounded-lg"
                 />

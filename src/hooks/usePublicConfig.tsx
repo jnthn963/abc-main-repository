@@ -62,9 +62,31 @@ export function usePublicConfig() {
       }
 
       if (data) {
+        // If there's a QR URL stored, create a signed URL for authenticated access
+        let signedQrUrl = data.qr_gateway_url;
+        if (data.qr_gateway_url && data.qr_gateway_url.includes('qr-codes')) {
+          try {
+            // Extract the file path from the full URL
+            const urlParts = data.qr_gateway_url.split('qr-codes/');
+            if (urlParts[1]) {
+              const filePath = urlParts[1].split('?')[0]; // Remove any existing query params
+              const { data: signedData, error: signError } = await supabase.storage
+                .from('qr-codes')
+                .createSignedUrl(filePath, 3600); // 1 hour expiry
+              
+              if (!signError && signedData?.signedUrl) {
+                signedQrUrl = signedData.signedUrl;
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to create signed URL for QR code:', err);
+            // Fall back to stored URL (may work if bucket is still public)
+          }
+        }
+
         return {
           id: data.id,
-          qrGatewayUrl: data.qr_gateway_url,
+          qrGatewayUrl: signedQrUrl,
           receiverName: data.receiver_name || 'Alpha Bankers Cooperative',
           receiverPhone: data.receiver_phone || '+63 917 XXX XXXX',
           vaultInterestRate: Number(data.vault_interest_rate) || 0.5,
