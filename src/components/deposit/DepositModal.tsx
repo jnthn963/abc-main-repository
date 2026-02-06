@@ -10,6 +10,8 @@ import {
   ArrowRight,
   Wallet,
   ShieldCheck,
+  Camera,
+  ImageIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +24,8 @@ import { Card } from "@/components/ui/card";
 import { usePublicConfig } from "@/hooks/usePublicConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import ProofOfPaymentUpload from "./ProofOfPaymentUpload";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -31,7 +35,8 @@ interface DepositModalProps {
 const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const { config, loading: configLoading } = usePublicConfig();
   const { toast } = useToast();
-  const [step, setStep] = useState<"amount" | "qr" | "pending">("amount");
+  const { user } = useAuth();
+  const [step, setStep] = useState<"amount" | "qr" | "upload" | "pending">("amount");
   const [amount, setAmount] = useState("");
   const [amountError, setAmountError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -41,6 +46,8 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const [clearingSeconds, setClearingSeconds] = useState(0);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [proofOfPaymentPath, setProofOfPaymentPath] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Generate reference number
   const generateReferenceNumber = () => {
@@ -87,8 +94,33 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     }
   };
 
+  // Handle proceeding to upload step
+  const handleProceedToUpload = () => {
+    setStep("upload");
+  };
+
+  // Handle proof of payment upload completion
+  const handleUploadComplete = (path: string) => {
+    setProofOfPaymentPath(path);
+    setUploadError(null);
+  };
+
+  // Handle upload error
+  const handleUploadError = (error: string) => {
+    setUploadError(error);
+  };
+
   // Handle payment confirmation - calls process-deposit edge function
   const handleConfirmPayment = async () => {
+    if (!proofOfPaymentPath) {
+      toast({
+        title: "Receipt Required",
+        description: "Please upload your proof of payment before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -103,11 +135,12 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
         return;
       }
 
-      // Call the process-deposit edge function
+      // Call the process-deposit edge function with POP path
       const response = await supabase.functions.invoke('process-deposit', {
         body: {
           amount: Math.floor(parseFloat(amount)),
           reference_number: referenceNumber,
+          proof_of_payment_path: proofOfPaymentPath,
         },
       });
 
@@ -138,7 +171,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
       
       toast({
         title: "Deposit Submitted",
-        description: "Your deposit is pending Governor verification.",
+        description: "Your deposit with receipt is pending Governor verification.",
       });
       
     } catch (error) {
@@ -190,6 +223,8 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     setTransactionId(null);
     setClearingEndsAt(null);
     setIsSubmitting(false);
+    setProofOfPaymentPath(null);
+    setUploadError(null);
     onClose();
   };
 
@@ -214,6 +249,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
           <p className="text-[#050505]/80 text-sm mt-1">
             {step === "amount" && "Specify sovereign capital injection amount"}
             {step === "qr" && "Complete payment via QR PH Gateway"}
+            {step === "upload" && "Upload proof of payment for verification"}
             {step === "pending" && "Transaction verification in progress"}
           </p>
         </div>
@@ -378,32 +414,101 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                     <li>Scan the QR code above</li>
                     <li>Enter the exact amount: {formatCurrency(amount)}</li>
                     <li>Include reference: {referenceNumber}</li>
-                    <li>Complete the payment and click confirm below</li>
+                    <li>Take a screenshot of your transaction receipt</li>
                   </ol>
                 </div>
 
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStep("amount")}
-                    className="flex-1 py-3 bg-muted rounded-lg font-medium hover:bg-muted/70 transition-colors"
+                    className="flex-1 py-3 min-h-[48px] bg-muted rounded-lg font-medium hover:bg-muted/70 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleProceedToUpload}
+                    className="flex-1 py-3 min-h-[48px] bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Upload Receipt
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: Upload Proof of Payment */}
+            {step === "upload" && user && (
+              <motion.div
+                key="upload"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-4"
+              >
+                {/* Amount Summary */}
+                <div className="text-center pb-3 border-b border-border">
+                  <p className="text-sm text-muted-foreground">Deposit Amount</p>
+                  <p className="text-2xl font-bold text-success balance-number">
+                    {formatCurrency(amount)}
+                  </p>
+                  <p className="text-xs font-mono text-muted-foreground mt-1">
+                    Ref: {referenceNumber}
+                  </p>
+                </div>
+
+                {/* Upload Component */}
+                <ProofOfPaymentUpload
+                  userId={user.id}
+                  referenceNumber={referenceNumber}
+                  onUploadComplete={handleUploadComplete}
+                  onUploadError={handleUploadError}
+                  disabled={isSubmitting}
+                />
+
+                {/* Upload Status Indicator */}
+                {proofOfPaymentPath && (
+                  <Card className="p-3 bg-success/10 border-success/30">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-success" />
+                      <p className="text-xs font-medium text-success">
+                        Receipt attached successfully
+                      </p>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setStep("qr")}
+                    className="flex-1 py-3 min-h-[48px] bg-muted rounded-lg font-medium hover:bg-muted/70 transition-colors"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleConfirmPayment}
-                    disabled={isSubmitting}
-                    className="flex-1 py-3 bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    disabled={!proofOfPaymentPath || isSubmitting}
+                    className="flex-1 py-3 min-h-[48px] bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Processing...
+                        Submitting...
                       </>
                     ) : (
-                      "I've Paid"
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        Submit for Verification
+                      </>
                     )}
                   </button>
                 </div>
+
+                {/* Requirement Notice */}
+                <p className="text-xs text-center text-muted-foreground">
+                  <AlertCircle className="w-3 h-3 inline mr-1" />
+                  Proof of payment is required for all deposits
+                </p>
               </motion.div>
             )}
 

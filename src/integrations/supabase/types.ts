@@ -282,6 +282,7 @@ export type Database = {
           destination: string | null
           id: string
           metadata: Json | null
+          proof_of_payment_url: string | null
           reference_number: string
           rejection_reason: string | null
           related_loan_id: string | null
@@ -303,6 +304,7 @@ export type Database = {
           destination?: string | null
           id?: string
           metadata?: Json | null
+          proof_of_payment_url?: string | null
           reference_number: string
           rejection_reason?: string | null
           related_loan_id?: string | null
@@ -324,6 +326,7 @@ export type Database = {
           destination?: string | null
           id?: string
           metadata?: Json | null
+          proof_of_payment_url?: string | null
           reference_number?: string
           rejection_reason?: string | null
           related_loan_id?: string | null
