@@ -908,16 +908,27 @@ export type Database = {
           question_2: string
         }[]
       }
-      governor_approve_action: {
-        Args: {
-          p_action_id: string
-          p_action_type: string
-          p_approve: boolean
-          p_governor_id: string
-          p_rejection_reason?: string
-        }
-        Returns: Json
-      }
+      governor_approve_action:
+        | {
+            Args: {
+              p_action_id: string
+              p_action_type: string
+              p_approve: boolean
+              p_governor_id: string
+              p_rejection_reason?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_action_id: string
+              p_action_type: string
+              p_approve: boolean
+              p_governor_id: string
+              p_rejection_reason?: string
+            }
+            Returns: Json
+          }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
