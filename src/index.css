@@ -159,10 +159,15 @@
     @apply text-xs;
   }
 
-  /* Number styling for balances */
+  /* Number styling for balances - TERMINAL AESTHETIC */
   .balance-number {
     font-family: 'JetBrains Mono', monospace;
     @apply font-semibold tracking-tight;
+  }
+
+  /* Monospace override for financial data */
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace !important;
   }
 
   /* Gradient text */

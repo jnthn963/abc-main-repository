@@ -23,6 +23,7 @@ import DepositModal from '@/components/deposit/DepositModal';
 import PendingReviewBanner from '@/components/dashboard/PendingReviewBanner';
 import { ConnectionStatusBanner } from '@/components/common/ConnectionStatusBanner';
 import FloatingMemberCard from '@/components/dashboard/FloatingMemberCard';
+import ComplianceShield from '@/components/dashboard/ComplianceShield';
 import { SovereignMonolith } from '@/components/transitions/SovereignMonolith';
 import { StaggeredContainer, StaggeredItem } from '@/components/transitions/StaggeredContainer';
 
@@ -148,6 +149,9 @@ export default function Dashboard() {
 
       {/* Floating Concierge */}
       <AlphaConcierge />
+
+      {/* Floating Compliance Shield */}
+      <ComplianceShield />
 
       {/* Floating 3D Membership Card */}
       {profile && (
