@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from "react";
 import { TrendingUp, TrendingDown, Zap, HandCoins, Shield, CheckCircle, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import AutoRepaymentTooltip from "@/components/lending/AutoRepaymentTooltip";
 import { Button } from "@/components/ui/button";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useMemberData } from "@/hooks/useMemberData";
@@ -239,22 +240,25 @@ const AlphaMarketplace = () => {
           </div>
         </div>
         
-        {/* Bottom trust badges */}
+        {/* Bottom trust badges with tooltip */}
         <div className="relative mt-4 pt-3 border-t border-[#00FF41]/20">
-          <div className="flex items-center justify-center gap-4 text-[10px]">
-            <div className="flex items-center gap-1 text-[#00FF41]/70">
-              <Shield className="w-3 h-3" />
-              <span>28-Day Auto-Settlement</span>
-            </div>
-            <div className="w-1 h-1 rounded-full bg-[#00FF41]/30" />
-            <div className="flex items-center gap-1 text-[#00FF41]/70">
-              <CheckCircle className="w-3 h-3" />
-              <span>Collateral-Backed</span>
-            </div>
-            <div className="w-1 h-1 rounded-full bg-[#00FF41]/30" />
-            <div className="flex items-center gap-1 text-[#00FF41]/70">
-              <Zap className="w-3 h-3" />
-              <span>Instant Payouts</span>
+          <div className="flex items-center justify-between">
+            <AutoRepaymentTooltip />
+            <div className="flex items-center gap-4 text-[10px]">
+              <div className="flex items-center gap-1 text-[#00FF41]/70">
+                <Shield className="w-3 h-3" />
+                <span>28-Day Auto-Settlement</span>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-[#00FF41]/30" />
+              <div className="flex items-center gap-1 text-[#00FF41]/70">
+                <CheckCircle className="w-3 h-3" />
+                <span>Collateral-Backed</span>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-[#00FF41]/30" />
+              <div className="flex items-center gap-1 text-[#00FF41]/70">
+                <Zap className="w-3 h-3" />
+                <span>Instant Payouts</span>
+              </div>
             </div>
           </div>
         </div>
