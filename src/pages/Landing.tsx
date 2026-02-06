@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import LandingNav from '@/components/landing/LandingNav';
 import LandingHero from '@/components/landing/LandingHero';
+import LandingSecuritySection from '@/components/landing/LandingSecuritySection';
 import LandingProtocols from '@/components/landing/LandingProtocols';
 import LandingVaultPreview from '@/components/landing/LandingVaultPreview';
 import LandingManifesto from '@/components/landing/LandingManifesto';
@@ -29,6 +30,9 @@ export default function Landing() {
       {/* Hero Section */}
       <LandingHero />
 
+      {/* Security & Compliance Section */}
+      <LandingSecuritySection />
+
       {/* System Protocols Section */}
       <LandingProtocols />
 
@@ -38,7 +42,7 @@ export default function Landing() {
       {/* Manifesto Section */}
       <LandingManifesto />
 
-      {/* Footer */}
+      {/* Professional Multi-Column Footer */}
       <LandingFooter />
     </div>
   );
