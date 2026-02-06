@@ -18,6 +18,10 @@ import PendingActionsSummary from "@/components/admin/PendingActionsSummary";
 import MemberManagement from "@/components/admin/MemberManagement";
 import LiquidityIndexChart from "@/components/admin/LiquidityIndexChart";
 import CMSManager from "@/components/admin/CMSManager";
+import FinancialOverview from "@/components/admin/FinancialOverview";
+import GovernorMasterLedger from "@/components/admin/GovernorMasterLedger";
+import KYCVerificationQueue from "@/components/admin/KYCVerificationQueue";
+import SafetyGuardrails from "@/components/admin/SafetyGuardrails";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { ConnectionStatusBanner, ConnectionIndicator } from "@/components/common/ConnectionStatusBanner";
 import { supabase } from "@/integrations/supabase/client";
@@ -297,6 +301,11 @@ const GovernorDashboard = () => {
             ))}
           </div>
 
+          {/* Financial Overview - 50/50 Pulse */}
+          <div className="mb-6">
+            <FinancialOverview />
+          </div>
+
           {/* Pending Actions Summary Widget */}
           <div className="mb-6">
             <PendingActionsSummary />
@@ -309,7 +318,7 @@ const GovernorDashboard = () => {
 
           <div className="grid grid-cols-12 gap-6">
             {/* Economic Levers */}
-            <div className="col-span-4">
+            <div className="col-span-3">
               <Card className="p-5 bg-card/50 border-border">
                 <div className="flex items-center gap-2 mb-5">
                   <Sliders className="w-5 h-5 text-primary" />
@@ -376,10 +385,28 @@ const GovernorDashboard = () => {
                   Apply Changes
                 </button>
               </Card>
+
+              {/* Safety Guardrails */}
+              <div className="mt-6">
+                <SafetyGuardrails />
+              </div>
+            </div>
+
+            {/* KYC Verification Queue */}
+            <div className="col-span-5">
+              <KYCVerificationQueue />
+              
+              {/* QR Gateway Manager */}
+              <div className="mt-6">
+                <QRGatewayManager 
+                  currentQRUrl={settings.qrUrl || ''}
+                  onQRUpdate={handleQRUpdate}
+                />
+              </div>
             </div>
 
             {/* Live Audit Trail */}
-            <div className="col-span-5">
+            <div className="col-span-4">
               <Card className="p-5 bg-card/50 border-border h-full">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -412,14 +439,11 @@ const GovernorDashboard = () => {
                 </div>
               </Card>
             </div>
+          </div>
 
-            {/* QR Gateway Manager */}
-            <div className="col-span-3">
-              <QRGatewayManager 
-                currentQRUrl={settings.qrUrl || ''}
-                onQRUpdate={handleQRUpdate}
-              />
-            </div>
+          {/* Governor Master Ledger - Full Width */}
+          <div className="mt-6">
+            <GovernorMasterLedger />
           </div>
 
           {/* Member Management - Full Width */}
