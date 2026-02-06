@@ -11,6 +11,9 @@ import Profile from "@/pages/Profile";
 import GovernorDashboard from "@/pages/GovernorDashboard";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
+import ArticlesOfCooperation from "@/pages/governance/ArticlesOfCooperation";
+import BoardOfDirectors from "@/pages/governance/BoardOfDirectors";
+import GeneralAssembly from "@/pages/governance/GeneralAssembly";
 
 export function AnimatedRoutes() {
   const location = useLocation();
@@ -85,6 +88,30 @@ export function AnimatedRoutes() {
           element={
             <PageTransition>
               <ResetPassword />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/governance/articles"
+          element={
+            <PageTransition>
+              <ArticlesOfCooperation />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/governance/board"
+          element={
+            <PageTransition>
+              <BoardOfDirectors />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/governance/assembly"
+          element={
+            <PageTransition>
+              <GeneralAssembly />
             </PageTransition>
           }
         />
