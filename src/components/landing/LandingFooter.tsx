@@ -3,34 +3,34 @@ import { motion } from 'framer-motion';
 import { Shield, Lock, Linkedin, Twitter, Facebook, Mail, Phone, MapPin, Award, CheckCircle, Zap, Building } from 'lucide-react';
 
 const footerLinks = {
-  institution: {
-    title: 'Institution',
+  governance: {
+    title: 'Governance',
     links: [
-      { label: 'About ABC', href: '#' },
-      { label: 'Leadership', href: '#' },
-      { label: 'Governance', href: '#' },
-      { label: 'Sustainability', href: '#' },
-      { label: 'Careers', href: '#' }
+      { label: 'Articles of Cooperation', href: '#' },
+      { label: 'Board of Directors', href: '#' },
+      { label: 'General Assembly', href: '#' },
+      { label: 'Cooperative Principles', href: '#' },
+      { label: 'Membership PRS', href: '#' }
     ]
   },
-  solutions: {
-    title: 'Solutions',
+  memberServices: {
+    title: 'Member Services',
     links: [
-      { label: 'Sovereign Vault', href: '#' },
-      { label: 'P2P Marketplace', href: '#' },
-      { label: 'Referral Network', href: '#' },
-      { label: 'Enterprise', href: '#' },
-      { label: 'API Access', href: '#' }
+      { label: 'Share Capital Ledger', href: '#' },
+      { label: 'Credit Facilities', href: '#' },
+      { label: 'Patronage Refund', href: '#' },
+      { label: 'Savings & Loans', href: '#' },
+      { label: 'Member Dividends', href: '#' }
     ]
   },
-  security: {
-    title: 'Security',
+  protection: {
+    title: 'Protection',
     links: [
       { label: 'Security Center', href: '#' },
       { label: 'Fraud Awareness', href: '#' },
-      { label: 'Data Protection', href: '#' },
+      { label: "Treasurer's Affidavit", href: '#' },
       { label: 'Incident Response', href: '#' },
-      { label: 'Bug Bounty', href: '#' }
+      { label: 'Audit Committee', href: '#' }
     ]
   },
   compliance: {
@@ -163,7 +163,7 @@ export default function LandingFooter() {
             </motion.div>
           </div>
 
-          {/* Institution Links */}
+          {/* Governance Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -171,10 +171,10 @@ export default function LandingFooter() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
-              {footerLinks.institution.title}
+              {footerLinks.governance.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.institution.links.map((link) => (
+              {footerLinks.governance.links.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
@@ -187,7 +187,7 @@ export default function LandingFooter() {
             </ul>
           </motion.div>
 
-          {/* Solutions Links */}
+          {/* Member Services Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -195,10 +195,10 @@ export default function LandingFooter() {
             transition={{ duration: 0.5, delay: 0.15 }}
           >
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
-              {footerLinks.solutions.title}
+              {footerLinks.memberServices.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.solutions.links.map((link) => (
+              {footerLinks.memberServices.links.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
@@ -211,7 +211,7 @@ export default function LandingFooter() {
             </ul>
           </motion.div>
 
-          {/* Security Links */}
+          {/* Protection Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -219,10 +219,10 @@ export default function LandingFooter() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
-              {footerLinks.security.title}
+              {footerLinks.protection.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.security.links.map((link) => (
+              {footerLinks.protection.links.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
@@ -317,8 +317,9 @@ export default function LandingFooter() {
       <div className="bg-[#030303] border-t border-gray-900">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <p className="text-[10px] text-gray-700 text-center leading-relaxed">
-            Alpha Bankers Cooperative is a member-owned financial cooperative. All financial transactions are subject to applicable laws and regulations. 
-            Past performance does not guarantee future results. Cooperative membership requires compliance with KYC/AML procedures.
+            Alpha Bankers Cooperative operates under the Authority of the Cooperative Development Authority (CDA). 
+            Legitimacy is maintained through our verified Articles of Cooperation, By-Laws, and Treasurer's Affidavit 
+            as ratified by the General Assembly Resolution. All financial transactions are subject to applicable laws and regulations.
           </p>
         </div>
       </div>
