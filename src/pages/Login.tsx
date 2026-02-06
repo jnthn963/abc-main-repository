@@ -264,11 +264,7 @@ export default function Login() {
   }
   return <div className="min-h-screen bg-[#050505] flex">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden border-r border-[#D4AF37]/10">
-        <div className="absolute inset-0 bg-[#050505]" />
-        
-        
-      </div>
+      
 
       {/* Right Panel - Login Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-[#050505]">
