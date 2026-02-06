@@ -1,10 +1,18 @@
 import { Link } from "react-router-dom";
-import { User, Bell, Wallet, Shield } from "lucide-react";
+import { User, Bell, Wallet, Shield, Settings } from "lucide-react";
 import abcLogo from "@/assets/abc-logo.png";
 import { Button } from "@/components/ui/button";
 import { SecureLogout } from "@/components/auth/SecureLogout";
 import { useAuth } from "@/hooks/useAuth";
 import LiveTicker from "./LiveTicker";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface NavbarProps {
   onDepositClick?: () => void;
@@ -50,6 +58,46 @@ const Navbar = ({ onDepositClick }: NavbarProps) => {
             <Bell className="w-5 h-5 text-[#D4AF37]/60" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-[#00FF41] rounded-full" />
           </button>
+          
+          {/* Settings Dropdown with Gear Icon */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                id="settings-gear-icon"
+                className="p-2 rounded-lg hover:bg-[#D4AF37]/10 transition-colors"
+                aria-label="Settings"
+              >
+                <Settings className="w-5 h-5 text-[#D4AF37]/60 hover:text-[#D4AF37]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 bg-[#0a0a0a] border-[#D4AF37]/20 z-[100]"
+            >
+              <DropdownMenuLabel className="text-[#D4AF37]">
+                Quick Settings
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-[#D4AF37]/20" />
+              <DropdownMenuItem asChild>
+                <Link 
+                  to="/profile" 
+                  className="flex items-center gap-2 cursor-pointer hover:bg-[#D4AF37]/10 text-foreground"
+                >
+                  <User className="w-4 h-4 text-[#D4AF37]" />
+                  Account Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link 
+                  to="/profile#security" 
+                  className="flex items-center gap-2 cursor-pointer hover:bg-[#D4AF37]/10 text-foreground"
+                >
+                  <Shield className="w-4 h-4 text-[#00FF41]" />
+                  Security Settings
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           {/* Profile Link */}
           <Link 

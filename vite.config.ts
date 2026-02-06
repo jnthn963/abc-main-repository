@@ -5,8 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Production base path for Hostinger /ABC/ subdirectory
-  base: mode === "production" ? "/ABC/" : "/",
+  // Root-relative paths for standard static site hosting
+  base: "/",
   server: {
     host: "::",
     port: 8080,
