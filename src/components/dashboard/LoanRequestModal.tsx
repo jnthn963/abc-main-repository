@@ -184,29 +184,38 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                 </Card>
               )}
 
-              {/* Vault & Collateral Info */}
+              {/* Vault & Collateral Info with Collateral-Backed Sovereignty */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <Card className="p-3 bg-muted/30 border-border">
-                  <p className="text-xs text-muted-foreground">Vault Holdings</p>
-                  <p className="text-lg font-bold text-success balance-number">
+                  <p className="text-xs text-muted-foreground">Liquid Vault</p>
+                  <p className="text-lg font-bold text-[#D4AF37] balance-number">
                     ₱{memberData.vaultBalance.toLocaleString()}
                   </p>
                 </Card>
-                <Card className="p-3 bg-muted/30 border-border">
+                <Card className="p-3 bg-[#D4AF37]/10 border-[#D4AF37]/30">
                   <div className="flex items-center gap-1">
                     <p className="text-xs text-muted-foreground">Max Loan (50%)</p>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger>
-                          <Info className="w-3 h-3 text-muted-foreground" />
+                          <Info className="w-3 h-3 text-[#D4AF37]" />
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs">50% collateral rule ensures 100% coverage</p>
+                        <TooltipContent className="max-w-xs bg-[#0a0a0a] border-[#D4AF37]/30">
+                          <div className="space-y-2">
+                            <p className="font-bold text-[#D4AF37] text-xs">Collateral-Backed Sovereignty</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                              The 50% Liquidity Rule ensures your remaining vault balance serves as collateral, 
+                              guaranteeing 100% coverage for lenders. This creates a fully-reserved, zero-default system.
+                            </p>
+                            <p className="text-[9px] text-[#00FF41]">
+                              ✓ Your collateral continues earning 0.5% daily yield
+                            </p>
+                          </div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>
-                  <p className="text-lg font-bold text-primary balance-number">
+                  <p className="text-lg font-bold text-[#D4AF37] balance-number">
                     ₱{maxLoan.toLocaleString()}
                   </p>
                 </Card>
@@ -277,11 +286,18 @@ const LoanRequestModal = ({ isOpen, onClose }: LoanRequestModalProps) => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Interest ({interestRate}%)</span>
-                    <span className="font-medium text-primary">+₱{interestAmount.toLocaleString()}</span>
+                    <span className="font-medium text-[#D4AF37]">+₱{interestAmount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Collateral Locked</span>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-1.5">
+                      <Lock className="w-3 h-3 text-destructive" />
+                      <span className="text-muted-foreground">Collateral Locked</span>
+                    </div>
                     <span className="font-medium text-destructive">₱{collateralRequired.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#00FF41] bg-[#00FF41]/10 rounded px-2 py-1">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Collateral continues earning 0.5% daily yield</span>
                   </div>
                   <div className="border-t border-border pt-2 flex justify-between">
                     <span className="font-medium">Total Repayment</span>

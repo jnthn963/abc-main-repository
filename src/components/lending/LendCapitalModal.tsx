@@ -3,14 +3,16 @@
  * Move funds from E-Wallet to Lend Capital for +0.7% daily premium yield
  * Enforces 50% vault limit, whole peso amounts
  * Includes confidence-boosting Auto-Repayment messaging
+ * LIQUIDITY PROTOCOL: 50% Collateral-Backed Sovereignty Rules
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Wallet, ArrowRight, Lock, Sparkles, AlertCircle, Shield, CheckCircle } from "lucide-react";
+import { TrendingUp, Wallet, ArrowRight, Lock, Sparkles, AlertCircle, Shield, CheckCircle, Info, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMemberData } from "@/hooks/useMemberData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -109,7 +111,7 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
         </DialogHeader>
 
         <div className="space-y-5">
-          {/* Balance Display */}
+          {/* Balance Display with Collateral-Backed Sovereignty */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20">
               <div className="flex items-center gap-2 mb-1">
@@ -124,6 +126,28 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
               <div className="flex items-center gap-2 mb-1">
                 <Lock className="w-4 h-4 text-[#00FF41]" />
                 <span className="text-xs text-muted-foreground">Max Deploy (50%)</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-[#00FF41]/60 hover:text-[#00FF41] transition-colors" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs bg-[#0a0a0a] border-[#00FF41]/30">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-[#00FF41]" />
+                          <span className="font-bold text-[#00FF41] text-xs">Collateral-Backed Sovereignty</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          The 50% Liquidity Rule ensures 50% of your vault remains liquid at all times. 
+                          This creates a fully-reserved system where deployed capital is always backed.
+                        </p>
+                        <p className="text-[9px] text-[#D4AF37]">
+                          ✓ Your remaining 50% continues earning 0.5% daily base yield
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <p className="text-lg font-bold text-[#00FF41]">
                 ₱{maxLendAmount.toLocaleString()}
@@ -281,10 +305,16 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             )}
           </Button>
 
-          {/* Minimum Notice */}
-          <p className="text-[10px] text-center text-muted-foreground">
-            Minimum: ₱100 • Max: 50% of Liquid Vault • Whole Pesos Only
-          </p>
+          {/* Minimum Notice with Collateral-Backed Sovereignty */}
+          <div className="text-center space-y-1">
+            <p className="text-[10px] text-muted-foreground">
+              Minimum: ₱100 • Max: 50% of Liquid Vault • Whole Pesos Only
+            </p>
+            <p className="text-[9px] text-[#D4AF37]/60 flex items-center justify-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              <span>Collateral-Backed Sovereignty • 50% Liquidity Reserve Maintained</span>
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
