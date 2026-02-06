@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // Process Referral Commission Edge Function
-// Automates the 3% commission logic for Level 1 direct referrals
+// Automates the 5% Direct Patronage Reward for Alpha Founding Members
 // Called when a referred member makes their first deposit
 
 Deno.serve(async (req) => {
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const commissionRate = settings?.referral_level1_rate || 3; // Default 3%
+    const commissionRate = settings?.referral_level1_rate || 5; // Default 5% for Alpha Founding Members
     
     // Calculate commission using floor() for Integer Rule
     const commissionAmount = Math.floor(deposit_amount * (commissionRate / 100));

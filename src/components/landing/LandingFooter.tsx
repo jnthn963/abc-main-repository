@@ -313,13 +313,14 @@ export default function LandingFooter() {
         </div>
       </div>
 
-      {/* Disclaimer */}
+      {/* CDA Regulatory Disclaimer - 11px font as required */}
       <div className="bg-[#030303] border-t border-gray-900">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <p className="text-[10px] text-gray-700 text-center leading-relaxed">
-            Alpha Bankers Cooperative operates under the Authority of the Cooperative Development Authority (CDA). 
-            Legitimacy is maintained through our verified Articles of Cooperation, By-Laws, and Treasurer's Affidavit 
-            as ratified by the General Assembly Resolution. All financial transactions are subject to applicable laws and regulations.
+          <p className="text-[11px] text-gray-700 text-center leading-relaxed">
+            Alpha Bankers Cooperative operates under the Authority of the Cooperative Development Authority (CDA) 
+            pursuant to Republic Act No. 9520. Legitimacy is maintained through our verified Articles of Cooperation, 
+            By-Laws, and Treasurer's Affidavit as ratified by the General Assembly Resolution. All financial 
+            transactions are subject to applicable laws and regulations of the Republic of the Philippines.
           </p>
         </div>
       </div>
