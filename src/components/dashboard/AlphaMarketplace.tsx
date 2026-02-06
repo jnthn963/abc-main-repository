@@ -3,18 +3,22 @@
  * 
  * STABILITY FIX: Uses hasInitialData pattern to show skeleton only on first load
  * AUTO-REPAYMENT GUARANTEE: Prominently displays the Reserve Fund protection
+ * ENHANCED: Status badges, name masking for privacy
  */
 
 import { useState, useEffect, useRef } from "react";
-import { TrendingUp, TrendingDown, Zap, HandCoins, Shield, CheckCircle, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, HandCoins, Shield, CheckCircle, Wallet, Info, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import AutoRepaymentTooltip from "@/components/lending/AutoRepaymentTooltip";
 import { Button } from "@/components/ui/button";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
 import { useMemberData } from "@/hooks/useMemberData";
 import { useLoans, type P2PLoan } from "@/hooks/useLoans";
 import LoanRequestModal from "./LoanRequestModal";
 import LenderFundingModal from "@/components/lending/LenderFundingModal";
+import LoanStatusBadge from "@/components/lending/LoanStatusBadge";
+import { maskDisplayName } from "@/lib/maskName";
 import type { LoanListing } from "@/components/lending/LenderFundingModal";
 
 const liquidityData = [
@@ -125,7 +129,7 @@ const AlphaMarketplace = () => {
                 tick={{ fill: 'hsl(215 20% 55%)', fontSize: 10 }}
               />
               <YAxis hide domain={['dataMin - 50000', 'dataMax + 50000']} />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{
                   backgroundColor: '#0d0d0d',
                   border: '1px solid rgba(212, 175, 55, 0.3)',
@@ -313,21 +317,36 @@ const AlphaMarketplace = () => {
                   key={loan.id} 
                   className="grid grid-cols-4 gap-2 items-center py-2 order-row rounded-lg px-2 -mx-2"
                 >
-                  <span className="text-sm font-medium font-mono">{loan.borrowerAlias}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium font-mono">{maskDisplayName(loan.borrowerAlias)}</span>
+                    <LoanStatusBadge status="open" size="sm" />
+                  </div>
                   <span className="text-sm text-right balance-number">
                     ₱{loan.principalAmount.toLocaleString()}
                   </span>
-                  <span className="text-sm text-right text-success font-medium">
+                  <span className="text-sm text-right text-[#00FF41] font-medium">
                     {loan.interestRate}%
                   </span>
-                    <div className="text-right">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleLendClick(loan)}
-                        className="h-7 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-[#050505] text-xs font-bold uppercase tracking-wider"
-                      >
-                        DEPLOY
-                    </Button>
+                  <div className="text-right">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleLendClick(loan)}
+                            className="h-7 px-3 bg-[#00FF41] hover:bg-[#00CC33] text-[#050505] text-xs font-bold uppercase tracking-wider"
+                          >
+                            DEPLOY
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-[#0a0a0a] border-[#00FF41]/30">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-3 h-3 text-[#00FF41]" />
+                            <span className="text-[10px]">50% Collateral Locked • 100% Protected</span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               ))
