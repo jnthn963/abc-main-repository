@@ -2,17 +2,19 @@
  * ABC Master Build: Lend Capital Modal
  * Move funds from E-Wallet to Lend Capital for +0.7% daily premium yield
  * Enforces 50% vault limit, whole peso amounts
+ * Includes confidence-boosting Auto-Repayment messaging
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Wallet, ArrowRight, Lock, Sparkles, AlertCircle } from "lucide-react";
+import { TrendingUp, Wallet, ArrowRight, Lock, Sparkles, AlertCircle, Shield, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMemberData } from "@/hooks/useMemberData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AutoRepaymentTooltip from "./AutoRepaymentTooltip";
 
 interface LendCapitalModalProps {
   isOpen: boolean;
@@ -202,6 +204,37 @@ export default function LendCapitalModal({ isOpen, onClose }: LendCapitalModalPr
             <p className="text-[10px] text-muted-foreground mt-1">
               Capital locked for deployment • Midnight UTC yield accrual
             </p>
+          </div>
+
+          {/* Auto-Repayment Confidence Booster */}
+          <div className="p-4 rounded-lg bg-gradient-to-r from-[#00FF41]/10 via-[#00FF41]/5 to-transparent border border-[#00FF41]/30 relative overflow-hidden">
+            {/* Animated glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00FF41]/10 via-transparent to-transparent animate-pulse opacity-30" />
+            
+            <div className="relative flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#00FF41]/20 border border-[#00FF41]/40 flex items-center justify-center shrink-0">
+                <Shield className="w-5 h-5 text-[#00FF41]" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-xs font-bold text-[#00FF41] uppercase tracking-wider">
+                    100% Protected Capital
+                  </h4>
+                  <CheckCircle className="w-3 h-3 text-[#00FF41]" />
+                </div>
+                <p className="text-[10px] text-[#00FF41]/70 leading-relaxed mb-2">
+                  Your deployed capital is backed by the <span className="font-semibold text-[#00FF41]">Reserve Fund Auto-Repayment System</span>. 
+                  If any borrower defaults, you receive your full principal + interest automatically.
+                </p>
+                <div className="flex items-center justify-between">
+                  <AutoRepaymentTooltip />
+                  <div className="flex items-center gap-2 text-[9px] text-[#00FF41]/60">
+                    <Shield className="w-3 h-3" />
+                    <span>28-Day Settlement</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Transaction Preview */}
