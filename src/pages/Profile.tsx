@@ -13,6 +13,7 @@ import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { AccountSettings } from '@/components/profile/AccountSettings';
 import { SecuritySettings } from '@/components/profile/SecuritySettings';
 import Navbar from '@/components/layout/Navbar';
+import AppLayout from '@/components/layout/AppLayout';
 import DepositModal from '@/components/deposit/DepositModal';
 
 interface ProfileData {
@@ -88,7 +89,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <AppLayout>
       <Navbar onDepositClick={() => setShowDepositModal(true)} />
       
       <main className="pt-20 pb-8 px-4 lg:px-6">
@@ -186,6 +187,6 @@ export default function Profile() {
         isOpen={showDepositModal}
         onClose={() => setShowDepositModal(false)}
       />
-    </div>
+    </AppLayout>
   );
 }

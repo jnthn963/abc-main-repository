@@ -18,6 +18,7 @@ import { useMemberData } from '@/hooks/useMemberData';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/layout/Navbar';
+import AppLayout from '@/components/layout/AppLayout';
 import MemberPulse from '@/components/dashboard/MemberPulse';
 import AlphaMarketplace from '@/components/dashboard/AlphaMarketplace';
 import TransferFundsHub from '@/components/dashboard/TransferFundsHub';
@@ -101,7 +102,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <AppLayout>
       {/* Connection Status Banner */}
       <ConnectionStatusBanner onReconnect={handleReconnect} />
       
@@ -229,6 +230,6 @@ export default function Dashboard() {
         isOpen={showDepositModal}
         onClose={() => setShowDepositModal(false)}
       />
-    </div>
+    </AppLayout>
   );
 }
