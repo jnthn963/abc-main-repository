@@ -3,7 +3,7 @@ name: ABC Sovereign Deployment
 on:
   push:
     branches:
-      - main # Siguraduhin na ito ang tamang branch name mo
+      - main # Siguraduhin na 'main' ang gamit mong branch sa GitHub
 
 jobs:
   build-and-deploy:
@@ -20,17 +20,18 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Install Dependencies
-        run: npm ci # Mas mabilis at mas safe kaysa sa 'npm install'
+        run: npm ci 
 
       - name: 🏗️ Build Project
         run: npm run build
 
-      - name: 🚀 FTP Deploy to Hostinger
+      - name: 🚀 FTP Deploy to Hostinger Subdomain
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/ # Ang 'dist' folder lang ang i-uupload
-          server-dir: ./public_html/ # DITO DAPAT SA ROOT PARA LIVE AGAD
+          local-dir: ./dist/ 
+          # Siguraduhin na ang files ay mapupunta sa folder ng iyong subdomain
+          server-dir: ./public_html/abc/ 
           state-name: .ftp-deploy-sync-state.json
