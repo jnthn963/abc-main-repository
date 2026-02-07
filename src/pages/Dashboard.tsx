@@ -32,6 +32,7 @@ import { ConnectionStatusBanner } from '@/components/common/ConnectionStatusBann
 import FloatingMemberCard from '@/components/dashboard/FloatingMemberCard';
 import ComplianceShield from '@/components/dashboard/ComplianceShield';
 import AuditTrail from '@/components/dashboard/AuditTrail';
+import FloatingCalculator from '@/components/dashboard/FloatingCalculator';
 import { SovereignMonolith } from '@/components/transitions/SovereignMonolith';
 import { StaggeredContainer, StaggeredItem } from '@/components/transitions/StaggeredContainer';
 
@@ -197,6 +198,9 @@ export default function Dashboard() {
 
       {/* Floating Concierge */}
       <AlphaConcierge />
+
+      {/* Floating Sovereign Calculator */}
+      <FloatingCalculator />
 
       {/* Floating Compliance Shield - Hidden on mobile */}
       {!isMobile && <ComplianceShield />}
