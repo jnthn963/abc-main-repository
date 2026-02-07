@@ -1,0 +1,35 @@
+name: Sovereign Deployment (Alpha Bankers)
+
+on:
+  push:
+    branches:
+      - main  # Siguraduhin na 'main' ang gamit mong branch name
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install Dependencies
+        run: npm install
+
+      - name: 🏗️ Build Project
+        run: npm run build
+
+      - name: 🚀 FTP Deploy to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/  # Ang built files lang ang i-uupload natin
+          server-dir: ./public_html/ # Ang target directory sa Hostinger
+          state-name: .ftp-deploy-sync-state.json # Para mabilis ang susunod na deploys
