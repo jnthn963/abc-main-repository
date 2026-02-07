@@ -25,7 +25,6 @@ import {
  */
 
 const DAILY_RATE = 0.005; // 0.5% daily
-const COMPOUND_DAYS = 30;
 
 export default function FloatingCalculator() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,11 +32,19 @@ export default function FloatingCalculator() {
   const [isPressed, setIsPressed] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  // Calculate compound interest: A = P(1 + r)^n
-  const calculateYield = useCallback((principal: number): number => {
-    if (principal <= 0) return 0;
-    const finalAmount = principal * Math.pow(1 + DAILY_RATE, COMPOUND_DAYS);
-    return Math.floor(finalAmount - principal); // Whole peso mandate
+  // Multi-period yield calculations
+  const calculateYields = useCallback((principal: number) => {
+    if (principal <= 0) return { daily: 0, weekly: 0, monthly: 0 };
+    
+    // Simple interest calculations for clear breakdown
+    const daily = Math.floor(principal * DAILY_RATE);
+    const weekly = Math.floor(principal * DAILY_RATE * 7);
+    
+    // Compound interest for 30-day projection: A = P(1 + r)^n - P
+    const monthlyCompound = principal * Math.pow(1 + DAILY_RATE, 30);
+    const monthly = Math.floor(monthlyCompound - principal);
+    
+    return { daily, weekly, monthly };
   }, []);
 
   const handleButtonPress = useCallback((value: string) => {
@@ -76,8 +83,8 @@ export default function FloatingCalculator() {
   }, [input]);
 
   const currentAmount = parseFloat(input) || 0;
-  const projectedYield = calculateYield(currentAmount);
-  const totalAfter30Days = currentAmount + projectedYield;
+  const yields = calculateYields(currentAmount);
+  const totalAfter30Days = currentAmount + yields.monthly;
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-PH', {
@@ -138,22 +145,28 @@ export default function FloatingCalculator() {
               </span>
             </div>
 
-            {/* LCD Display Panel */}
+            {/* Enhanced Multi-Period LCD Display Panel */}
             <div 
               className="rounded-lg p-4 mb-4"
               style={{
-                background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(10, 10, 15, 0.95))',
-                boxShadow: 'inset 0 3px 8px rgba(0, 0, 0, 0.8), inset 0 -2px 4px rgba(255, 255, 255, 0.03), 0 0 20px rgba(212, 175, 55, 0.2)',
-                border: '1px solid rgba(50, 50, 55, 0.5)',
+                background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(8, 8, 12, 0.98))',
+                boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.9), inset 0 -2px 4px rgba(255, 255, 255, 0.02), 0 0 30px rgba(212, 175, 55, 0.25)',
+                border: '1px solid rgba(60, 55, 45, 0.4)',
               }}
             >
-              {/* Current Input */}
-              <div className="text-right mb-2">
+              {/* Line 1: Principal Amount */}
+              <div className="flex justify-between items-center mb-3">
                 <span 
-                  className="font-mono text-2xl font-bold tracking-wider"
+                  className="text-[10px] font-mono uppercase tracking-wider"
+                  style={{ color: 'rgba(120, 120, 125, 0.7)' }}
+                >
+                  Principal
+                </span>
+                <span 
+                  className="font-mono text-xl font-bold tracking-wider"
                   style={{
                     color: '#D4AF37',
-                    textShadow: '0 0 12px rgba(212, 175, 55, 0.6), 0 0 24px rgba(212, 175, 55, 0.3)',
+                    textShadow: '0 0 15px rgba(212, 175, 55, 0.7), 0 0 30px rgba(212, 175, 55, 0.4)',
                     fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
@@ -163,39 +176,91 @@ export default function FloatingCalculator() {
 
               {/* Divider */}
               <div 
-                className="h-px my-2"
+                className="h-px mb-3"
                 style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(197, 160, 89, 0.3), transparent)',
+                  background: 'linear-gradient(90deg, transparent, rgba(197, 160, 89, 0.4), transparent)',
                 }}
               />
 
-              {/* 30-Day Yield */}
-              <div className="text-right">
-                <div 
-                  className="text-[9px] font-mono uppercase tracking-wider mb-1"
-                  style={{ color: 'rgba(140, 140, 140, 0.8)' }}
-                >
-                  30-Day Compound Yield
-                </div>
+              {/* Line 2: Daily Yield */}
+              <div className="flex justify-between items-center mb-2">
                 <span 
-                  className="font-mono text-lg font-semibold"
+                  className="text-[9px] font-mono uppercase tracking-wider"
+                  style={{ color: 'rgba(100, 100, 105, 0.6)' }}
+                >
+                  Daily (0.5%)
+                </span>
+                <span 
+                  className="font-mono text-sm font-semibold"
                   style={{
                     color: '#00FF41',
                     textShadow: '0 0 8px rgba(0, 255, 65, 0.5)',
                     fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
-                  +₱{formatCurrency(projectedYield)}
+                  +₱{formatCurrency(yields.daily)}
                 </span>
               </div>
 
-              {/* Total */}
-              <div className="text-right mt-2 pt-2 border-t border-gray-800/50">
+              {/* Line 3: Weekly Yield */}
+              <div className="flex justify-between items-center mb-2">
                 <span 
-                  className="text-[10px] font-mono"
-                  style={{ color: 'rgba(130, 130, 135, 0.6)' }}
+                  className="text-[9px] font-mono uppercase tracking-wider"
+                  style={{ color: 'rgba(100, 100, 105, 0.6)' }}
                 >
-                  Total: <span style={{ color: 'rgba(212, 175, 55, 0.8)' }}>₱{formatCurrency(totalAfter30Days)}</span>
+                  Weekly (7 Days)
+                </span>
+                <span 
+                  className="font-mono text-sm font-semibold"
+                  style={{
+                    color: '#00FF41',
+                    textShadow: '0 0 8px rgba(0, 255, 65, 0.5)',
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                >
+                  +₱{formatCurrency(yields.weekly)}
+                </span>
+              </div>
+
+              {/* Line 4: Monthly Compound Yield */}
+              <div className="flex justify-between items-center mb-3">
+                <span 
+                  className="text-[9px] font-mono uppercase tracking-wider"
+                  style={{ color: 'rgba(100, 100, 105, 0.6)' }}
+                >
+                  Monthly (30 Days)
+                </span>
+                <span 
+                  className="font-mono text-base font-bold"
+                  style={{
+                    color: '#00FF41',
+                    textShadow: '0 0 12px rgba(0, 255, 65, 0.6)',
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}
+                >
+                  +₱{formatCurrency(yields.monthly)}
+                </span>
+              </div>
+
+              {/* Total After 30 Days */}
+              <div 
+                className="pt-2 border-t flex justify-between items-center"
+                style={{ borderColor: 'rgba(60, 55, 45, 0.3)' }}
+              >
+                <span 
+                  className="text-[9px] font-mono uppercase tracking-wider"
+                  style={{ color: 'rgba(140, 135, 120, 0.5)' }}
+                >
+                  Total Balance
+                </span>
+                <span 
+                  className="font-mono text-sm font-semibold"
+                  style={{ 
+                    color: 'rgba(212, 175, 55, 0.9)',
+                    textShadow: '0 0 8px rgba(212, 175, 55, 0.4)',
+                  }}
+                >
+                  ₱{formatCurrency(totalAfter30Days)}
                 </span>
               </div>
             </div>
