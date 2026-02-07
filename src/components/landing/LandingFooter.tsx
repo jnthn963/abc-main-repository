@@ -6,11 +6,11 @@ const footerLinks = {
   governance: {
     title: 'Governance',
     links: [
+      { label: 'Our Manifesto', href: '/governance/ideology' },
       { label: 'Articles of Cooperation', href: '/governance/articles' },
       { label: 'Board of Directors', href: '/governance/board' },
       { label: 'General Assembly', href: '/governance/assembly' },
-      { label: 'Cooperative Principles', href: '#' },
-      { label: 'Membership PRS', href: '#' }
+      { label: 'Cooperative Principles', href: '#' }
     ]
   },
   memberServices: {
