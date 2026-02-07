@@ -146,18 +146,30 @@ export default function Ideology() {
                 Sa paglilingkod at karangalan,
               </p>
 
-              {/* Digital Signature */}
+              {/* Digital Signature - Sovereign Gold SVG */}
               <div className="mt-6 pt-4">
-                <p 
-                  className="text-2xl md:text-3xl mb-2"
-                  style={{ 
-                    fontFamily: "'Dancing Script', cursive",
-                    color: '#C5A059',
-                    textShadow: '0 0 20px rgba(197, 160, 89, 0.3)',
-                  }}
+                {/* Clean, Bold SVG Signature Path */}
+                <svg 
+                  viewBox="0 0 300 80" 
+                  className="w-48 md:w-56 h-auto mb-3"
+                  style={{ filter: 'drop-shadow(0 0 12px rgba(197, 160, 89, 0.4))' }}
                 >
-                  Jonathan Nangkil
-                </p>
+                  <path
+                    d="M10 55 Q15 20 35 35 T55 30 Q70 25 80 40 T95 35 Q105 30 115 45 T130 40 
+                       M140 25 L140 55 M140 40 L160 40 M160 25 L160 55
+                       M175 55 Q175 30 195 30 Q215 30 215 42 Q215 55 195 55 Q175 55 175 42 L175 55
+                       M230 30 L230 55 M230 30 Q250 25 260 35 T270 55"
+                    fill="none"
+                    stroke="#C5A059"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ 
+                      strokeDasharray: 500,
+                      strokeDashoffset: 0,
+                    }}
+                  />
+                </svg>
                 <p className="text-xs text-gray-600 tracking-wider uppercase">
                   Supreme Governor, Alpha Bankers Cooperative
                 </p>
