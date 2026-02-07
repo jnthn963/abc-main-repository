@@ -1,9 +1,9 @@
-name: Sovereign Deployment (Alpha Bankers)
+name: ABC Sovereign Deployment
 
 on:
   push:
     branches:
-      - main  # Siguraduhin na 'main' ang gamit mong branch name
+      - main # Siguraduhin na ito ang tamang branch name mo
 
 jobs:
   build-and-deploy:
@@ -17,9 +17,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: 📦 Install Dependencies
-        run: npm install
+        run: npm ci # Mas mabilis at mas safe kaysa sa 'npm install'
 
       - name: 🏗️ Build Project
         run: npm run build
@@ -30,6 +31,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/  # Ang built files lang ang i-uupload natin
-          server-dir: ./public_html/ # Ang target directory sa Hostinger
-          state-name: .ftp-deploy-sync-state.json # Para mabilis ang susunod na deploys
+          local-dir: ./dist/ # Ang 'dist' folder lang ang i-uupload
+          server-dir: ./public_html/ # DITO DAPAT SA ROOT PARA LIVE AGAD
+          state-name: .ftp-deploy-sync-state.json
