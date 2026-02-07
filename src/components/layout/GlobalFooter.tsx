@@ -56,6 +56,11 @@ export default function GlobalFooter() {
             </h4>
             <ul className="space-y-2.5">
               <li>
+                <Link to="/governance/ideology" className="text-[11px] text-gray-500 hover:text-[#D4AF37] transition-colors">
+                  Our Manifesto
+                </Link>
+              </li>
+              <li>
                 <Link to="/governance/articles" className="text-[11px] text-gray-500 hover:text-[#D4AF37] transition-colors">
                   Articles of Cooperation
                 </Link>
@@ -69,11 +74,6 @@ export default function GlobalFooter() {
                 <Link to="/governance/assembly" className="text-[11px] text-gray-500 hover:text-[#D4AF37] transition-colors">
                   General Assembly
                 </Link>
-              </li>
-              <li>
-                <a href="#" className="text-[11px] text-gray-500 hover:text-[#D4AF37] transition-colors">
-                  Cooperative Principles
-                </a>
               </li>
             </ul>
           </div>

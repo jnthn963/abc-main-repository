@@ -14,6 +14,7 @@ import NotFound from "@/pages/NotFound";
 import ArticlesOfCooperation from "@/pages/governance/ArticlesOfCooperation";
 import BoardOfDirectors from "@/pages/governance/BoardOfDirectors";
 import GeneralAssembly from "@/pages/governance/GeneralAssembly";
+import Ideology from "@/pages/governance/Ideology";
 
 export function AnimatedRoutes() {
   const location = useLocation();
@@ -112,6 +113,14 @@ export function AnimatedRoutes() {
           element={
             <PageTransition>
               <GeneralAssembly />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/governance/ideology"
+          element={
+            <PageTransition>
+              <Ideology />
             </PageTransition>
           }
         />
