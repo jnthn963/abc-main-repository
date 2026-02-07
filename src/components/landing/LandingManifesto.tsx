@@ -246,17 +246,30 @@ export default function LandingManifesto() {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="text-center"
         >
-          <Link to="/register">
-            <Button
-              size="lg"
-              className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] font-bold text-sm uppercase tracking-[0.1em] px-12 py-7 shadow-lg shadow-[#D4AF37]/20 transition-all duration-300 hover:shadow-[#D4AF37]/40 group"
-            >
-              Initialize Your Ledger
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+            <Link to="/register">
+              <Button
+                size="lg"
+                className="bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] font-bold text-sm uppercase tracking-[0.1em] px-10 py-7 shadow-lg shadow-[#D4AF37]/20 transition-all duration-300 hover:shadow-[#D4AF37]/40 group"
+              >
+                Initialize Your Ledger
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            
+            {/* Read Full Manifesto Button */}
+            <Link to="/governance/ideology">
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/60 font-medium text-sm uppercase tracking-[0.1em] px-8 py-7 transition-all duration-300"
+              >
+                Read Full Manifesto
+              </Button>
+            </Link>
+          </div>
           
-          <div className="flex items-center justify-center gap-4 mt-6">
+          <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-[#D4AF37]" />
               <span className="text-xs text-gray-500">Founding Alpha Status</span>
