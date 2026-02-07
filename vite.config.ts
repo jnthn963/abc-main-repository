@@ -5,8 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Relative paths for static hosting (Hostinger) - works with HashRouter
-  base: "./",
+  // Absolute root path for mainoffice.online domain deployment
+  base: "/",
   server: {
     host: "::",
     port: 8080,
