@@ -186,7 +186,7 @@ const GovernorDashboard = () => {
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/governor/login" replace />;
   }
 
   // Redirect to dashboard if not authorized (no governor/admin role)
