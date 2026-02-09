@@ -39,7 +39,7 @@ export function AnimatedRoutes() {
           }
         />
         <Route
-          path="/governor-login"
+          path="/governor/login"
           element={
             <PageTransition>
               <GovernorLogin />
