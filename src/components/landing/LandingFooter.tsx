@@ -6,51 +6,51 @@ const footerLinks = {
   governance: {
     title: 'Governance',
     links: [
-      { label: 'Our Manifesto', href: '/governance/ideology' },
-      { label: 'Articles of Cooperation', href: '/governance/articles' },
-      { label: 'Board of Directors', href: '/governance/board' },
-      { label: 'General Assembly', href: '/governance/assembly' },
-      { label: 'Cooperative Principles', href: '#' }
-    ]
+    { label: 'Our Manifesto', href: '/governance/ideology' },
+    { label: 'Articles of Cooperation', href: '/governance/articles' },
+    { label: 'Board of Directors', href: '/governance/board' },
+    { label: 'General Assembly', href: '/governance/assembly' },
+    { label: 'Cooperative Principles', href: '#' }]
+
   },
   memberServices: {
     title: 'Member Services',
     links: [
-      { label: 'Share Capital Ledger', href: '#' },
-      { label: 'Credit Facilities', href: '#' },
-      { label: 'Patronage Refund', href: '#' },
-      { label: 'Savings & Loans', href: '#' },
-      { label: 'Member Dividends', href: '#' }
-    ]
+    { label: 'Share Capital Ledger', href: '#' },
+    { label: 'Credit Facilities', href: '#' },
+    { label: 'Patronage Refund', href: '#' },
+    { label: 'Savings & Loans', href: '#' },
+    { label: 'Member Dividends', href: '#' }]
+
   },
   protection: {
     title: 'Protection',
     links: [
-      { label: 'Security Center', href: '#' },
-      { label: 'Fraud Awareness', href: '#' },
-      { label: "Treasurer's Affidavit", href: '#' },
-      { label: 'Incident Response', href: '#' },
-      { label: 'Audit Committee', href: '#' }
-    ]
+    { label: 'Security Center', href: '#' },
+    { label: 'Fraud Awareness', href: '#' },
+    { label: "Treasurer's Affidavit", href: '#' },
+    { label: 'Incident Response', href: '#' },
+    { label: 'Audit Committee', href: '#' }]
+
   },
   compliance: {
     title: 'Compliance',
     links: [
-      { label: 'Privacy Policy', href: '#' },
-      { label: 'Terms of Service', href: '#' },
-      { label: 'Cookie Policy', href: '#' },
-      { label: 'Disclosures', href: '#' },
-      { label: 'AML Policy', href: '#' }
-    ]
+    { label: 'Privacy Policy', href: '#' },
+    { label: 'Terms of Service', href: '#' },
+    { label: 'Cookie Policy', href: '#' },
+    { label: 'Disclosures', href: '#' },
+    { label: 'AML Policy', href: '#' }]
+
   }
 };
 
 const trustBadges = [
-  { icon: Shield, label: 'AML Compliant', color: '#D4AF37' },
-  { icon: Lock, label: 'SSL Secured', color: '#00FF41' },
-  { icon: CheckCircle, label: 'KYC Verified', color: '#D4AF37' },
-  { icon: Award, label: 'BSP Registered', color: '#00FF41' }
-];
+{ icon: Shield, label: 'AML Compliant', color: '#D4AF37' },
+{ icon: Lock, label: 'SSL Secured', color: '#00FF41' },
+{ icon: CheckCircle, label: 'KYC Verified', color: '#D4AF37' },
+{ icon: Award, label: 'BSP Registered', color: '#00FF41' }];
+
 
 export default function LandingFooter() {
   return (
@@ -63,21 +63,21 @@ export default function LandingFooter() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="flex flex-wrap items-center justify-center gap-6 md:gap-10"
-          >
-            {trustBadges.map((badge, index) => (
-              <motion.div
-                key={badge.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#050505] border border-gray-800/50"
-              >
+            className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+
+            {trustBadges.map((badge, index) =>
+            <motion.div
+              key={badge.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#050505] border border-gray-800/50">
+
                 <badge.icon className="w-4 h-4" style={{ color: badge.color }} />
                 <span className="text-xs text-gray-400 font-medium">{badge.label}</span>
               </motion.div>
-            ))}
+            )}
           </motion.div>
         </div>
       </div>
@@ -91,21 +91,21 @@ export default function LandingFooter() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
+              transition={{ duration: 0.5 }}>
+
               {/* Logo */}
               <div className="flex items-center gap-3 mb-6">
                 <img
                   alt="ABC Logo"
                   className="w-12 h-12 rounded-full"
-                  style={{ filter: 'drop-shadow(0 0 12px rgba(212, 175, 55, 0.5))' }}
-                  src="/lovable-uploads/389305a4-94f8-484b-80a7-d0accbe48f53.png"
-                />
+                  style={{ filter: 'drop-shadow(0 0 12px rgba(212, 175, 55, 0.5))' }} src="/lovable-uploads/db800924-be93-4855-8d8d-8d73699a8c77.png" />
+
+
                 <div>
                   <span
                     className="text-xl font-bold text-[#D4AF37] block"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                  >
+                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+
                     ₳฿C
                   </span>
                   <span className="text-[9px] text-gray-500 uppercase tracking-wider">
@@ -122,8 +122,8 @@ export default function LandingFooter() {
               {/* Brand Tagline */}
               <p
                 className="text-[10px] text-[#00FF41] uppercase tracking-[0.15em] mb-6"
-                style={{ fontFamily: 'JetBrains Mono, monospace' }}
-              >
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+
                 Integrity Outside The System
               </p>
 
@@ -146,19 +146,19 @@ export default function LandingFooter() {
               {/* Social Links */}
               <div className="flex items-center gap-3">
                 {[
-                  { icon: Linkedin, label: 'LinkedIn' },
-                  { icon: Twitter, label: 'Twitter' },
-                  { icon: Facebook, label: 'Facebook' }
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href="#"
-                    className="w-9 h-9 rounded-full border border-gray-800 flex items-center justify-center text-gray-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5 transition-all duration-200"
-                    aria-label={social.label}
-                  >
+                { icon: Linkedin, label: 'LinkedIn' },
+                { icon: Twitter, label: 'Twitter' },
+                { icon: Facebook, label: 'Facebook' }].
+                map((social) =>
+                <a
+                  key={social.label}
+                  href="#"
+                  className="w-9 h-9 rounded-full border border-gray-800 flex items-center justify-center text-gray-500 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5 transition-all duration-200"
+                  aria-label={social.label}>
+
                     <social.icon className="w-4 h-4" />
                   </a>
-                ))}
+                )}
               </div>
             </motion.div>
           </div>
@@ -168,22 +168,22 @@ export default function LandingFooter() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+            transition={{ duration: 0.5, delay: 0.1 }}>
+
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
               {footerLinks.governance.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.governance.links.map((link) => (
-                <li key={link.label}>
+              {footerLinks.governance.links.map((link) =>
+              <li key={link.label}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200"
-                  >
+                  to={link.href}
+                  className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200">
+
                     {link.label}
                   </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </motion.div>
 
@@ -192,22 +192,22 @@ export default function LandingFooter() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-          >
+            transition={{ duration: 0.5, delay: 0.15 }}>
+
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
               {footerLinks.memberServices.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.memberServices.links.map((link) => (
-                <li key={link.label}>
+              {footerLinks.memberServices.links.map((link) =>
+              <li key={link.label}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200"
-                  >
+                  to={link.href}
+                  className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200">
+
                     {link.label}
                   </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </motion.div>
 
@@ -216,22 +216,22 @@ export default function LandingFooter() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+            transition={{ duration: 0.5, delay: 0.2 }}>
+
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
               {footerLinks.protection.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.protection.links.map((link) => (
-                <li key={link.label}>
+              {footerLinks.protection.links.map((link) =>
+              <li key={link.label}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200"
-                  >
+                  to={link.href}
+                  className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200">
+
                     {link.label}
                   </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </motion.div>
 
@@ -240,22 +240,22 @@ export default function LandingFooter() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-          >
+            transition={{ duration: 0.5, delay: 0.25 }}>
+
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5">
               {footerLinks.compliance.title}
             </h4>
             <ul className="space-y-3">
-              {footerLinks.compliance.links.map((link) => (
-                <li key={link.label}>
+              {footerLinks.compliance.links.map((link) =>
+              <li key={link.label}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200"
-                  >
+                  to={link.href}
+                  className="text-sm text-gray-500 hover:text-[#D4AF37] transition-colors duration-200">
+
                     {link.label}
                   </Link>
                 </li>
-              ))}
+              )}
             </ul>
           </motion.div>
         </div>
@@ -269,8 +269,8 @@ export default function LandingFooter() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col md:flex-row items-center justify-center gap-4 text-center"
-          >
+            className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#00FF41]" />
               <span className="text-xs text-[#00FF41] font-semibold uppercase tracking-wider">
@@ -324,6 +324,6 @@ export default function LandingFooter() {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>);
+
 }
