@@ -243,8 +243,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
           </DialogHeader>
           <p className="text-[#050505]/80 text-sm mt-1">
             {step === "amount" && "Specify sovereign capital injection amount"}
-            {step === "qr" && "Complete payment via QR PH Gateway"}
-            {step === "upload" && "Upload proof of payment for verification"}
+            {step === "qr" && "Pay via QR & upload proof of payment"}
             {step === "pending" && "Transaction verification in progress"}
           </p>
         </div>
