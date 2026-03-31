@@ -94,11 +94,6 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
     }
   };
 
-  // Handle proceeding to upload step
-  const handleProceedToUpload = () => {
-    setStep("upload");
-  };
-
   // Handle proof of payment upload completion
   const handleUploadComplete = (path: string) => {
     setProofOfPaymentPath(path);
