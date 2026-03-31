@@ -36,7 +36,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
   const { config, loading: configLoading } = usePublicConfig();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [step, setStep] = useState<"amount" | "qr" | "upload" | "pending">("amount");
+  const [step, setStep] = useState<"amount" | "qr" | "pending">("amount");
   const [amount, setAmount] = useState("");
   const [amountError, setAmountError] = useState("");
   const [copied, setCopied] = useState(false);
