@@ -412,52 +412,22 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                   </ol>
                 </div>
 
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setStep("amount")}
-                    className="flex-1 py-3 min-h-[48px] bg-muted rounded-lg font-medium hover:bg-muted/70 transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={handleProceedToUpload}
-                    className="flex-1 py-3 min-h-[48px] bg-gradient-to-r from-success to-emerald-600 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Upload Receipt
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 3: Upload Proof of Payment */}
-            {step === "upload" && user && (
-              <motion.div
-                key="upload"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-4"
-              >
-                {/* Amount Summary */}
-                <div className="text-center pb-3 border-b border-border">
-                  <p className="text-sm text-muted-foreground">Deposit Amount</p>
-                  <p className="text-2xl font-bold text-success balance-number">
-                    {formatCurrency(amount)}
+                {/* Upload Proof of Payment - Below QR */}
+                <div className="pt-3 border-t border-border">
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Camera className="w-3 h-3" />
+                    Step 2: Upload Proof of Payment
                   </p>
-                  <p className="text-xs font-mono text-muted-foreground mt-1">
-                    Ref: {referenceNumber}
-                  </p>
+                  {user && (
+                    <ProofOfPaymentUpload
+                      userId={user.id}
+                      referenceNumber={referenceNumber}
+                      onUploadComplete={handleUploadComplete}
+                      onUploadError={handleUploadError}
+                      disabled={isSubmitting}
+                    />
+                  )}
                 </div>
-
-                {/* Upload Component */}
-                <ProofOfPaymentUpload
-                  userId={user.id}
-                  referenceNumber={referenceNumber}
-                  onUploadComplete={handleUploadComplete}
-                  onUploadError={handleUploadError}
-                  disabled={isSubmitting}
-                />
 
                 {/* Upload Status Indicator */}
                 {proofOfPaymentPath && (
@@ -474,7 +444,7 @@ const DepositModal = ({ isOpen, onClose }: DepositModalProps) => {
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setStep("qr")}
+                    onClick={() => setStep("amount")}
                     className="flex-1 py-3 min-h-[48px] bg-muted rounded-lg font-medium hover:bg-muted/70 transition-colors"
                   >
                     Back
