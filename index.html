@@ -42,6 +42,19 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Redirect non-hash paths to hash equivalents for HashRouter compatibility
+      // e.g. /governor/login → /#/governor/login
+      (function() {
+        var path = window.location.pathname;
+        // Strip trailing slash for comparison, but keep root as-is
+        var cleanPath = path.replace(/\/+$/, '') || '/';
+        // Only redirect if there's a real path (not just /) and no hash route yet
+        if (cleanPath !== '/' && (!window.location.hash || window.location.hash === '#' || window.location.hash === '#/')) {
+          window.location.replace(window.location.origin + '/#' + cleanPath);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
