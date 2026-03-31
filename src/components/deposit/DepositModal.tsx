@@ -11,7 +11,6 @@ import {
   Wallet,
   ShieldCheck,
   Camera,
-  ImageIcon,
 } from "lucide-react";
 import {
   Dialog,
